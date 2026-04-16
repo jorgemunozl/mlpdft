@@ -1,0 +1,63 @@
+[BISPECTRUM]
+numTypes = 3
+twojmax = 8 8 8
+rcutfac = 4.812302818
+rfac0 = 0.99363
+rmin0 = 0.0
+wj = 1.0 1.0 1.0
+radelem = 0.5 0.5 0.5
+type = Li B F
+wselfallflag = 0
+chemflag = 1
+bzeroflag = 1
+quadraticflag = 0
+bikflag = 1
+dgradflag = 1
+
+[CALCULATOR]
+calculator = LAMMPSSNAP
+energy = 1
+per_atom_energy = 1
+force = 1
+stress = 1
+nonlinear = 0
+
+[ESHIFT]
+Li = 0.0
+B = 0.0
+F = 0.0
+
+[SOLVER]
+solver = RIDGE
+compute_testerrs = 1
+detailed_errors = 1
+
+[SCRAPER]
+scraper = JSON
+
+[PATH]
+dataPath = LiBF4/NEWJSON
+
+[OUTFILE]
+metrics = LiBF4_metrics.dat
+potential = LiBF4_pot
+
+[REFERENCE]
+units = metal
+atom_style = atomic
+pair_style = zero 10.0
+pair_coeff1 = * *
+
+[GROUPS]
+group_sections = name training_size testing_size eweight fweight vweight
+group_types = str float float float float float
+smartweights = 0
+random_sampling = 1
+DEFAULT = 0.8 0.2 1.0 1.0 1.0
+
+[EXTRAS]
+dump_peratom = 0
+dump_perconfig = 0
+
+[MEMORY]
+override = 0
