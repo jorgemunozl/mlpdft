@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH -J NTFSI             #Job Name (JobName)
+#SBATCH -t 72:00:00               #Wall time h:m:s (1 hour)
+#SBATCH --ntasks=28
+#SBATCH --ntasks-per-node=40     #Cores per node (48 cores per node)
+#SBATCH --mem=324G               #Memory per node (324 GB of memory per node)
+#SBATCH -o G16.o%j           #standard output file (JobName.ojobnumber)
+#SBATCH -e G16.e%j           #standard error file (JobName.ejobnumber)
+#SBATCH --account=132851585547
+
+ml GCC/9.3.0 OpenMPI/4.0.3
+ml LAMMPS/3Mar2020-Python-3.8.2-kokkos
+
+mpirun /scratch/user/seminario/QuantumE/QE-7.1/qe-7.1/PW/src/pw.x -i EMIMLiTFSI_anode_rv2 > EMIMLiTFSI_anode_rv2.out

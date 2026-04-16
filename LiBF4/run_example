@@ -1,0 +1,56 @@
+ &control
+    calculation='md'
+    restart_mode='from_scratch',
+    outdir = '/scratch/user/henrique.d.minami/programs/QE/temp/LiBF4'
+    pseudo_dir = '/scratch/user/henrique.d.minami/programs/QE/pseudos/'
+    dt=10,
+    nstep=50000,
+    disk_io='high',
+    tstress=.true.
+ /
+ &system
+    ibrav= 0, nat=  18, ntyp= 3,
+    ecutwfc = 30.0, nosym=.true.
+ /
+ &electrons
+    conv_thr =  1.0d-8,
+    mixing_beta = 0.7,
+    electron_maxstep = 500
+ /
+ &ions
+    tempw = 300.0,
+    ion_temperature='andersen',
+    pot_extrapolation='second-order',
+    wfc_extrapolation='second-order'
+ /
+ATOMIC_SPECIES
+ Li 6.941 Li.pbe-sl-kjpaw_psl.1.0.0.UPF
+ B 10.811 B.pbe-n-kjpaw_psl.1.0.0.UPF
+ F 18.998 F.pbe-n-kjpaw_psl.1.0.0.UPF
+CELL_PARAMETERS angstrom
+  4.73333213   0.00000000   0.00000000
+  2.36666607   4.10115034   0.00000000
+  0.00000000   0.00000000  10.83966193
+ATOMIC_POSITIONS angstrom
+ Li  0.00000000  2.03252885  6.93977462
+ Li  2.03252885  0.00000000  3.41988731
+ Li  2.60467061  2.60467061  0.00000000
+ B   2.63590618  2.63590618  5.41983097
+ B   0.00000000  2.10032311  1.80666165
+ B   2.10032311  0.00000000  8.39624833
+ F   2.73031806  3.88044423  10.14146263
+ F   0.38273884  3.10611151  2.90325562
+ F   1.63110157  2.01059885  6.51929223
+ F   3.10611151  0.38273884  7.93262806
+ F   1.89885561  1.63676839  4.32324771
+ F   3.88044423  2.73031806  0.71113406
+ F   1.26333371  1.92023488  1.45922822
+ F   0.38273884  0.00000000  7.15749973
+ F   2.73435272  1.92023488  4.47798783
+ F   1.13107961  0.00000000  8.52116973
+ F   2.03056524  1.38725304  6.44227598
+ F   1.92023488  0.00000000  5.30605904
+ F   0.00000000  2.03456345  4.97881261
+K_POINTS {automatic}
+ 3 3 3 0 0 0
+EOF

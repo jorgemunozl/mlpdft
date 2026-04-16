@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH -J LiBF4             #Job Name (JobName)
+#SBATCH -t 72:00:00               #Wall time h:m:s (1 hour)
+#SBATCH --ntasks=10
+#SBATCH --ntasks-per-node=10     #Cores per node (48 cores per node)
+#SBATCH --mem=80G               #Memory per node (324 GB of memory per node)
+#SBATCH -o G16.o%j           #standard output file (JobName.ojobnumber)
+#SBATCH -e G16.e%j           #standard error file (JobName.ejobnumber)
+#SBATCH --account=132735508154
+
+module purge
+ml GCC/12.3.0 OpenMPI/4.1.5
+ml QuantumESPRESSO/7.2
+
+mpirun pw.x -i run_example > LiBF4.out
