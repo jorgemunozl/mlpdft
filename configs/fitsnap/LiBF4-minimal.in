@@ -36,7 +36,8 @@ detailed_errors = 1
 scraper = JSON
 
 [PATH]
-dataPath = LiBF4/NEWJSON
+# Relative to this .in file directory: configs/fitsnap/ -> ../../LiBF4/NEWJSON/<GROUP>/*.json
+dataPath = ../../LiBF4/NEWJSON
 
 [OUTFILE]
 metrics = LiBF4_metrics.dat
@@ -52,7 +53,7 @@ pair_coeff1 = * *
 group_sections = name training_size testing_size eweight fweight vweight
 group_types = str float float float float float
 smartweights = 0
-random_sampling = 1
+random_sampling = 0
 DEFAULT = 0.8 0.2 1.0 1.0 1.0
 
 [EXTRAS]

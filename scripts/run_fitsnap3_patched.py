@@ -2,6 +2,9 @@ import os
 import sys
 import random
 import traceback
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def _patch_fitsnap_randint() -> None:
@@ -18,27 +21,36 @@ def _patch_fitsnap_randint() -> None:
 
 
 def main(argv: list[str]) -> int:
-    log_path = os.path.abspath("fitsnap_run.log")
+    log_path = str(_REPO_ROOT / "logs" / "fitsnap_run.log")
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
     with open(log_path, "w", encoding="utf-8") as log:
         log.write("run_fitsnap3_patched.py starting\n")
         log.write(f"argv={argv!r}\n")
         log.write(f"cwd={os.getcwd()}\n")
 
     if len(argv) != 2:
-        print("usage: python run_fitsnap3_patched.py <input.in>", file=sys.stderr)
+        print("usage: python scripts/run_fitsnap3_patched.py <input.in>", file=sys.stderr)
         return 2
 
-    infile = argv[1]
-    if not os.path.isfile(infile):
-        print(f"error: input file not found: {infile}", file=sys.stderr)
+    raw = argv[1]
+    p = Path(raw)
+    if not p.is_file():
+        alt = _REPO_ROOT / raw
+        if alt.is_file():
+            p = alt
+    if not p.is_file():
+        print(f"error: input file not found: {raw}", file=sys.stderr)
         return 2
+
+    os.chdir(_REPO_ROOT)
+    infile_rel = os.path.relpath(p.resolve(), _REPO_ROOT)
 
     try:
         _patch_fitsnap_randint()
 
         from fitsnap3lib.fitsnap import FitSnap  # type: ignore
 
-        snap = FitSnap(input=infile, comm=None, arglist=["--overwrite", "--verbose"])
+        snap = FitSnap(input=infile_rel, comm=None, arglist=["--overwrite", "--verbose"])
         snap.scrape_configs(delete_scraper=True)
         snap.process_configs(delete_data=True)
         snap.perform_fit()

@@ -1,16 +1,27 @@
 import re
 import time
+from pathlib import Path
 def parse_qe_output(qe_output_file,dump_file):
     """ Parse Quantum ESPRESSO output file to extract atomic positions """
     timestep=0
     xlo= -0.0
-    xhi= 10.53
+    xhi= 4.7333213
     ylo= -0.0
-    yhi= 10.53
+    yhi= 4.10115034
     zlo= -0.0
-    zhi= 10.53
-    tatoms=54
+    zhi= 10.83966
+    tatoms=18
     framestoc=1
+    options = {
+           "C" : 1,
+           "H" : 3,
+           "Li" : 7,
+           "N" : 5,
+           "S" : 6,
+           "F" : 4,
+           "O" : 2,
+           "B" : 16,
+}
     with open(dump_file, 'w') as g:
         with open(qe_output_file, 'r') as f:
             lines = f.readlines()
@@ -33,7 +44,8 @@ def parse_qe_output(qe_output_file,dump_file):
             if flagr==1:
                 an=line.strip()
                 ant=an.split()
-                g.write(f'{ii} 1 {ant[1]} {ant[2]} {ant[3]}\n')
+                typen = options[ant[0]]
+                g.write(f'{ii} {typen} {ant[1]} {ant[2]} {ant[3]}\n')
                 ii=ii+1
             if line.strip()==stacompa:
                 ftoc=ftoc+1
@@ -54,8 +66,9 @@ def parse_qe_output(qe_output_file,dump_file):
         print("Last timestep is:",timestep)
 
 if __name__ == "__main__":
-    qe_output_file = 'BCC_54.out'
-    dump_file = 'output.dump'
+    _example_dir = Path(__file__).resolve().parent.parent
+    qe_output_file = str(_example_dir / "qe" / "LiBF4.out")
+    dump_file = str(_example_dir / "data" / "output.dump")
 
-    parse_qe_output(qe_output_file,dump_file)
+    parse_qe_output(qe_output_file, dump_file)
 

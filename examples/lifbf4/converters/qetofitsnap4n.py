@@ -1,5 +1,6 @@
 import re
 import time
+from pathlib import Path
 def parse_qe_output(qe_output_file,dump_file):
     
     def impresion(tatoms,energy,stress_matrix,positions_matrix,lattice_matrix,forces_matrix,types_matrix,numerofile):
@@ -142,8 +143,9 @@ def parse_qe_output(qe_output_file,dump_file):
         print("Total lines in the file is:",linesinfile)
         print("Number of frames make is: ",numerofile )
 if __name__ == "__main__":
-    qe_output_file = 'LiBF4.out'
-    fitsnap_file = 'NEWJSON/output'
+    _example_dir = Path(__file__).resolve().parent.parent
+    qe_output_file = str(_example_dir / "qe" / "LiBF4.out")
+    fitsnap_file = str(_example_dir / "NEWJSON" / "output")
 
-    parse_qe_output(qe_output_file,fitsnap_file)
+    parse_qe_output(qe_output_file, fitsnap_file)
 

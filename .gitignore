@@ -1,2 +1,6 @@
 *.out
 *.json
+
+# FitSNAP / local runs
+logs/*.log
+outputs/
