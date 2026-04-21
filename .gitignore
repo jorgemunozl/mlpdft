@@ -4,3 +4,4 @@
 # FitSNAP / local runs
 logs/*.log
 outputs/
+*.dat
