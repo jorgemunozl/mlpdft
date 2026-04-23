@@ -1,0 +1,99 @@
+ &control
+    calculation='md'
+    restart_mode='from_scratch',
+    outdir = '/scratch/user/luisantonioselis/QE/LiF64_kjpaw'
+    pseudo_dir = '/scratch/user/luisantonioselis/QE/pseudos'
+    dt=10,
+    nstep=10000,
+    disk_io='high',
+    tstress=.true.
+ /
+ &system
+    ibrav= 0, nat=  64, ntyp= 2,
+    ecutwfc = 30.0, ecutrho = 320, nosym=.true.
+ /
+ &electrons
+    conv_thr =  1.0d-8,
+    mixing_beta = 0.7,
+    electron_maxstep = 500
+ /
+ &ions
+    tempw = 300.0,
+    ion_temperature='andersen',
+    pot_extrapolation='second-order',
+    wfc_extrapolation='second-order'
+ /
+ATOMIC_SPECIES
+ Li 6.941 Li.pbe-sl-kjpaw_psl.1.0.0.UPF
+ F 18.998 F.pbe-n-kjpaw_psl.1.0.0.UPF
+CELL_PARAMETERS angstrom
+    8.16  0.0  0.0
+    0.0  8.16  0.0
+    0.0  0.0  8.16
+ATOMIC_POSITIONS angstrom
+Li  0   0   0
+Li  0   2.04    2.04
+Li  2.04    0   2.04
+Li  2.04    2.04    0
+F   2.04    2.04    2.04
+F   0   2.04    0
+F   2.04    0   0
+F   0   0   2.04
+Li  4.08    0   0
+Li  4.08    2.04    2.04
+Li  6.12    0   2.04
+Li  6.12    2.04    0
+F   6.12    2.04    2.04
+F   4.08    2.04    0
+F   6.12    0   0
+F   4.08    0   2.04
+Li  0   4.08    0
+Li  0   6.12    2.04
+Li  2.04    4.08    2.04
+Li  2.04    6.12    0
+F   2.04    6.12    2.04
+F   0   6.12    0
+F   2.04    4.08    0
+F   0   4.08    2.04
+Li  4.08    4.08    0
+Li  4.08    6.12    2.04
+Li  6.12    4.08    2.04
+Li  6.12    6.12    0
+F   6.12    6.12    2.04
+F   4.08    6.12    0
+F   6.12    4.08    0
+F   4.08    4.08    2.04
+Li  0   0   4.08
+Li  0   2.04    6.12
+Li  2.04    0   6.12
+Li  2.04    2.04    4.08
+F   2.04    2.04    6.12
+F   0   2.04    4.08
+F   2.04    0   4.08
+F   0   0   6.12
+Li  4.08    0   4.08
+Li  4.08    2.04    6.12
+Li  6.12    0   6.12
+Li  6.12    2.04    4.08
+F   6.12    2.04    6.12
+F   4.08    2.04    4.08
+F   6.12    0   4.08
+F   4.08    0   6.12
+Li  0   4.08    4.08
+Li  0   6.12    6.12
+Li  2.04    4.08    6.12
+Li  2.04    6.12    4.08
+F   2.04    6.12    6.12
+F   0   6.12    4.08
+F   2.04    4.08    4.08
+F   0   4.08    6.12
+Li  4.08    4.08    4.08
+Li  4.08    6.12    6.12
+Li  6.12    4.08    6.12
+Li  6.12    6.12    4.08
+F   6.12    6.12    6.12
+F   4.08    6.12    4.08
+F   6.12    4.08    4.08
+F   4.08    4.08    6.12
+K_POINTS {automatic}
+ 3 3 3 0 0 0
