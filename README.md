@@ -25,6 +25,7 @@ This repository holds experiments and helper scripts for **[FitSNAP](https://git
 | `scripts/random_energy_fitsnap.py` | Thin CLI: calls `fitsnap_json_scrape` + `toy_energy` (no bispectrum). |
 | `scripts/fitsnap_snap_matrix.py` | Library helper: `snap_design_matrix()` runs `FitSnap` scrape → `process_configs` → returns design matrix `A` (SNAP bispectrum rows) and the `FitSnap` instance. |
 | `scripts/snap_bispectrum.py` | CLI wrapper: prints `A.shape`, optional `-o` saves `A` as NumPy `.npy`. Requires LAMMPS with SNAP. |
+| `scripts/mace_on_qe_out.py` | Reads a Quantum ESPRESSO **pw.x** `.out` (last frame), runs **MACE-MP** (`--model`, default `small`) on **CPU**, prints energy and forces; compares to QE forces if present in the OUT file. |
 
 ## Configs
 
@@ -32,6 +33,19 @@ This repository holds experiments and helper scripts for **[FitSNAP](https://git
 |------|------|
 | `configs/fitsnap/LiBF4-minimal.in` | Example FitSNAP deck (bispectrum / LAMMPSSNAP, JSON scraper). `dataPath` is relative to this file’s directory (see comment in file); with cwd at repo root it resolves to `LiBF4/NEWJSON/<GROUP>/`. |
 | `configs/fitsnap/LiFB-example.in` | Larger PyTorch-focused example; `dataPath` points outside this repo (`../LiFB_kjpaw/JSON`) — adjust for your machine. |
+
+## MACE (optional, CPU-only PyTorch via uv)
+
+This repo includes a [`pyproject.toml`](pyproject.toml) that installs **`mace-torch`** with **`torch` from the official PyTorch CPU wheel index** so Linux resolves to **`torch…+cpu`** and does not pull NVIDIA CUDA wheels.
+
+```bash
+cd /path/to/mlpdft
+uv sync
+# First MACE-MP download needs a writable cache (default ~/.cache/mace):
+uv run python scripts/mace_on_qe_out.py --qe-out /path/to/LiF64_kjpaw.out
+```
+
+Use `XDG_CACHE_HOME` if you want checkpoints under the repo, e.g. `export XDG_CACHE_HOME=$PWD/.cache`.
 
 ## Prerequisites
 

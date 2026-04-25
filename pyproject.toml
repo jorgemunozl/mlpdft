@@ -1,0 +1,20 @@
+[project]
+name = "mlpdft"
+version = "0.0.0"
+description = "FitSNAP experiments and optional MACE-on-QE helpers"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    # Direct dependency so [tool.uv.sources] applies; otherwise uv resolves torch
+    # from PyPI and pulls NVIDIA CUDA wheels on Linux.
+    "torch>=2.2,<3",
+    "mace-torch>=0.3.6",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
