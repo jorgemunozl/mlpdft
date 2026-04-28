@@ -57,8 +57,8 @@ random_sampling = 0
 DEFAULT = 0.8 0.2 1.0 1.0 1.0
 
 [EXTRAS]
-dump_peratom = 0
-dump_perconfig = 0
+dump_peratom = 1
+dump_perconfig = 1
 
 [MEMORY]
 override = 0
