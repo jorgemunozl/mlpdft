@@ -1,0 +1,161 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+
+\title{MACE vs.\ FitSNAP (LiF)}
+\subtitle{Higher-order equivariant message passing and LiF64 finetuning preparation}
+\author{MLPDFT notes}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Goal}
+  \begin{itemize}
+    \item Summarize \textbf{MACE}: many-body equivariant message-passing potentials (Batatia et al., NeurIPS 2022).
+    \item Document two FitSNAP styles: \textbf{linear ridge} on SNAP (\texttt{LiBF4-minimal.in}) and \textbf{PyTorch MLP} on SNAP (\texttt{model/}); compare to \textbf{MACE-MP} finetune on LiF64.
+    \item Position a \textbf{fair comparison} and \textbf{MACE-MP finetuning} on the in-repo \textbf{LiF64 NEWJSON} set (\texttt{examples/LiF64\_kjpaw\_v2/NEWJSON/}).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{MLIPs: problem statement}
+  \begin{itemize}
+    \item Need \textbf{DFT-quality} energies, forces, and (for solids) stress at \textbf{MD cost}.
+    \item Classical snap fits: \textbf{fixed local basis} + linear or small nonlinear head.
+    \item Graph models: learn features on the \textbf{local neighborhood graph} in 3D with \textbf{rotation/reflection equivariance} ($O(3)$ or $E(3)$).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{MACE (idea)}
+  \begin{itemize}
+    \item \textbf{Equivariant MPNN} on atoms; internal features carry angular momentum channels ($L=0$ scalar, $L>0$ tensors).
+    \item Key idea: \textbf{explicit many-body messages} via coupled tensor products of neighbor-edge features (correlation order $\nu$), not only stacking many 2-body layers.
+    \item Often \textbf{two message-passing layers} suffice when $\nu$ is high enough --- decouples many-body expressivity from deep receptive-field growth.
+    \item Readout uses \textbf{invariant} ($L{=}0$) channels so site energies are scalars; sum gives extensive total energy.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{MACE (data flow sketch)}
+  \[
+    \text{atoms } (\mathbf r_i, Z_i)
+    \;\Rightarrow\;
+    \text{2-body equivariant } A_i
+    \;\Rightarrow\;
+    \text{tensor products } B_i^{(\nu)}
+    \;\Rightarrow\;
+    \text{message } m_i
+    \;\Rightarrow\;
+    \text{update } h_i
+    \;\Rightarrow\;
+    E_i
+  \]
+  \vfill
+  \begin{center}
+    \small
+    Neighbor sum retains permutational invariance; Clebsch--Gordan structure enforces $O(3)$ equivariance.
+  \end{center}
+\end{frame}
+
+\begin{frame}{FitSNAP baseline in \texttt{mlpdft/model/} (PyTorch)}
+  \begin{itemize}
+    \item \textbf{Solver:} \texttt{PYTORCH} --- \textbf{nonlinear} SNAP fit (\texttt{nonlinear = 1} in the corresponding \texttt{.in}).
+    \item \textbf{Descriptors:} SNAP bispectrum (\texttt{LAMMPSSNAP}): \texttt{twojmax = 8 8}, \texttt{chemflag = 1}, \texttt{bikflag / dgradflag} on.
+    \item \textbf{Cutoff knobs:} \texttt{rcutfac}, \texttt{rfac0}, \texttt{rmin0}, \texttt{radelem = 0.5 0.5} (LAMMPS-SNAP convention).
+    \item \textbf{Head:} PyTorch MLP \texttt{num\_desc $\to$ 256 $\to$ 128 $\to$ 64 $\to$ 64 $\to$ 1}, \texttt{multi\_element\_option = 2} (per-element nets).
+    \item \textbf{Training:} learning rate \texttt{5e-6}, \texttt{70} epochs, batch \texttt{50}; weights \texttt{LiF\_Pytorch.pt}.
+    \item \textbf{Data (original deck):} \texttt{dataPath = ../LiF\_kjpaw\_chem/JSON} (multi-group; not all in-repo).
+    \item \textbf{ML-IAP exports (LiF64):} \texttt{LiF64\_NEWJSON\_pot.*}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{FitSNAP linear baseline (\texttt{configs/fitsnap/LiBF4-minimal.in})}
+  \begin{itemize}
+    \item \textbf{Solver:} \texttt{RIDGE} --- \textbf{linear} regression, not a deep net (\texttt{nonlinear = 0}).
+    \item \textbf{Pipeline:} JSON $\to$ LAMMPS-SNAP bispectrum $\to$ fixed descriptor vector per atom $\to$ ridge fit to DFT energy (forces/stress via descriptor derivatives as in FitSNAP).
+    \item \textbf{Species / SNAP:} \texttt{numTypes = 3}, \texttt{type = Li B F}, \texttt{twojmax = 8 8 8}, \texttt{chemflag = 1}, \texttt{bzeroflag = 1}, \texttt{bikflag} / \texttt{dgradflag} on; radial knobs \texttt{rcutfac}, \texttt{rfac0}, \texttt{rmin0}, \texttt{radelem = 0.5} each.
+    \item \textbf{Readout:} single \textbf{linear} map from SNAP space (L2-regularized), unlike the PyTorch MLP in \texttt{model/LiF-example.in}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{MACE-MP-0a \texttt{small} (cached checkpoint)}
+  \small
+  \begin{itemize}
+    \item \textbf{Release file (typical cache path):} \texttt{\textasciitilde/.cache/mace/20231210mace128L0\_energy\_epoch249model} (naming: 128 channels, $L{=}0$ / invariant hidden irreps only).
+9    \item \textbf{Parameterization:} \texttt{ScaleShiftMACE} --- atomic reference energies plus learnable scale/shift; then equivariant message passing.
+    \item \textbf{Hyperparameters} (from \texttt{extract\_config\_mace\_model} on this checkpoint; re-run \texttt{scripts/print\_mace\_model\_arch.py} after downloads):
+      \texttt{r\_max}${}=6.0$~\AA, \texttt{num\_interactions}${}=2$, \textbf{correlation}${}=3$, hidden irreps \texttt{128x0e}, readout MLP \texttt{16x0e}, \texttt{max\_ell}${}=3$, \texttt{num\_bessel}${}=10$, radial MLP $[64,64,64]$, \texttt{avg\_num\_neighbors}${}\approx 62$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Side-by-side: FitSNAP vs.\ MACE}
+  \begin{table}
+    \centering
+    \small
+    \begin{tabular}{@{}p{0.28\textwidth}p{0.34\textwidth}p{0.34\textwidth}@{}}
+      \toprule
+      & \textbf{FitSNAP (SNAP)} & \textbf{MACE} \\
+      \midrule
+      Representation & Fixed bispectrum basis (LiBF4: ridge; LiF weights: PyTorch MLP head) & Learned equivariant features + correlation order $\nu$ (e.g.\ 3 in MACE-MP small) \\
+      Cutoff & SNAP radial cutoff (from \texttt{rcutfac}, radii) & User-chosen \texttt{r\_max} --- should \textbf{match} SNAP for fair comparison \\
+      Depth / field & Shallow MLP on descriptors; large MPNN depth not used & Often 2 MP layers; many-body from $\nu$, not only depth \\
+      Stress & Trained with stress terms in FitSNAP & Supported when stress labels exist in training XYZ \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+\begin{frame}{LiF64 NEWJSON dataset (finetune target)}
+  \begin{itemize}
+    \item Location: \texttt{examples/LiF64\_kjpaw\_v2/NEWJSON/DEFAULT/} (\texttt{output\_*.json}).
+    \item \textbf{System:} 64 atoms, Li/F, periodic cell; DFT (QE) references in JSON (\texttt{Energy}, \texttt{Forces}, \texttt{Stress}).
+    \item \textbf{Split (match FitSNAP \texttt{LiF64-NEWJSON.in}):} \texttt{random\_sampling = 0}, group \texttt{DEFAULT}: \textbf{80\%} train / \textbf{20\%} test, file order \textbf{sorted} (same rule as \texttt{mace\_eval\_fitsnap\_test.split}).
+    \item \textbf{Converter:} \texttt{scripts/fitsnap\_json\_to\_extxyz.py} writes \texttt{train.xyz} / \texttt{test.xyz} for \texttt{mace\_run\_train}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Planned metrics (fill after runs)}
+  \begin{table}
+    \centering
+    \small
+    \begin{tabular}{@{}lccc@{}}
+      \toprule
+      Model & Energy (MAE / RMSE) & Forces (MAE / RMSE) & Notes \\
+      \midrule
+      FitSNAP (eval on test split) & --- & --- & From FitSNAP metrics / perconfig \\
+      MACE-MP (zero-shot) & --- & --- & Foundation model, same frames \\
+      MACE (finetuned) & --- & --- & After \texttt{configs/mace/lif64\_finetune.yaml} \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \vfill
+  \small
+  Use consistent units (eV and eV/\AA{}) and clarify total vs.\ per-atom energy when comparing to FitSNAP logs.
+\end{frame}
+
+\begin{frame}{Finetune workflow (next steps)}
+  \begin{enumerate}
+    \item \texttt{uv run python scripts/fitsnap\_json\_to\_extxyz.py} $\to$ \texttt{train.xyz}, \texttt{test.xyz}.
+    \item \texttt{mace\_run\_train --config=configs/mace/lif64\_finetune.yaml ...} (override \texttt{device}, paths as needed).
+    \item Evaluate: \texttt{mace\_eval\_fitsnap\_test.py --test-extxyz ... --mace-model ...} (see README).
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{References}
+  \begin{thebibliography}{9}
+    \bibitem{Batatia2022mace}
+    I.\ Batatia, D.\ P.\ Kov\'acs, G.\ N.\ C.\ Simm, C.\ Ortner, G.\ Cs\'anyi.
+    \newblock MACE: Higher Order Equivariant Message Passing Neural Networks for Fast and Accurate Force Fields.
+    \newblock \emph{NeurIPS}, 2022.
+  \end{thebibliography}
+\end{frame}
+
+\end{document}
