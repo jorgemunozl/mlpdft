@@ -1,0 +1,55 @@
+# MACE-MP finetune on LiF64 NEWJSON (after JSON -> XYZ, see scripts/fitsnap_json_to_extxyz.py).
+# Paths are relative to the mlpdft repository root; run mace_run_train with cwd = repo root.
+#
+# SNAP cutoff alignment (model/LiF-example.in):
+#   r_cut ≈ rcutfac * rfac0 * (radelem_Li + radelem_F)
+#         = 4.812302818 * 0.99363 * (0.5 + 0.5) ≈ 4.78 Å
+# Use the same r_max here so MACE sees a similar neighborhood to LAMMPS-SNAP.
+#
+# Example (override device / dtype for your machine):
+#   cd /path/to/mlpdft
+#   uv run mace_run_train --config=configs/mace/lif64_finetune.yaml \
+#       --device=cuda --default_dtype=float32
+#
+# Or from a cloned mace repo with mlpdft on PYTHONPATH, invoke:
+#   python /path/to/mace/mace/cli/run_train.py --config=...
+
+name: lif64_mace_mp_ft
+seed: 3
+
+train_file: examples/LiF64_kjpaw_v2/xyz/train.xyz
+test_file: examples/LiF64_kjpaw_v2/xyz/test.xyz
+# Tiny training set: using the held-out FitSNAP test file as validation monitor.
+# For production, hold out part of train.xyz instead so test.xyz stays unused during training.
+valid_file: examples/LiF64_kjpaw_v2/xyz/test.xyz
+
+foundation_model: small
+E0s: estimated
+
+r_max: 4.78
+model: MACE
+
+energy_weight: 1.0
+forces_weight: 1.0
+scaling: rms_forces_scaling
+
+batch_size: 2
+max_num_epochs: 80
+lr: 0.01
+optimizer: adam
+amsgrad: true
+weight_decay: 5.0e-7
+
+default_dtype: float32
+device: cpu
+
+ema: true
+ema_decay: 0.99
+
+stage_two: true
+start_stage_two: 60
+
+config_type_weights: '{"Default":1.0}'
+
+plot: true
+error_table: PerAtomRMSE

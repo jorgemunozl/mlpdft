@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Evaluate MACE-MP on FitSNAP-style test set from LiBF4 JSON data.
+Evaluate MACE on FitSNAP-style JSON or extended XYZ against reference energies/forces.
 
 Reads FitSNAP perconfig.dat (or computes train/test split like FitSNAP with random_sampling=0),
-runs MACE-MP on test configurations, and compares to DFT energies/forces.
+or loads all frames from a ``test.xyz`` written by ``fitsnap_json_to_extxyz.py``.
+Uses either ``mace_mp`` (foundation) or a finetuned checkpoint via ``MACECalculator``.
 """
 
 from __future__ import annotations
@@ -111,6 +112,32 @@ def load_json_as_atoms(json_path: Path):
     return atoms
 
 
+def attach_reference_from_calc(atoms):
+    """
+    Ensure atoms carry energy_truth / forces_truth for evaluate_mace_on_atoms.
+
+    ASE-extxyz frames usually expose reference data via get_potential_energy /
+    get_forces when a SinglePointCalculator is attached.
+    """
+    if "energy_truth" in atoms.info and "forces_truth" in atoms.arrays:
+        return atoms
+    if atoms.calc is not None:
+        atoms.info["energy_truth"] = float(atoms.get_potential_energy())
+        atoms.arrays["forces_truth"] = np.asarray(atoms.get_forces())
+        return atoms
+    energy = atoms.info.get("energy")
+    if energy is None:
+        energy = atoms.info.get("free_energy")
+    forces = atoms.arrays.get("forces")
+    if energy is None or forces is None:
+        raise ValueError(
+            "Atoms have no calculator and no energy/forces arrays for reference labels"
+        )
+    atoms.info["energy_truth"] = float(energy)
+    atoms.arrays["forces_truth"] = np.asarray(forces)
+    return atoms
+
+
 def evaluate_mace_on_atoms(atoms, calc) -> dict:
     """Run MACE calculator on atoms and return metrics."""
     atoms.calc = calc
@@ -144,12 +171,27 @@ def evaluate_mace_on_atoms(atoms, calc) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Evaluate MACE-MP on LiBF4 test set from FitSNAP JSON"
+        description="Evaluate MACE (foundation or finetuned .model) on JSON or extxyz test data"
     )
     parser.add_argument(
         "--perconfig",
         type=Path,
         help="Path to perconfig.dat from FitSNAP (optional). If not provided, computes split directly from JSON files",
+    )
+    parser.add_argument(
+        "--test-extxyz",
+        type=Path,
+        default=None,
+        help=(
+            "If set, evaluate all frames in this extended XYZ (e.g. test.xyz from "
+            "fitsnap_json_to_extxyz). Ignores --json-root unless --perconfig is used."
+        ),
+    )
+    parser.add_argument(
+        "--mace-model",
+        type=Path,
+        default=None,
+        help="Path to a trained MACE .model checkpoint (uses MACECalculator instead of mace_mp)",
     )
     parser.add_argument(
         "--json-root",
@@ -206,8 +248,57 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    # Resolve JSON root
     repo_root = Path(__file__).resolve().parent.parent
+
+    # Optional branch: all frames from extxyz
+    if args.test_extxyz is not None:
+        xyz_path = args.test_extxyz.resolve()
+        if not xyz_path.is_file():
+            print(f"Error: --test-extxyz not found: {xyz_path}", file=sys.stderr)
+            return 1
+
+        if args.mace_model is not None:
+            from mace.calculators import MACECalculator
+
+            calc = MACECalculator(
+                model_paths=str(args.mace_model.resolve()),
+                device=args.device,
+                default_dtype=args.dtype,
+            )
+            model_label = str(args.mace_model.resolve())
+        else:
+            from mace.calculators import mace_mp
+
+            calc = mace_mp(
+                model=args.model, device=args.device, default_dtype=args.dtype
+            )
+            model_label = f"mace_mp:{args.model}"
+
+        from ase.io import read
+
+        frames = read(str(xyz_path), index=":")
+        if not isinstance(frames, list):
+            frames = [frames]
+        if args.max_frames:
+            frames = frames[: args.max_frames]
+
+        results = []
+        for i, atoms in enumerate(frames):
+            atoms = attach_reference_from_calc(atoms)
+            metrics = evaluate_mace_on_atoms(atoms, calc)
+            metrics["filename"] = f"{xyz_path.name}#{i}"
+            metrics["filepath"] = str(xyz_path)
+            results.append(metrics)
+
+        _print_and_write_summary(
+            results,
+            args,
+            summary_title=f"extxyz: {xyz_path.name}",
+            model_label=model_label,
+        )
+        return 0
+
+    # Resolve JSON root
     if args.json_root is None:
         json_root = repo_root / "examples" / "lifbf4" / "NEWJSON"
     else:
@@ -258,13 +349,27 @@ def main() -> int:
         test_files = test_files[: args.max_frames]
         print(f"Limited to {len(test_files)} test frames")
 
-    # Initialize MACE
-    print(f"Loading MACE-MP model: {args.model} (device={args.device}, dtype={args.dtype})")
-    from mace.calculators import mace_mp
+    if args.mace_model is not None:
+        print(
+            f"Loading MACE checkpoint: {args.mace_model} (device={args.device}, dtype={args.dtype})"
+        )
+        from mace.calculators import MACECalculator
 
-    calc = mace_mp(model=args.model, device=args.device, default_dtype=args.dtype)
+        calc = MACECalculator(
+            model_paths=str(args.mace_model.resolve()),
+            device=args.device,
+            default_dtype=args.dtype,
+        )
+        model_label = str(args.mace_model)
+    else:
+        print(
+            f"Loading MACE-MP model: {args.model} (device={args.device}, dtype={args.dtype})"
+        )
+        from mace.calculators import mace_mp
 
-    # Process test files
+        calc = mace_mp(model=args.model, device=args.device, default_dtype=args.dtype)
+        model_label = f"mace_mp:{args.model}"
+
     print(f"Processing {len(test_files)} test configurations...")
     results = []
 
@@ -282,11 +387,20 @@ def main() -> int:
             print(f"Error processing {json_path}: {e}", file=sys.stderr)
             continue
 
+    _print_and_write_summary(
+        results,
+        args,
+        summary_title="JSON test split",
+        model_label=model_label,
+    )
+    return 0
+
+
+def _print_and_write_summary(results, args, *, summary_title: str, model_label: str) -> None:
     if not results:
         print("Error: No successful evaluations", file=sys.stderr)
-        return 1
+        raise SystemExit(1)
 
-    # Compute aggregate statistics
     dE_values = [r["dE"] for r in results]
     dE_per_atom_values = [r["dE_per_atom"] for r in results]
     force_rmse_values = [r["force_rmse"] for r in results]
@@ -307,11 +421,10 @@ def main() -> int:
         "force_max_std": np.std(force_max_values),
     }
 
-    # Print summary
     print("\n" + "=" * 60)
-    print("MACE-MP Evaluation Summary (LiBF4 Test Set)")
+    print(f"MACE Evaluation Summary ({summary_title})")
     print("=" * 60)
-    print(f"Model: {args.model}, Device: {args.device}, Dtype: {args.dtype}")
+    print(f"Model: {model_label}, Device: {args.device}, Dtype: {args.dtype}")
     print(f"Test configurations: {summary['n_configs']}")
     print()
     print("Energy Errors (eV):")
@@ -331,7 +444,6 @@ def main() -> int:
     print(f"  Max |ΔF| (std):           {summary['force_max_std']:.6f}")
     print("=" * 60)
 
-    # Write CSV
     args.out_csv.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out_csv, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
@@ -353,7 +465,6 @@ def main() -> int:
             writer.writerow({k: r[k] for k in writer.fieldnames})
 
     print(f"\nResults written to: {args.out_csv}")
-    return 0
 
 
 if __name__ == "__main__":
