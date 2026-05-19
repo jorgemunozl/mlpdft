@@ -21,11 +21,11 @@ from typing import List
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.io import write
 
-_SCRIPTS = Path(__file__).resolve().parent
-if str(_SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(_SCRIPTS))
+_SRC = Path(__file__).resolve().parent.parent / "src"
+if str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
 
-from mace_eval_fitsnap_test import compute_fitsnap_split, load_json_as_atoms
+from utils import compute_fitsnap_split, load_json_as_atoms
 
 
 def _write_xyz(path: Path, frames: list) -> None:
