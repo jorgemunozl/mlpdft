@@ -4,35 +4,24 @@ from config import MaceConfig
 from pathlib import Path
 from typing import List
 
-from utils import (
-    attach_reference_from_calc,
-    compute_fitsnap_split,
-    evaluate_mace_on_atoms,
-    load_json_as_atoms,
-    parse_perconfig,
-    _print_and_write_summary,
-)
 import torch
 import torch.nn as nn
+from mace.calculators import mace_mp
+from ase.atoms import Atoms
 
 class MACE(nn.Module):
     def __init__(self, config: MaceConfig):
         self.config = config
 
-    def build_model(self):
-        model = torch.load(f=self.config.model, map_location=self.config.device)
-        if self.config.enable_cueq:
-            print("Converting models to CuEq for acceleration")
-            model = run_e3nn_to_cueq(model, device=self.config.device)
-        model = model.to(
-            self.config.device
-        )
-        return model
+    def build_calculator(self):
+        return mace_mp(model=self.config.model,
+                        device=self.config.device,
+                        default_dtype=self.config.dtype
+            )
 
-    def
+    def evaluate(self, atoms: Atoms, calculator) -> dict:
 
-    def evaluate(self, atoms: Atoms) -> dict:
-        return evaluate_mace_on_atoms(atoms, self.calc)
+
 
     def print_summary(self, results: list, config: MaceEvalConfig, summary_title: str, model_label: str) -> None:
         _print_and_write_summary(results, config, summary_title, model_label)
