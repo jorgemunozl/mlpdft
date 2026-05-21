@@ -16,7 +16,7 @@ from ase.calculators.singlepoint import SinglePointCalculator
 from ase.io import read, write
 
 from config import QEToExtXYZConfig
-from constants import LIF64_DIR
+from constants import LIF_KJPAW_GROUP
 
 
 def load_frames_with_ase(cfg: QEToExtXYZConfig) -> list[Atoms]:
@@ -110,7 +110,12 @@ def convert_qe_out_to_extxyz(cfg: QEToExtXYZConfig) -> int:
 
 
 def main() -> int:
-    return convert_qe_out_to_extxyz(QEToExtXYZConfig())
+    config = QEToExtXYZConfig(
+        group=LIF_KJPAW_GROUP,
+        frame_stride=2,
+        max_frames=10,
+    )
+    return convert_qe_out_to_extxyz(config)
 
 
 if __name__ == "__main__":

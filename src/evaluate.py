@@ -7,6 +7,7 @@ from mace import data
 from mace.tools import torch_geometric, torch_tools, utils
 
 from config import MaceConfig
+from constants import LIF64_GROUP, MACE_MP_0B3_MODEL
 from mace_scrap import MACE_SCRAP
 
 
@@ -37,7 +38,6 @@ def _cast_batch_to_dtype(
 
 
 def eval(config: MaceConfig) -> None:
-
     torch_tools.set_default_dtype(config.dtype)
     scrap = MACE_SCRAP(config=config)
     model = scrap.build_model()
@@ -48,7 +48,7 @@ def eval(config: MaceConfig) -> None:
     model_dtype = _get_model_float_dtype(model)
 
     # Load data and prepare input
-    atoms_list = ase.io.read(config.extyz_path, index=":")
+    atoms_list = ase.io.read(config.data_out_path, index=":")
 
     head_name = "Default"
     configs = [
@@ -74,6 +74,7 @@ def eval(config: MaceConfig) -> None:
     # Collect data
     energies_list = []
     forces_collection = []
+    node_energies_list = []
 
     for batch in data_loader:
         batch = batch.to(device)
@@ -88,24 +89,45 @@ def eval(config: MaceConfig) -> None:
         )
         forces_collection.append(forces[:-1])  # drop last as it's empty
 
+        if config.node_energy:
+            node_energies_list.append(
+                np.split(
+                    torch_tools.to_numpy(output["node_energy"]),
+                    indices_or_sections=batch.ptr[1:],
+                    axis=0,
+                )[:-1]  # drop last as its empty
+            )
+
     energies = np.concatenate(energies_list, axis=0)
     forces_list = [
         forces for forces_list in forces_collection for forces in forces_list
     ]
+
+    if config.node_energy:
+        node_energies = np.concatenate(node_energies_list, axis=0)
+        assert len(atoms_list) == node_energies.shape[0]
+
     assert len(atoms_list) == len(energies) == len(forces_list)
 
     # Store data in atoms objects
-    for atoms, energy, forces in zip(atoms_list, energies, forces_list):
+    for i, (atoms, energy, forces) in enumerate(zip(atoms_list, energies, forces_list)):
         atoms.calc = None  # crucial
         atoms.info[config.info_prefix + "energy"] = energy
         atoms.arrays[config.info_prefix + "forces"] = forces
+        if config.node_energy:
+            atoms.arrays[config.info_prefix + "node_energy"] = node_energies[i]
 
     # Write atoms to output path
-    ase.io.write(str(config.output), images=atoms_list, format="extxyz")
+    ase.io.write(str(config.model_output), images=atoms_list, format="extxyz")
 
 
 def main() -> None:
-    config = MaceConfig()
+    config = MaceConfig(
+        model_path=MACE_MP_0B3_MODEL,
+        group=LIF64_GROUP,
+        frame_stride=10,
+        max_frames=20,
+    )
     eval(config)
 
 

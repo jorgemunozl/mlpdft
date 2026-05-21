@@ -1,16 +1,12 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field, fields
 from pathlib import Path
+from re import M
 from typing import Literal, Optional
 
-from constants import (
-    LIF64_DIR,
-    LIF64_GROUP,
-    PATH_MODEL,
-    PREDICTION_DIR,
-    XYZ_DIR,
-)
+from constants import DATA_DIR, LIF64_GROUP, MACE_MP_0B3_MODEL, PREDICTION_DIR, XYZ_DIR
 
 
 @dataclass
@@ -19,19 +15,53 @@ class MaceConfig:
     Settings for a MACE model evaluation.
     """
 
-    model_path: str = field(
-        default=PATH_MODEL,
+    group: str = field(
+        default=LIF64_GROUP,
+        metadata={"description": "Group name"},
+    )
+
+    model_path: str | Path = field(
+        default=MACE_MP_0B3_MODEL,
         metadata={"description": "MACE model path"},
     )
 
-    extyz_path: str = field(
-        default=str(LIF64_DIR / XYZ_DIR / "LIF64_10_20.extxyz"),
-        metadata={"description": "Path to test extxyz file"},
+    data_in_path: Path = field(
+        default=Path("LiF64_kjpaw.out"),
+        metadata={"description": "Path to Quantum ESPRESSO .out file"},
     )
 
-    output: Path = field(
+    data_out_path: Path = field(
+        default=Path("out.extxyz"),
+        metadata={"description": "Output multi-frame extxyz path"},
+    )
+
+    model_output: Path = field(
         default=Path(PREDICTION_DIR / "pred_LIF64_10_20.extxyz"),
         metadata={"description": "Output path"},
+    )
+
+    frame_stride: int = field(
+        default=10,
+        metadata={"description": "Keep one frame every N parsed frames (>=1)"},
+    )
+
+    max_frames: int | None = field(
+        default=20,
+        metadata={"description": "Optional cap on written frames after striding"},
+    )
+
+    include_stress: bool = field(
+        default=False,
+        metadata={
+            "description": "If true, copy QE stress labels into output frames when available"
+        },
+    )
+
+    config_type: str = field(
+        default="Default",
+        metadata={
+            "description": "Value stored in Atoms.info['config_type'] for each frame"
+        },
     )
 
     perconfig: Optional[Path] = field(
@@ -52,69 +82,50 @@ class MaceConfig:
         default=False,
         metadata={"description": "Compute BEC"},
     )
+
+    node_energy: bool = field(
+        default=True,
+        metadata={"description": "Compute node energy"},
+    )
+
     device: Literal["cpu", "cuda"] = "cpu"
 
     dtype: Literal["float32", "float64"] = "float32"
 
     info_prefix: str = field(
-        default="",
-        metadata={"description": ""},
-    )
-
-
-@dataclass
-class QEToExtXYZConfig:
-    """Configuration for converting a QE output file into extxyz."""
-
-    in_path: Path = field(
-        default=Path(LIF64_DIR / "LiF64_kjpaw.out"),
-        metadata={"description": "Path to Quantum ESPRESSO .out file"},
-    )
-    out_path: Path = field(
-        default=Path("out.extxyz"),
-        metadata={"description": "Output multi-frame extxyz path"},
-    )
-    frame_stride: int = field(
-        default=10,
-        metadata={"description": "Keep one frame every N parsed frames (>=1)"},
-    )
-    group: str = field(
-        default=LIF64_GROUP,
-        metadata={"description": "Group name for the output frames"},
-    )
-    max_frames: int | None = field(
-        default=20,
-        metadata={"description": "Optional cap on written frames after striding"},
-    )
-    include_stress: bool = field(
-        default=False,
-        metadata={
-            "description": "If true, copy QE stress labels into output frames when available"
-        },
-    )
-    config_type: str = field(
-        default="Default",
-        metadata={
-            "description": "Value stored in Atoms.info['config_type'] for each frame"
-        },
+        default=" ",
+        metadata={"description": "Prefix for info fields in output atoms objects"},
     )
 
     def __post_init__(self):
-        self.set_out_path()
+        self.solve_paths()
+
+    def solve_paths(self):
+        data_in_path = DATA_DIR / self.group / Path(str(self.group) + ".out")
+        data_out_path = (
+            DATA_DIR
+            / Path(self.group)
+            / XYZ_DIR
+            / f"{self.group}_{self.frame_stride}_{self.max_frames}.extxyz"
+        )
+        self.data_in_path = data_in_path
+        self.data_out_path = data_out_path
+
+        model_output_path = (
+            PREDICTION_DIR
+            / self.group
+            / Path(
+                str(self.group + f"_{self.frame_stride}_{self.max_frames}") + ".extxyz"
+            )
+        )
+        os.makedirs(model_output_path.parent, exist_ok=True)
+        self.model_output = model_output_path
+
+    def validate(self) -> None:
+        if self.frame_stride <= 0:
+            raise ValueError("frame_stride must be >= 1")
 
     @classmethod
     def describe_fields(cls) -> dict[str, str]:
         """Return a field->description map for documentation or logging."""
         return {f.name: f.metadata.get("description", "") for f in fields(cls)}
-
-    def set_out_path(self):
-        path = (
-            LIF64_DIR
-            / XYZ_DIR
-            / f"{self.group.split('_')[0]}_{self.frame_stride}_{self.max_frames}.extxyz"
-        )
-        self.out_path = path
-
-    def validate(self) -> None:
-        if self.frame_stride <= 0:
-            raise ValueError("frame_stride must be >= 1")

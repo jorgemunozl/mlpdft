@@ -23,5 +23,6 @@ class MACE_SCRAP(nn.Module):
         )
 
     def build_model(self):
-        model = torch.load(self.config.model_path, map_location=self.config.device)
+        model_path = Path(self.config.model_path).expanduser()
+        model = torch.load(model_path, map_location=self.config.device)
         return model
