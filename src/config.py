@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+from constants import (
+    LIF64_DIR,
+    LIF64_GROUP,
+    PATH_MODEL,
+    PREDICTION_DIR,
+    XYZ_DIR,
+)
 
 
 @dataclass
@@ -13,32 +19,102 @@ class MaceConfig:
     Settings for a MACE model evaluation.
     """
 
-    model: str = "small"
-    perconfig: Optional[Path] = None
-    test_extxyz: Optional[Path] = None
-    mace_model: Optional[Path] = None
+    model_path: str = field(
+        default=PATH_MODEL,
+        metadata={"description": "MACE model path"},
+    )
 
-    group: str = "DEFAULT"
-    training_frac: float = 0.8
-    testing_frac: float = 0.2
-    device: Device = "cpu"
+    extyz_path: str = field(
+        default=str(LIF64_DIR / XYZ_DIR / "LIF64_10_20.extxyz"),
+        metadata={"description": "Path to test extxyz file"},
+    )
 
-    dtype: Dtype = "float32"
-    out_csv: Path = field(default_factory=lambda: Path("outputs/mace_eval_results.csv"))
-    max_frames: Optional[int] = None
+    output: Path = field(
+        default=Path(PREDICTION_DIR / "pred_LIF64_10_20.extxyz"),
+        metadata={"description": "Output path"},
+    )
 
-    def __post_init__(self) -> None:
-        if self.perconfig is not None:
-            self.perconfig = Path(self.perconfig)
-        if self.test_extxyz is not None:
-            self.test_extxyz = Path(self.test_extxyz)
-        if self.mace_model is not None:
-            self.mace_model = Path(self.mace_model)
-        if self.json_root is not None:
-            self.json_root = Path(self.json_root)
-        self.out_csv = Path(self.out_csv)
+    perconfig: Optional[Path] = field(
+        default=None, metadata={"description": "Path to per-configuration file"}
+    )
 
-    def resolve_json_root(self) -> Path:
-        if self.json_root is not None:
-            return self.json_root
-        return _REPO_ROOT
+    batch_size: int = field(
+        default=1,
+        metadata={"description": "Batch size for evaluation"},
+    )
+
+    compute_stress: bool = field(
+        default=False,
+        metadata={"description": "Compute stress"},
+    )
+
+    compute_bec: bool = field(
+        default=False,
+        metadata={"description": "Compute BEC"},
+    )
+    device: Literal["cpu", "cuda"] = "cpu"
+
+    dtype: Literal["float32", "float64"] = "float32"
+
+    info_prefix: str = field(
+        default="",
+        metadata={"description": ""},
+    )
+
+
+@dataclass
+class QEToExtXYZConfig:
+    """Configuration for converting a QE output file into extxyz."""
+
+    in_path: Path = field(
+        default=Path(LIF64_DIR / "LiF64_kjpaw.out"),
+        metadata={"description": "Path to Quantum ESPRESSO .out file"},
+    )
+    out_path: Path = field(
+        default=Path("out.extxyz"),
+        metadata={"description": "Output multi-frame extxyz path"},
+    )
+    frame_stride: int = field(
+        default=10,
+        metadata={"description": "Keep one frame every N parsed frames (>=1)"},
+    )
+    group: str = field(
+        default=LIF64_GROUP,
+        metadata={"description": "Group name for the output frames"},
+    )
+    max_frames: int | None = field(
+        default=20,
+        metadata={"description": "Optional cap on written frames after striding"},
+    )
+    include_stress: bool = field(
+        default=False,
+        metadata={
+            "description": "If true, copy QE stress labels into output frames when available"
+        },
+    )
+    config_type: str = field(
+        default="Default",
+        metadata={
+            "description": "Value stored in Atoms.info['config_type'] for each frame"
+        },
+    )
+
+    def __post_init__(self):
+        self.set_out_path()
+
+    @classmethod
+    def describe_fields(cls) -> dict[str, str]:
+        """Return a field->description map for documentation or logging."""
+        return {f.name: f.metadata.get("description", "") for f in fields(cls)}
+
+    def set_out_path(self):
+        path = (
+            LIF64_DIR
+            / XYZ_DIR
+            / f"{self.group.split('_')[0]}_{self.frame_stride}_{self.max_frames}.extxyz"
+        )
+        self.out_path = path
+
+    def validate(self) -> None:
+        if self.frame_stride <= 0:
+            raise ValueError("frame_stride must be >= 1")

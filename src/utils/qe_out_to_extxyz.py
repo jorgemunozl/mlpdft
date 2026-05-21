@@ -7,7 +7,6 @@ Edit `DEFAULT_CONFIG` below and run the script.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Any
 
@@ -16,51 +15,12 @@ from ase import Atoms
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.io import read, write
 
-
-@dataclass(frozen=True)
-class QEToExtXYZConfig:
-    """Configuration for converting a QE output file into extxyz."""
-    qe_out: Path = field(
-        default=Path("qe.out"),
-        metadata={"description": "Path to Quantum ESPRESSO pw.x .out file"},
-    )
-    out: Path = field(
-        default=Path("out.extxyz"),
-        metadata={"description": "Output multi-frame extxyz path"},
-    )
-    frame_stride: int = field(
-        default=1,
-        metadata={"description": "Keep one frame every N parsed frames (>=1)"},
-    )
-    max_frames: int | None = field(
-        default=None,
-        metadata={"description": "Optional cap on written frames after striding"},
-    )
-    include_stress: bool = field(
-        default=False,
-        metadata={
-            "description": "If true, copy QE stress labels into output frames when available"
-        },
-    )
-    config_type: str = field(
-        default="Default",
-        metadata={
-            "description": "Value stored in Atoms.info['config_type'] for each frame"
-        },
-    )
-
-    @classmethod
-    def describe_fields(cls) -> dict[str, str]:
-        """Return a field->description map for documentation or logging."""
-        return {f.name: f.metadata.get("description", "") for f in fields(cls)}
-
-    def validate(self) -> None:
-        if self.frame_stride <= 0:
-            raise ValueError("frame_stride must be >= 1")
+from config import QEToExtXYZConfig
+from constants import LIF64_DIR
 
 
 def load_frames_with_ase(cfg: QEToExtXYZConfig) -> list[Atoms]:
-    raw = read(str(cfg.qe_out), format="espresso-out", index=":")
+    raw = read(str(cfg.in_path), format="espresso-out", index=":")
 
     frames = [raw] if isinstance(raw, Atoms) else list(raw)
 
@@ -139,13 +99,13 @@ def convert_qe_out_to_extxyz(cfg: QEToExtXYZConfig) -> int:
         print("Error: no labeled frames found in QE output")
         return 1
 
-    write_extxyz(cfg.out, frames)
+    write_extxyz(cfg.out_path, frames)
 
     print("Field descriptions:")
     for name, desc in QEToExtXYZConfig.describe_fields().items():
         print(f"- {name}: {desc}")
     print(f"Parsed frames: {len(frames)}")
-    print(f"Wrote extxyz: {cfg.out}")
+    print(f"Wrote extxyz: {cfg.out_path}")
     return 0
 
 
