@@ -1,20 +1,22 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
+
 @dataclass
 class MaceConfig:
     """
     Settings for a MACE model evaluation.
     """
+
     model: str = "small"
     perconfig: Optional[Path] = None
     test_extxyz: Optional[Path] = None
     mace_model: Optional[Path] = None
-    json_root: Optional[Path] = None
 
     group: str = "DEFAULT"
     training_frac: float = 0.8
@@ -35,8 +37,6 @@ class MaceConfig:
         if self.json_root is not None:
             self.json_root = Path(self.json_root)
         self.out_csv = Path(self.out_csv)
-
-   
 
     def resolve_json_root(self) -> Path:
         if self.json_root is not None:

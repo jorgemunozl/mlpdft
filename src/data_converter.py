@@ -1,10 +1,38 @@
 """
-Utils to read from generated dataset
+Utils to read from generated dataset and transform
+it to xyz files expected by mace
+Mace Internally uses its own data loader
 """
-
-from pathlib import Path
-
+from dataclasses import dataclass
+from annotation import Int
 from ase import Atoms
+from utils import parse_perconfig
+
+@dataclass(frozen=True)
+class Config_Row:
+    """
+    ConfigRow represents a single row in the file perconfig.dat
+    """
+    filename: str
+    group: str
+    natoms: in
+    energy_truth: float
+    energy_pred: Optional[float]
+    testing_bool: bool
+
+
+@dataclass
+class Data_Config:
+    json_root: Optional[Path] = None
+    samples_num: Int = 2
+    per_config: bool = False
+
+
+class Data_Loader:
+    def __init__(self, config: Data_config):
+        self.config = config
+        self.atoms_list = []
+        self.per_config = parse_perconfig()
 
 
 def load_json_as_atoms(json_path: Path):
