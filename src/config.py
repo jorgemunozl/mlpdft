@@ -3,10 +3,16 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field, fields
 from pathlib import Path
-from re import M
 from typing import Literal, Optional
 
-from constants import DATA_DIR, LIF64_GROUP, MACE_MP_0B3_MODEL, PREDICTION_DIR, XYZ_DIR
+from constants import (
+    DATA_DIR,
+    LIF64_GROUP,
+    MODEL_REGISTRY,
+    PREDICTION_DIR,
+    XYZ_DIR,
+    ModelSpec,
+)
 
 
 @dataclass
@@ -20,9 +26,26 @@ class MaceConfig:
         metadata={"description": "Group name"},
     )
 
-    model_path: str | Path = field(
-        default=MACE_MP_0B3_MODEL,
-        metadata={"description": "MACE model path"},
+    model_key: Literal["0b3-medium", "0-small"] = field(
+        default="0b3-medium",
+        metadata={"description": "MACE model key"},
+    )
+
+    model: ModelSpec = field(
+        init=False,
+        metadata={"description": "Resolved MACE model specification"},
+    )
+
+    energy_offset_per_atom: float | None = field(
+        default=None,
+        metadata={
+            "description": "Optional energy shift (eV/atom). If None, use model default."
+        },
+    )
+
+    resolved_energy_offset_per_atom: float = field(
+        init=False,
+        metadata={"description": "Final energy shift applied at inference (eV/atom)"},
     )
 
     data_in_path: Path = field(
@@ -98,6 +121,12 @@ class MaceConfig:
     )
 
     def __post_init__(self):
+        self.model = MODEL_REGISTRY[self.model_key]
+        self.resolved_energy_offset_per_atom = (
+            self.model.energy_offset_per_atom
+            if self.energy_offset_per_atom is None
+            else self.energy_offset_per_atom
+        )
         self.solve_paths()
 
     def solve_paths(self):

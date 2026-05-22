@@ -7,7 +7,7 @@ from mace import data
 from mace.tools import torch_geometric, torch_tools, utils
 
 from config import MaceConfig
-from constants import LIF64_GROUP, MACE_MP_0B3_MODEL
+from constants import LIF64_GROUP
 from mace_scrap import MACE_SCRAP
 
 
@@ -112,8 +112,10 @@ def eval(config: MaceConfig) -> None:
     # Store data in atoms objects
     for i, (atoms, energy, forces) in enumerate(zip(atoms_list, energies, forces_list)):
         atoms.calc = None  # crucial
-        atoms.info[config.info_prefix + "energy"] = energy
+        total_energy_shift = config.resolved_energy_offset_per_atom * len(atoms)
+        atoms.info[config.info_prefix + "energy"] = energy + total_energy_shift
         atoms.arrays[config.info_prefix + "forces"] = forces
+
         if config.node_energy:
             atoms.arrays[config.info_prefix + "node_energy"] = node_energies[i]
 
@@ -123,11 +125,12 @@ def eval(config: MaceConfig) -> None:
 
 def main() -> None:
     config = MaceConfig(
-        model_path=MACE_MP_0B3_MODEL,
+        model_key="0b3-medium",
         group=LIF64_GROUP,
         frame_stride=10,
         max_frames=20,
     )
+
     eval(config)
 
 
