@@ -38,4 +38,10 @@ MODEL_REGISTRY = {
         name="mace-mp-0-small",
         energy_offset_per_atom=0.0,
     ),
+    "0-omat-medium": ModelSpec(
+        key="0-omat-medium",
+        path=CACHE_DIR / "mace-omat-0-medium.model",
+        name="mace-mp-0-omat-medium",
+        energy_offset_per_atom=0.0,
+    ),
 }

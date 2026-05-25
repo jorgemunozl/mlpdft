@@ -7,7 +7,7 @@ from mace import data
 from mace.tools import torch_geometric, torch_tools, utils
 
 from config import MaceConfig
-from constants import LIF64_GROUP
+from constants import LIF64_GROUP, LIF_KJPAW_GROUP
 from mace_scrap import MACE_SCRAP
 
 
@@ -125,8 +125,8 @@ def eval(config: MaceConfig) -> None:
 
 def main() -> None:
     config = MaceConfig(
-        model_key="0b3-medium",
-        group=LIF64_GROUP,
+        model_key="0-omat-medium",
+        group=LIF_KJPAW_GROUP,
         frame_stride=10,
         max_frames=20,
     )

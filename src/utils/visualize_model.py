@@ -42,7 +42,6 @@ def visualize_model(config: MaceConfig):
     # Count the number of parameters
     write_model_summary(model, open(UTILS_DIR / f"{config.model.name}.txt", "w"))
 
-
 if __name__ == "__main__":
-    config = MaceConfig(model_key="0-small")
+    config = MaceConfig(model_key="0-omat-medium")
     visualize_model(config)

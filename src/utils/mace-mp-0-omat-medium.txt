@@ -1,0 +1,226 @@
+ScaleShiftMACE(
+  (node_embedding): LinearNodeEmbeddingBlock(
+    (linear): Linear(89x0e -> 128x0e | 11392 weights)
+  )
+  (radial_embedding): RadialEmbeddingBlock(
+    (bessel_fn): BesselBasis(r_max=6.0, num_basis=10, trainable=False)
+    (distance_transform): AgnesiTransform(a=1.0805, q=0.9183, p=4.5791)
+    (cutoff_fn): PolynomialCutoff(p=5.0, r_max=6.0)
+  )
+  (pair_repulsion_fn): ZBLBasis(c=tensor([0.1818, 0.5099, 0.2802, 0.0282], dtype=torch.float64))
+  (spherical_harmonics): SphericalHarmonics()
+  (atomic_energies_fn): AtomicEnergiesBlock(energies=[[-1.1173, 0.0010, -0.2975, -0.0178, -0.2689, -1.2617, -3.1244, -1.5484, -0.5188, -0.0124, -0.2288, -0.0095, -0.2163, -0.8264, -1.8882, -0.8916, -0.2583, -0.0493, -0.2270, -0.0928, -2.1140, -2.5005, -3.7048, -5.6026, -5.3254, -3.5200, -1.9356, -0.9352, -0.6003, -0.1651, -0.3299, -0.7797, -1.6837, -0.7694, -0.2221, -0.0336, -0.1882, -0.0683, -2.1708, -2.2858, -3.1343, -4.6021, -3.4520, -2.3807, -1.4686, -1.4773, -0.3395, -0.1684, -0.3547, -0.8364, -1.4110, -0.6574, -0.1896, -0.0086, -0.1377, -0.0346, -0.4558, -1.3309, -0.2967, -0.3039, -0.3090, -0.2547, -8.3800, -10.3890, -0.3060, -0.3068, -0.3087, -0.3161, -0.2519, -0.0643, -0.3200, -3.5277, -3.5449, -4.6566, -4.7011, -2.8826, -1.4678, -0.5027, -0.2880, -0.1245, -0.3174, -0.7764, -1.3263, -0.2683, -0.9082, -2.4765, -4.9044, -7.6338, -10.7724]])
+  (interactions): ModuleList(
+    (0): RealAgnosticDensityInteractionBlock(
+      (linear_up): Linear(128x0e -> 128x0e | 16384 weights)
+      (conv_tp): TensorProduct(128x0e x 1x0e+1x1o+1x2e+1x3o -> 128x0e+128x1o+128x2e+128x3o | 512 paths | 512 weights)
+      (conv_tp_weights): FullyConnectedNet[10, 64, 64, 64, 512]
+      (linear): Linear(128x0e+128x1o+128x2e+128x3o -> 128x0e+128x1o+128x2e+128x3o | 65536 weights)
+      (skip_tp): FullyConnectedTensorProduct(128x0e+128x1o+128x2e+128x3o x 89x0e -> 128x0e+128x1o+128x2e+128x3o | 5832704 paths | 5832704 weights)
+      (reshape): reshape_irreps()
+      (density_fn): FullyConnectedNet[10, 1]
+    )
+    (1): RealAgnosticDensityResidualInteractionBlock(
+      (linear_up): Linear(128x0e+128x1o -> 128x0e+128x1o | 32768 weights)
+      (conv_tp): TensorProduct(128x0e+128x1o x 1x0e+1x1o+1x2e+1x3o -> 256x0e+384x1o+384x2e+256x3o | 1280 paths | 1280 weights)
+      (conv_tp_weights): FullyConnectedNet[10, 64, 64, 64, 1280]
+      (linear): Linear(256x0e+384x1o+384x2e+256x3o -> 128x0e+128x1o+128x2e+128x3o | 163840 weights)
+      (skip_tp): FullyConnectedTensorProduct(128x0e+128x1o x 89x0e -> 128x0e | 1458176 paths | 1458176 weights)
+      (reshape): reshape_irreps()
+      (density_fn): FullyConnectedNet[10, 1]
+    )
+  )
+  (products): ModuleList(
+    (0): EquivariantProductBasisBlock(
+      (symmetric_contractions): SymmetricContraction(
+        (contractions): ModuleList(
+          (0): Contraction(
+            (contractions_weighting): ModuleList(
+              (0-1): 2 x GraphModule()
+            )
+            (contractions_features): ModuleList(
+              (0-1): 2 x GraphModule()
+            )
+            (weights): ParameterList(
+                (0): Parameter containing: [torch.float64 of size 89x4x128]
+                (1): Parameter containing: [torch.float64 of size 89x1x128]
+            )
+            (graph_opt_main): GraphModule()
+          )
+          (1): Contraction(
+            (contractions_weighting): ModuleList(
+              (0-1): 2 x GraphModule()
+            )
+            (contractions_features): ModuleList(
+              (0-1): 2 x GraphModule()
+            )
+            (weights): ParameterList(
+                (0): Parameter containing: [torch.float64 of size 89x6x128]
+                (1): Parameter containing: [torch.float64 of size 89x1x128]
+            )
+            (graph_opt_main): GraphModule()
+          )
+        )
+      )
+      (linear): Linear(128x0e+128x1o -> 128x0e+128x1o | 32768 weights)
+    )
+    (1): EquivariantProductBasisBlock(
+      (symmetric_contractions): SymmetricContraction(
+        (contractions): ModuleList(
+          (0): Contraction(
+            (contractions_weighting): ModuleList(
+              (0-1): 2 x GraphModule()
+            )
+            (contractions_features): ModuleList(
+              (0-1): 2 x GraphModule()
+            )
+            (weights): ParameterList(
+                (0): Parameter containing: [torch.float64 of size 89x4x128]
+                (1): Parameter containing: [torch.float64 of size 89x1x128]
+            )
+            (graph_opt_main): GraphModule()
+          )
+        )
+      )
+      (linear): Linear(128x0e -> 128x0e | 16384 weights)
+    )
+  )
+  (readouts): ModuleList(
+    (0): LinearReadoutBlock(
+      (linear): Linear(128x0e+128x1o -> 1x0e | 128 weights)
+    )
+    (1): NonLinearReadoutBlock(
+      (linear_1): Linear(128x0e -> 16x0e | 2048 weights)
+      (non_linearity): Activation [x] (16x0e -> 16x0e)
+      (linear_2): Linear(16x0e -> 1x0e | 16 weights)
+    )
+  )
+  (scale_shift): ScaleShiftBlock(scale=0.7736, shift=0.0000)
+)
+Parameters:
+node_embedding.linear.weight: torch.Size([11392])
+interactions.0.linear_up.weight: torch.Size([16384])
+interactions.0.conv_tp_weights.layer0.weight: torch.Size([10, 64])
+interactions.0.conv_tp_weights.layer1.weight: torch.Size([64, 64])
+interactions.0.conv_tp_weights.layer2.weight: torch.Size([64, 64])
+interactions.0.conv_tp_weights.layer3.weight: torch.Size([64, 512])
+interactions.0.linear.weight: torch.Size([65536])
+interactions.0.skip_tp.weight: torch.Size([5832704])
+interactions.0.density_fn.layer0.weight: torch.Size([10, 1])
+interactions.1.linear_up.weight: torch.Size([32768])
+interactions.1.conv_tp_weights.layer0.weight: torch.Size([10, 64])
+interactions.1.conv_tp_weights.layer1.weight: torch.Size([64, 64])
+interactions.1.conv_tp_weights.layer2.weight: torch.Size([64, 64])
+interactions.1.conv_tp_weights.layer3.weight: torch.Size([64, 1280])
+interactions.1.linear.weight: torch.Size([163840])
+interactions.1.skip_tp.weight: torch.Size([1458176])
+interactions.1.density_fn.layer0.weight: torch.Size([10, 1])
+products.0.symmetric_contractions.contractions.0.weights_max: torch.Size([89, 23, 128])
+products.0.symmetric_contractions.contractions.0.weights.0: torch.Size([89, 4, 128])
+products.0.symmetric_contractions.contractions.0.weights.1: torch.Size([89, 1, 128])
+products.0.symmetric_contractions.contractions.1.weights_max: torch.Size([89, 51, 128])
+products.0.symmetric_contractions.contractions.1.weights.0: torch.Size([89, 6, 128])
+products.0.symmetric_contractions.contractions.1.weights.1: torch.Size([89, 1, 128])
+products.0.linear.weight: torch.Size([32768])
+products.1.symmetric_contractions.contractions.0.weights_max: torch.Size([89, 23, 128])
+products.1.symmetric_contractions.contractions.0.weights.0: torch.Size([89, 4, 128])
+products.1.symmetric_contractions.contractions.0.weights.1: torch.Size([89, 1, 128])
+products.1.linear.weight: torch.Size([16384])
+readouts.0.linear.weight: torch.Size([128])
+readouts.1.linear_1.weight: torch.Size([2048])
+readouts.1.linear_2.weight: torch.Size([16])
+Number of parameters: 9063204
+
+Energy reference terms:
+scale_shift.scale: 0.7735790334431056
+scale_shift.shift: 0.0
+atomic_energies_fn.atomic_energies (E0 table):
+  Z=  1: E0=-1.11734008 eV
+  Z=  2: E0= 0.00096759 eV
+  Z=  3: E0=-0.29754725 eV
+  Z=  4: E0=-0.01781697 eV
+  Z=  5: E0=-0.26885011 eV
+  Z=  6: E0=-1.26173507 eV
+  Z=  7: E0=-3.12438806 eV
+  Z=  8: E0=-1.54838784 eV
+  Z=  9: E0=-0.51882044 eV
+  Z= 10: E0=-0.01241601 eV
+  Z= 11: E0=-0.22883163 eV
+  Z= 12: E0=-0.00951015 eV
+  Z= 13: E0=-0.21630193 eV
+  Z= 14: E0=-0.82639030 eV
+  Z= 15: E0=-1.88816619 eV
+  Z= 16: E0=-0.89160769 eV
+  Z= 17: E0=-0.25828273 eV
+  Z= 18: E0=-0.04925973 eV
+  Z= 19: E0=-0.22697913 eV
+  Z= 20: E0=-0.09277950 eV
+  Z= 21: E0=-2.11396364 eV
+  Z= 22: E0=-2.50054871 eV
+  Z= 23: E0=-3.70477179 eV
+  Z= 24: E0=-5.60261985 eV
+  Z= 25: E0=-5.32541181 eV
+  Z= 26: E0=-3.52004933 eV
+  Z= 27: E0=-1.93555024 eV
+  Z= 28: E0=-0.93519690 eV
+  Z= 29: E0=-0.60025846 eV
+  Z= 30: E0=-0.16513320 eV
+  Z= 31: E0=-0.32990651 eV
+  Z= 32: E0=-0.77971828 eV
+  Z= 33: E0=-1.68367812 eV
+  Z= 34: E0=-0.76941032 eV
+  Z= 35: E0=-0.22213843 eV
+  Z= 36: E0=-0.03358790 eV
+  Z= 37: E0=-0.18817240 eV
+  Z= 38: E0=-0.06826294 eV
+  Z= 39: E0=-2.17084228 eV
+  Z= 40: E0=-2.28579303 eV
+  Z= 41: E0=-3.13429753 eV
+  Z= 42: E0=-4.60211419 eV
+  Z= 43: E0=-3.45201492 eV
+  Z= 44: E0=-2.38073513 eV
+  Z= 45: E0=-1.46855515 eV
+  Z= 46: E0=-1.47731260 eV
+  Z= 47: E0=-0.33954585 eV
+  Z= 48: E0=-0.16843877 eV
+  Z= 49: E0=-0.35470981 eV
+  Z= 50: E0=-0.83642657 eV
+  Z= 51: E0=-1.41101987 eV
+  Z= 52: E0=-0.65740879 eV
+  Z= 53: E0=-0.18964571 eV
+  Z= 54: E0=-0.00857582 eV
+  Z= 55: E0=-0.13771876 eV
+  Z= 56: E0=-0.03457659 eV
+  Z= 57: E0=-0.45580806 eV
+  Z= 58: E0=-1.33091750 eV
+  Z= 59: E0=-0.29671824 eV
+  Z= 60: E0=-0.30391193 eV
+  Z= 61: E0=-0.30898427 eV
+  Z= 62: E0=-0.25470891 eV
+  Z= 63: E0=-8.38001538 eV
+  Z= 64: E0=-10.38896525 eV
+  Z= 65: E0=-0.30595050 eV
+  Z= 66: E0=-0.30676216 eV
+  Z= 67: E0=-0.30874667 eV
+  Z= 68: E0=-0.31610927 eV
+  Z= 69: E0=-0.25190039 eV
+  Z= 70: E0=-0.06431414 eV
+  Z= 71: E0=-0.31997586 eV
+  Z= 72: E0=-3.52770927 eV
+  Z= 73: E0=-3.54492209 eV
+  Z= 74: E0=-4.65658356 eV
+  Z= 75: E0=-4.70108713 eV
+  Z= 76: E0=-2.88257209 eV
+  Z= 77: E0=-1.46779304 eV
+  Z= 78: E0=-0.50269936 eV
+  Z= 79: E0=-0.28801193 eV
+  Z= 80: E0=-0.12454674 eV
+  Z= 81: E0=-0.31737194 eV
+  Z= 82: E0=-0.77644932 eV
+  Z= 83: E0=-1.32627283 eV
+  Z= 89: E0=-0.26827152 eV
+  Z= 90: E0=-0.90817426 eV
+  Z= 91: E0=-2.47653193 eV
+  Z= 92: E0=-4.90438537 eV
+  Z= 93: E0=-7.63378961 eV
+  Z= 94: E0=-10.77237713 eV

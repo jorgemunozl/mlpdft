@@ -8,6 +8,7 @@ Edit `DEFAULT_CONFIG` below and run the script.
 from __future__ import annotations
 
 from pathlib import Path
+from re import M
 from typing import Any
 
 import numpy as np
@@ -15,12 +16,12 @@ from ase import Atoms
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.io import read, write
 
-from config import QEToExtXYZConfig
+from config import MaceConfig
 from constants import LIF_KJPAW_GROUP
 
 
-def load_frames_with_ase(cfg: QEToExtXYZConfig) -> list[Atoms]:
-    raw = read(str(cfg.in_path), format="espresso-out", index=":")
+def load_frames_with_ase(cfg: MaceConfig) -> list[Atoms]:
+    raw = read(str(cfg.data_in_path), format="espresso-out", index=":")
 
     frames = [raw] if isinstance(raw, Atoms) else list(raw)
 
@@ -87,7 +88,7 @@ def write_extxyz(path: Path, frames: list[Atoms]) -> None:
         write(path, atoms, format="extxyz", append=i > 0)
 
 
-def convert_qe_out_to_extxyz(cfg: QEToExtXYZConfig) -> int:
+def convert_qe_out_to_extxyz(cfg: MaceConfig) -> int:
     try:
         cfg.validate()
         frames = load_frames_with_ase(cfg)
@@ -99,21 +100,21 @@ def convert_qe_out_to_extxyz(cfg: QEToExtXYZConfig) -> int:
         print("Error: no labeled frames found in QE output")
         return 1
 
-    write_extxyz(cfg.out_path, frames)
+    write_extxyz(cfg.data_out_path, frames)
 
     print("Field descriptions:")
-    for name, desc in QEToExtXYZConfig.describe_fields().items():
+    for name, desc in MaceConfig.describe_fields().items():
         print(f"- {name}: {desc}")
     print(f"Parsed frames: {len(frames)}")
-    print(f"Wrote extxyz: {cfg.out_path}")
+    print(f"Wrote extxyz: {cfg.data_out_path}")
     return 0
 
 
 def main() -> int:
-    config = QEToExtXYZConfig(
+    config = MaceConfig(
         group=LIF_KJPAW_GROUP,
-        frame_stride=2,
-        max_frames=10,
+        frame_stride=10,
+        max_frames=20,
     )
     return convert_qe_out_to_extxyz(config)
 

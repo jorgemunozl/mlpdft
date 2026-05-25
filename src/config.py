@@ -26,7 +26,7 @@ class MaceConfig:
         metadata={"description": "Group name"},
     )
 
-    model_key: Literal["0b3-medium", "0-small"] = field(
+    model_key: Literal["0b3-medium", "0-small", "0-omat-medium"] = field(
         default="0b3-medium",
         metadata={"description": "MACE model key"},
     )
@@ -144,7 +144,13 @@ class MaceConfig:
             PREDICTION_DIR
             / self.group
             / Path(
-                str(self.group + f"_{self.frame_stride}_{self.max_frames}") + ".extxyz"
+                str(
+                    self.model_key
+                    + "_"
+                    + self.group
+                    + f"_{self.frame_stride}_{self.max_frames}"
+                )
+                + ".extxyz"
             )
         )
         os.makedirs(model_output_path.parent, exist_ok=True)
