@@ -1,0 +1,89 @@
+ &control
+    calculation='md'
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    dt=10,
+    nstep=10000,
+    disk_io='high',
+    tstress=.true.
+ /
+ &system
+    ibrav= 0, nat=  54, ntyp= 2,
+    ecutwfc = 20.0, nosym=.true.
+ /
+ &electrons
+    conv_thr =  3.0d-5,
+    mixing_beta = 0.7,
+    electron_maxstep = 500
+ /
+ &ions
+    tempw = 300.0,
+    ion_temperature='andersen',
+    pot_extrapolation='second-order',
+    wfc_extrapolation='second-order'
+ /
+ATOMIC_SPECIES
+ Li 6.941 Li.pbe-sl-kjpaw_psl.1.0.0.UPF
+ F 18.998 F.pbe-n-kjpaw_psl.1.0.0.UPF
+CELL_PARAMETERS angstrom
+    10.53  0.0  0.0
+    0.0  10.53  0.0
+    0.0  0.0  10.53
+ATOMIC_POSITIONS angstrom
+    Li  0.01    0.01    0.01
+    Li  1.765   1.765   1.765
+    Li  3.52    0.01    0.01
+    Li  5.275   1.765   1.765
+    Li  7.03    0.01    0.01
+    Li  8.785   1.765   1.765
+    Li  0.01    3.52    0.01
+    Li  1.765   5.275   1.765
+    Li  3.52    3.52    0.01
+    Li  5.275   5.275   1.765
+    Li  7.03    3.52    0.01
+    Li  8.785   5.275   1.765
+    Li  0.01    7.03    0.01
+    Li  1.765   8.785   1.765
+    Li  3.52    7.03    0.01
+    Li  5.275   8.785   1.765
+    Li  7.03    7.03    0.01
+    Li  8.785   8.785   1.765
+    Li  0.01    0.01    3.52
+    Li  1.765   1.765   5.275
+    Li  3.52    0.01    3.52
+    Li  5.275   1.765   5.275
+    Li  7.03    0.01    3.52
+    Li  8.785   1.765   5.275
+    Li  0.01    3.52    3.52
+    Li  1.765   5.275   5.275
+    Li  3.52    3.52    3.52
+    F  5.275   5.275   5.275
+    Li  7.03    3.52    3.52
+    Li  8.785   5.275   5.275
+    Li  0.01    7.03    3.52
+    Li  1.765   8.785   5.275
+    Li  3.52    7.03    3.52
+    Li  5.275   8.785   5.275
+    Li  7.03    7.03    3.52
+    Li  8.785   8.785   5.275
+    Li  0.01    0.01    7.03
+    Li  1.765   1.765   8.785
+    Li  3.52    0.01    7.03
+    Li  5.275   1.765   8.785
+    Li  7.03    0.01    7.03
+    Li  8.785   1.765   8.785
+    Li  0.01    3.52    7.03
+    Li  1.765   5.275   8.785
+    Li  3.52    3.52    7.03
+    Li  5.275   5.275   8.785
+    Li  7.03    3.52    7.03
+    Li  8.785   5.275   8.785
+    Li  0.01    7.03    7.03
+    Li  1.765   8.785   8.785
+    Li  3.52    7.03    7.03
+    Li  5.275   8.785   8.785
+    Li  7.03    7.03    7.03
+    Li  8.785   8.785   8.785
+K_POINTS {automatic}
+ 1 1 1 0 0 0

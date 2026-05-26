@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
 import os
+from configparser import MAX_INTERPOLATION_DEPTH
 from dataclasses import dataclass, field, fields
 from pathlib import Path
+from this import d
 from typing import Literal, Optional
 
 from constants import (
@@ -164,3 +167,38 @@ class MaceConfig:
     def describe_fields(cls) -> dict[str, str]:
         """Return a field->description map for documentation or logging."""
         return {f.name: f.metadata.get("description", "") for f in fields(cls)}
+
+
+@dataclass
+class Mace_TrainerConfig(MaceConfig):
+    experiment_name: str = field(
+        default="experiment",
+        metadata={"description": ""},
+    )
+    r_max: float = field(
+        default=0.1,
+        metadata={"description": ""},
+    )
+    train_file: str = field(
+        default="",
+        metadata={"description": ""},
+    )
+    valid_file: str = field(
+        default="",
+        metadata={"description": ""},
+    )
+    batch_size: int = field(
+        default=1,
+        metadata={"description": ""},
+    )
+    max_num_epochs: int = field(
+        default=4,
+        metadata={"description": ""},
+    )
+
+    def write_to_json(self, path: str) -> None:
+        with open(path, "w") as f:
+            json.dump(self.__dict__, f)
+
+    def validate(self) -> None:
+        pass
