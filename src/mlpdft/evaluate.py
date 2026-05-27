@@ -6,9 +6,8 @@ import torch
 from mace import data
 from mace.tools import torch_geometric, torch_tools, utils
 
-from config import MaceConfig
-from constants import LIF64_GROUP, LIF_KJPAW_GROUP
-from mace_scrap import MACE_SCRAP
+from mlpdft.config import MaceConfig
+from mlpdft.constants import LIF_KJPAW_GROUP
 
 
 def get_model_output(
@@ -130,7 +129,6 @@ def main() -> None:
         frame_stride=10,
         max_frames=20,
     )
-
     eval(config)
 
 
