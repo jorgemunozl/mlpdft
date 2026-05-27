@@ -195,6 +195,32 @@ class Mace_TrainerConfig(MaceConfig):
         default=4,
         metadata={"description": ""},
     )
+    energy_key: str = field(
+        default="REF_energy",
+        metadata={"description": ""},
+    )
+    force_key: str = field(
+        default="REF_forces",
+        metadata={"description": ""},
+    )
+    valid_batch_size: int = field(
+        default=1,
+        metadata={"description": "Batch size used for validation"},
+    )
+    valid_frac: float = field(
+        default=0.1,
+        metadata={"description": "Fraction of data used for validation"},
+    )
+    pin_memory: bool = field(
+        default=False,
+        metadata={"description": "Pin memory for DataLoader"},
+    )
+    model_dir: str = field(
+        default="models",
+        metadata={
+            "description": "Directory to save both compile and no compile model checkpoints and results"
+        },
+    )
 
     def write_to_json(self, path: str) -> None:
         with open(path, "w") as f:

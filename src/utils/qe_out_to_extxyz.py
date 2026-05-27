@@ -8,16 +8,14 @@ Edit `DEFAULT_CONFIG` below and run the script.
 from __future__ import annotations
 
 from pathlib import Path
-from re import M
 from typing import Any
 
 import numpy as np
 from ase import Atoms
-from ase.calculators.singlepoint import SinglePointCalculator
 from ase.io import read, write
 
 from config import MaceConfig
-from constants import LIF_KJPAW_GROUP
+from constants import ENERGY_KEY, FORCE_KEY, LIF_KJPAW_GROUP
 
 
 def load_frames_with_ase(cfg: MaceConfig) -> list[Atoms]:
@@ -63,17 +61,18 @@ def load_frames_with_ase(cfg: MaceConfig) -> list[Atoms]:
         atoms = atoms.copy()
         atoms.info["config_type"] = cfg.config_type
 
-        sp_kwargs: dict[str, Any] = {
-            "energy": float(energy),
-            "forces": np.asarray(forces, dtype=float),
-        }
+        # Store custom keys directly on atoms (no SinglePointCalculator)
+        # SinglePointCalculator only accepts keys in ase's all_properties,
+        # so we bypass it and set atoms.info / atoms.arrays directly.
+        # The extxyz writer will pick these up when write_results=False.
+        atoms.info[ENERGY_KEY] = float(energy)
+        atoms.arrays[FORCE_KEY] = np.asarray(forces, dtype=float)
 
         if cfg.include_stress:
             stress = results.get("stress")
             if stress is not None:
-                sp_kwargs["stress"] = np.asarray(stress, dtype=float)
+                atoms.info["stress"] = np.asarray(stress, dtype=float)
 
-        atoms.calc = SinglePointCalculator(atoms, **sp_kwargs)
         labeled.append(atoms)
 
     if skipped:
@@ -85,7 +84,11 @@ def load_frames_with_ase(cfg: MaceConfig) -> list[Atoms]:
 def write_extxyz(path: Path, frames: list[Atoms]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     for i, atoms in enumerate(frames):
-        write(path, atoms, format="extxyz", append=i > 0)
+        # write_results=False: we bypassed SinglePointCalculator so there is
+        # nothing to extract from a calculator.  The data is already in
+        # atoms.info (REF_energy, config_type, …) and atoms.arrays
+        # (REF_forces, …), which the extxyz writer handles natively.
+        write(path, atoms, format="extxyz", append=i > 0, write_results=False)
 
 
 def convert_qe_out_to_extxyz(cfg: MaceConfig) -> int:

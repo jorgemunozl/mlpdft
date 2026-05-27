@@ -25,6 +25,26 @@ OUTPUTS_DIR = PATH_REPO / "src" / "outputs"
 PREDICTION_DIR = OUTPUTS_DIR / "predictions"
 UTILS_DIR = PATH_REPO / "src" / "utils"
 
+ENERGY_KEY = "REF_energy"
+FORCE_KEY = "REF_forces"
+
+
+RY_TO_EV = 13.6056980659
+
+LI_ISOLATED = -15.11995216 * RY_TO_EV
+F_ISOLATED = -58.46236447 * RY_TO_EV
+
+ENERGY_OFFSET = {
+    3: LI_ISOLATED,
+    9: F_ISOLATED,
+}
+
+OUTPUTS_DIR = PATH_REPO / "src" / "outputs"
+CHECKPOINTS_DIR = OUTPUTS_DIR / "checkpoints"
+RESULTS_DIR = OUTPUTS_DIR / "results"
+MODELS_DIR = OUTPUTS_DIR / "models"
+LOGS_DIR = OUTPUTS_DIR / "logs"
+
 MODEL_REGISTRY = {
     "0b3-medium": ModelSpec(
         key="0b3-medium",
