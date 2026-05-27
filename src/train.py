@@ -26,6 +26,7 @@ config = config_poc
 parser = build_default_arg_parser()
 args = parser.parse_args(["--name", config.experiment_name])
 
+args.seed = 123
 
 # DIRS
 args.checkpoints_dir = CHECKPOINTS_DIR
@@ -33,31 +34,34 @@ args.results_dir = RESULTS_DIR
 args.model_dir = MODELS_DIR
 args.log_dir = LOGS_DIR
 
-# DATA
-args.energy_key = config.energy_key
-args.force_key = config.force_key
-
-args.valid_batch_size = config.valid_batch_size
-args.valid_frac = config.valid_frac
-
-args.pin_memory = config.pin_memory
-
+# DEVICE
 args.device = config.device
-args.seed = 123
+
+# MODEL ARCHITECTURE
 args.model = "MACE"
 args.r_max = config.r_max
 args.num_channels = 128
 args.max_L = 1
+
+# DATA KEYS
+args.energy_key = config.energy_key
+args.force_key = config.force_key
+
+# DATASET
+args.pin_memory = config.pin_memory
+args.E0s = str(ENERGY_OFFSET)
+args.train_file = str(config.data_out_path)
+
+# LOSS AND VALIDATION
+args.valid_batch_size = config.valid_batch_size
+args.valid_frac = config.valid_frac
 args.batch_size = config.batch_size
 args.max_num_epochs = config.max_num_epochs
 
+# Fine-tuning
 args.foundation_model = config.model.path
 args.lora = True
 args.lora_rank = 8
-# ENERGY_OFFSET is a dict {Z: energy_in_eV}.  ast.literal_eval expects a string,
-# so we convert it before assigning to the argparse namespace.
-args.E0s = str(ENERGY_OFFSET)
-args.train_file = str(config.data_out_path)
 
 # Train the model
 run(args)
