@@ -8,6 +8,7 @@ from mace.tools import torch_geometric, torch_tools, utils
 
 from mlpdft.config import MaceConfig
 from mlpdft.constants import LIF_KJPAW_GROUP
+from mlpdft.mace_scrap import MACE_SCRAP
 
 
 def get_model_output(

@@ -10,7 +10,7 @@ class ModelSpec:
     energy_offset_per_atom: float = 0.0
 
 
-PATH_REPO = Path(__file__).resolve().parent.parent
+PATH_REPO = Path(__file__).resolve().parent.parent.parent
 
 # Groups
 LIF64_GROUP = "LIF64_KJPAW_V2"
