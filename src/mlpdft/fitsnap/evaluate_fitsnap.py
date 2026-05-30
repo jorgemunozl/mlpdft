@@ -1,7 +1,8 @@
 from ase.calculators.lammpslib import LAMMPSlib
 from ase.io import read
-
 from config import MaceConfig
+
+from mlpdft.constants import FITSNAP_LIF_CHECKPOINTS_DIR
 
 # 1. Load your test structure (e.g., an extxyz file)
 config = MaceConfig()

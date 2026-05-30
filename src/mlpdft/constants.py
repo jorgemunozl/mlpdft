@@ -45,6 +45,11 @@ RESULTS_DIR = OUTPUTS_DIR / "results"
 MODELS_DIR = OUTPUTS_DIR / "models"
 LOGS_DIR = OUTPUTS_DIR / "logs"
 
+FITSNAP_DIR = PATH_REPO / "fitsnap_models"
+
+FITSNAP_LIF_CHECKPOINTS_DIR = FITSNAP_DIR / "LI_F" / "checkpoints"
+
+
 MODEL_REGISTRY = {
     "0b3-medium": ModelSpec(
         key="0b3-medium",

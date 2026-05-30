@@ -9,10 +9,12 @@ outputs/
 dataset/
 
 outputs/
-
+images/
 qe_test/
 scripts_deprecated/
 
 # Checkpoints and results produced by training (MACE script)
 checkpoints/
 results/
+
+fitsnap_models/
