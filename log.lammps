@@ -1,0 +1,27 @@
+LAMMPS (30 Mar 2026 - Development)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread.
+  using 1 OpenMP thread(s) per MPI task
+Loading python model deferred.
+SNAP keyword rcutfac 4.812302818 
+SNAP keyword twojmax 8 
+SNAP keyword nelems 2 
+SNAP keyword elems Li F 
+SNAP keyword radelems 0.5 0.5 
+SNAP keyword welems 1.0 1.0 
+SNAP keyword rfac0 0.99363 
+SNAP keyword rmin0 0.0 
+SNAP keyword switchinnerflag 0 
+SNAP keyword bzeroflag 1 
+Created orthogonal box = (0 0 0) to (4.02 4.02 4.02)
+  1 by 1 by 1 MPI processor grid
+Loading python model complete.
+ERROR: Incorrect args for pair coefficients
+For more information see https://docs.lammps.org/err0021 (src/ML-IAP/pair_mliap.cpp:247)
+Last input line: pair_coeff * * mliap Li F
+ERROR: Incorrect args for pair coefficients
+For more information see https://docs.lammps.org/err0021 (src/ML-IAP/pair_mliap.cpp:247)
+Last input line: pair_coeff * * mliap
+ERROR: Incorrect args for pair coefficients
+For more information see https://docs.lammps.org/err0021 (src/ML-IAP/pair_mliap.cpp:247)
+Last input line: pair_coeff * * mliap NULL NULL
+Total wall time: 0:00:01

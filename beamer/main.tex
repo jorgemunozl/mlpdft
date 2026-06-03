@@ -9,9 +9,6 @@
 \usepackage{booktabs}
 
 \title{Proof of Concept: Use and Fine-Tune MACE}
-\subtitle{Dataset, FitSNAP baseline, MACE architecture, zero-shot evaluation, finetuning}
-\author{} % fill in
-\institute{} % fill in
 \date{\today}
 
 \begin{document}
@@ -24,16 +21,7 @@
   \tableofcontents
 \end{frame}
 
-\section{Dataset}
-
-\begin{frame}{What dataset we have}
-  \begin{itemize}
-    \item Large \textbf{DFT-labeled} set for electrolyte / solid-electrolyte style chemistry: mostly \textbf{Li--F}, \textbf{LiBF$_4$}, and \textbf{B--Li} compositions (bulk BLi, BLi$_3$, many \textbf{interface} and \textbf{NPT} variants), plus \textbf{BCC-54-atom} lithium supercells, \textbf{isolated} and \textbf{relaxed} cells, and ionic-liquid-related groups such as \textbf{EMIM-TFSI-BF$_4$} and \textbf{EMIMLiTFSI} anode setups.
-    \item \textbf{On the order of 50--60 distinct configuration groups} (folder names), including multiple versions (\texttt{v1}, \texttt{v2}, \texttt{v3}, \texttt{v4}), \texttt{final} and \texttt{kjpaw} tags, LiF 64-atom and interface series (\texttt{LiF64\_…}, \texttt{LiFinterface\_…}), Li-with-F and Li-with-BF clusters, and a catch-all \texttt{special} group.
-bts are used day-to-day; the full collection lives in shared project storage under names like \textbf{LiF\_kjpaw}.
-    \item Each group holds \textbf{structures with total energies, atomic forces, and virial/stress where available}, suitable for training interatomic potentials (same information can be delivered as extended XYZ or JSON for FitSNAP).
-  \end{itemize}
-\end{frame}
+\section{Dataset we already have}
 
 \begin{frame}{Examples of configuration-group names (catalog)}
   \small
@@ -60,51 +48,228 @@ bts are used day-to-day; the full collection lives in shared project storage und
       \end{itemize}
     \end{column}
   \end{columns}
-  \vfill
-  \tiny
-  Sample of the $\sim$60 groups: tags such as \texttt{NPT}, \texttt{kjpaw}, \texttt{v2}/\texttt{final}, \texttt{interface}, and \texttt{isolated} indicate ensemble, pseudopotential setup, revision, or geometry class.
 \end{frame}
 
+\section{FitSNAP model}
 
 \section{FitSNAP model}
 \begin{frame}{The FitSNAP model we have}
   \begin{itemize}
-    \item Training data are \textbf{split by configuration group} (train/test fractions per group); labels are energies, forces, and optionally stress.
     \item \textbf{FitSNAP stack} in words:
       \begin{itemize}
         \item \textbf{Scraper} --- reads quantum-chemistry frames (e.g.\ JSON) into structures.
         \item \textbf{Calculator} --- builds \textbf{SNAP bispectrum} descriptors per atom in LAMMPS (radial cutoff, \texttt{twojmax}, chemical channels, etc.).
-        \item \textbf{Solver} --- either \textbf{ridge regression} (linear model on descriptors) or \textbf{PyTorch} (nonlinear MLP on descriptor vectors), depending on the fit setup.
-      \end{itemize}
+        \item \textbf{Solver} --- \textbf{PyTorch} MLP.
+        \item \textbf{Layers:} PyTorch MLP \texttt{num\_desc $\to$ 256 $\to$ 128 $\to$ 64 $\to$ 64 $\to$ 1}, \texttt{multi\_element\_option = 2} (per-element nets).
+    \item \textbf{Training:} learning rate \texttt{5e-6}, \texttt{70} epochs, batch \texttt{50}.
+    \end{itemize}
   \end{itemize}
+\end{frame}
+
+\begin{frame}{Metrics}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{Metrics MLPDFT.png}
+        \caption{Metrics obtained by two models}
+    \end{figure}
 \end{frame}
 
 \section{MACE model}
-
 \begin{frame}{What the MACE model is}
-  \begin{enumerate}
-    \item \textbf{Variants} --- \textbf{foundation} models (e.g.\ MACE-MP trained on Materials Project trajectories) vs.\ \textbf{finetuned} or trained-from-scratch potentials on your own DFT data.
-    \item \textbf{Architecture} --- \textbf{equivariant message passing} on the local neighbor graph, explicit \textbf{many-body correlation} (order $\nu$), radial cutoff \textbf{\texttt{r\_max}}, and typically \textbf{scale--shift} atomic energy handling (\textbf{ScaleShiftMACE}) for materials.
-  \end{enumerate}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\linewidth]{image.png}
+        \caption{I.~Batatia et al. 2022}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Message Passing Neural Networks}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{mpnn.png}
+    \caption{Message Passing Neural Network Concept}
+\end{figure}
+\end{frame}
+
+\begin{frame}{MACE Step (1): Atom Embedding}
+  A molecule or crystal is represented as a \textbf{graph}:
+  atoms are nodes, edges connect pairs within a cutoff radius $r_c$.
+  \medskip
+  Each atom $i$ is assigned an initial feature vector:
+  \[
+    \mathbf{h}_i^{(0)} = \mathbf{W}_{Z_i}
+  \]
+  a learned embedding indexed by atomic number $Z_i$ (lookup table).
+  \medskip
+  \textbf{Goal:} produce, for each atom, a scalar energy $E_i$
+  that reflects its local chemical environment.
+  The total energy is $E = \sum_i E_i$.
+\end{frame}
+
+\begin{frame}{Depth on MPNN}
+
+\begin{itemize}
+    \item $t=0$, the atom/node only can see itself.
+    \item $t=1$, the atom can see its neighborhoods - \textbf{TWO BODY}.
+    \item $t=2$, the atom can see the neighborhoods from its neighborhoods - TRIPLETS - \textbf{THREE BODY}
+\end{itemize}
+Three and higher order bodies are computationally expensive.
+\end{frame}
+\begin{frame}{MACE Step (2): Interaction Block}
+  For each atom $i$, messages from neighbors $j$ are built as:
+  \[
+    \mathbf{m}_{ij} = \sum_{k} W_k \, R_{k}(r_{ij}) \cdot
+    Y_l^m\!\left(\hat{r}_{ij}\right) \otimes \mathbf{h}_j^{(t)}
+  \]
+  $W_k$ learned matrix.
+  \begin{itemize}
+    \item $Y_l^m(\hat{r}_{ij})$: \textbf{spherical harmonics} — fixed geometric
+          functions encoding the \emph{direction} to neighbor $j$.
+    \item $R_k(r_{ij})$: \textbf{radial network} — a small MLP acting on the
+          scalar distance. \emph{This is where most parameters live.}
+    \item $\otimes$: tensor product combining neighbor features with
+          edge geometry, preserving equivariance via
+          Clebsch--Gordan coefficients.
+  \end{itemize}
+
+  Messages are aggregated: $\mathbf{m}_i = \sum_{j \in \mathcal{N}(i)} \mathbf{m}_{ij}$
+\end{frame}
+
+
+\begin{frame}{MACE Step (3): Equivariant Product Block}
+  After aggregating neighbors, atom $i$ holds a feature vector
+  $\mathbf{m}_i$ encoding its local environment.
+
+  \medskip
+  \textbf{The problem:} one message passing layer only captures
+  pairwise $(i,j)$ interactions --- that is \textbf{2-body}.
+
+  \medskip
+  \textbf{The MACE idea:} take tensor products of $\mathbf{m}_i$
+  with itself $\nu$ times:
+  \[
+    \mathbf{m}_i \otimes \mathbf{m}_i \otimes \cdots
+    \quad (\nu \text{ times})
+  \]
+  This mixes contributions from \emph{different} neighbors $j, k$
+  simultaneously, producing \textbf{$(\nu+1)$-body correlations}
+  without any extra message passing.
+
+  \medskip
+  \begin{itemize}
+    \item With $\nu = 2$: reaches \textbf{3-body} after layer 1,
+          compounding across layers.
+    \item The CG coefficients ensure the result stays
+          \textbf{equivariant} — no parameters, fixed by symmetry.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{MACE Step (4): Readout}
+  After $T$ interaction layers, each atom $i$ holds a feature vector
+  $\mathbf{h}_i^{(t)}$ with components of different equivariance order $L$.
+  \medskip
+  Each layer contributes a partial atomic energy via its $L=0$ features:
+  \[
+    E_i = E_i^{(0)} + E_i^{(1)} + \cdots + E_i^{(T)}
+  \]
+  where each $E_i^{(t)}$ is a linear projection of $\mathbf{h}_i^{(t)}\big|_{L=0}$,
+  except the last layer which uses a small MLP.
+
+  \medskip
+  The total energy and forces are then:
+  \[
+    E = \sum_i E_i, \qquad
+    \mathbf{F}_i = -\frac{\partial E}{\partial \mathbf{r}_i}
+  \]
+
+  \textbf{Forces are free} --- no extra network needed, just
+  automatic differentiation through the entire graph.
+\end{frame}
+
+\begin{frame}{Parameters Distribution}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.7\linewidth]{image_par.png}
+    \end{figure}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{image_par2.png}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}{MACE Flavors: Training Dataset}
+MACE MP OMAT Number of parameters: 9063204
+MACE MP 0 - Small - Number of parameters: 3847696
+MACE MP 0B3 - Number of parameters: 9063204
+
+Training data set:
+
+
 \end{frame}
 
 \section{Zero-shot evaluation}
+\begin{frame}{Zero-Shot MACE-MP Evaluation on LiF 54}
 
-\begin{frame}{Zero-shot evaluation of MACE}
-  \begin{itemize}
-    \item Run a \textbf{pretrained foundation} MACE (e.g.\ the smallest MACE-MP checkpoint) on a \textbf{held-out subset} of the same structures used for FitSNAP testing.
-    \item Report \textbf{energy and force errors} in consistent units (eV, eV/\AA) and, if needed, stress, so results are comparable to the SNAP-based baseline on \textbf{identical frames}.
-  \end{itemize}
 \end{frame}
 
-\section{Finetuning}
 
-\begin{frame}{Challenges for finetuning MACE}
+\begin{frame}{Challenges of Fine-Tuning MACE on a Specific Dataset}
+
   \begin{itemize}
-    \item \textbf{Many-body vs.\ cutoff} --- align MACE interaction cutoff with the SNAP radial setup where comparisons should be fair; correlation order in MACE is not the same object as SNAP descriptor depth.
-    \item \textbf{Small data} --- a few dozen to a few hundred DFT frames vs.\ millions in foundation pretraining: risk of overfitting; choose epochs, batch size, and regularization accordingly.
-    \item \textbf{Energy reference} --- map DFT total energies to MACE conventions (atomic reference energies, optional \texttt{E0} corrections when starting from a foundation model).
+
+    \item \textbf{Reference energy mismatch ($E_0$ problem)}\\
+      The foundation model and the target DFT dataset use different
+      atomic reference energies. A linear regression over the
+      training set is required to align them before fine-tuning.
+
+    \medskip
+    \item \textbf{DFT functional mismatch}\\
+      MACE-MP was trained with very specific data, if different
+      functional (DFT), the model must \emph{unlearn} systematic
+      biases --- which can hurt generalization.
+    \medskip
+    \item \textbf{Out-of-domain chemistry}\\
+      LiBF$_4$ contains ionic species and Li, which are outside
+      the MACE-OFF23 organic training domain. The model has no
+      prior knowledge of ionic interactions, charge transfer,
+      or metal coordination.
+\end{itemize}
+\end{frame}
+\begin{frame}{Challenges}
+    \begin{itemize}
+    \item \textbf{Data scarcity}\\
+      Fine-tuning on a small dataset risks \textbf{catastrophic
+      forgetting} --- the model overfits to the new data and
+      loses the general knowledge from pretraining.
+
+    \item \textbf{Force/energy weight balance}\\
+      The loss $\mathcal{L} = \lambda_E \mathcal{L}_E +
+      \lambda_F \mathcal{L}_F$ is sensitive to the choice of
+      $\lambda_E, \lambda_F$. Wrong balance leads to models
+      that predict energies well but produce unphysical forces
+      or vice versa.
+
   \end{itemize}
+
+
+\end{frame}
+
+
+\begin{frame}{Iterative Learning}
+   \begin{figure}
+        \centering
+        \includegraphics[width=0.45\linewidth]{iterative_training.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Active Learning}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.45\linewidth]{pic_044.png}
+\end{figure}
+
 \end{frame}
 
 \end{document}
