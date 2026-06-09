@@ -18,3 +18,7 @@ checkpoints/
 results/
 
 fitsnap_models/
+
+lammps_example/
+
+ .rules/

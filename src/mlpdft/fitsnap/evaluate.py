@@ -96,7 +96,10 @@ def run_inference(atoms, subnets):
     lmp.command(f"region mybox block 0 {lx:.6f} 0 {ly:.6f} 0 {lz:.6f}")
     lmp.command("create_box 2 mybox")
 
-    # Cargar modelo PyTorch ANTES de pair_coeff
+    # pair_coeff con LATER (modelo aún no cargado — se cargará después)
+    lmp.command("pair_coeff * * Li F")
+
+    # Cargar modelo PyTorch DESPUÉS de pair_coeff (tal como en el ejemplo oficial de LAMMPS)
     from lammps.mliap.pytorch import ElemwiseModels, TorchWrapper
 
     elemwise_model = ElemwiseModels(subnets, NUM_ELEMENTS)
@@ -107,8 +110,6 @@ def run_inference(atoms, subnets):
         dtype=torch.float64,
     )
     lammps.mliap.load_model(wrapped)
-
-    lmp.command("pair_coeff * * mliap Li F")
 
     for p, t in zip(pos, atom_types):
         lmp.command(
