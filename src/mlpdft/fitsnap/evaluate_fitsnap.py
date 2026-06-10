@@ -1,3 +1,7 @@
+"""
+Deprecated file
+"""
+
 from ase.calculators.lammpslib import LAMMPSlib
 from ase.io import read
 from config import MaceConfig

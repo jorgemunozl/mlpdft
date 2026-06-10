@@ -1,28 +1,26 @@
 #!/usr/bin/env python3
 """
-Evaluación de modelo FitSNAP (SNAP + PyTorch) para LiF.
-
-Usa LAMMPS directamente (modo librería) con el modelo mliappy.
-NO usa LAMMPSlib porque necesitamos activate_mliappy() antes de pair_style.
+The idea, took a dataset, look the initial state,
+the issue is that I dont have idea how to read initial states.
+and compare trajectories,
+from there we can obtain metrics!
 """
 
 import ctypes
 import re
-from pathlib import Path
 
 import numpy as np
 import torch
 import torch.nn as nn
 from ase.build import bulk
 
-# ── Configuración ──────────────────────────────────────────────────────
-FITSNAP_DIR = (
-    Path(__file__).resolve().parent.parent.parent.parent / "fitsnap_models" / "LI_F"
-)
-DESCRIPTOR_FILE = str(FITSNAP_DIR / "LiF64_NEWJSON_pot.mliap.descriptor")
-CHECKPOINT_FILE = str(FITSNAP_DIR / "checkpoints" / "LiF_Pytorch.pt")
+from mlpdft.constants import FITSNAP_LIF_CHECKPOINTS_DIR
 
-NUM_DESCRIPTORS = 440  # twojmax=8, 2 elementos, chemflag=1
+DESCRIPTOR_FILE = str(
+    FITSNAP_LIF_CHECKPOINTS_DIR / "LiF64_NEWJSON_pot.mliap.descriptor"
+)
+CHECKPOINT_FILE = str(FITSNAP_LIF_CHECKPOINTS_DIR / "LiF_Pytorch.pt")
+NUM_DESCRIPTORS = 440  # twojmax=8, 2 elements, chemflag=1
 NUM_ELEMENTS = 2  # Li, F
 
 
