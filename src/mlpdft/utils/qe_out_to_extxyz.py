@@ -7,6 +7,7 @@ Edit `DEFAULT_CONFIG` below and run the script.
 
 from __future__ import annotations
 
+from io import StringIO
 from pathlib import Path
 from typing import Any
 
@@ -14,12 +15,17 @@ import numpy as np
 from ase import Atoms
 from ase.io import read, write
 
-from config import MaceConfig
-from constants import ENERGY_KEY, FORCE_KEY, LIF_KJPAW_GROUP
+from mlpdft.config import MaceConfig
+from mlpdft.constants import ENERGY_KEY, FORCE_KEY, GROUPS_LIF
 
 
 def load_frames_with_ase(cfg: MaceConfig) -> list[Atoms]:
-    raw = read(str(cfg.data_in_path), format="espresso-out", index=":")
+    # Some QE output files embed binary data alongside text (e.g. from
+    # high-precision or restart dumps).  Using latin-1 maps every byte 1:1
+    # to a character, preserving the text sections that ASE's parser needs
+    # while keeping the binary sections benign (no replacement chars).
+    text = cfg.data_in_path.read_text(encoding="latin-1")
+    raw = read(StringIO(text), format="espresso-out", index=":")
 
     frames = [raw] if isinstance(raw, Atoms) else list(raw)
 
@@ -91,17 +97,17 @@ def write_extxyz(path: Path, frames: list[Atoms]) -> None:
         write(path, atoms, format="extxyz", append=i > 0, write_results=False)
 
 
-def convert_qe_out_to_extxyz(cfg: MaceConfig) -> int:
+def convert_qe_out_to_extxyz(cfg: MaceConfig) -> None:
+    frames: list[Atoms] = []
     try:
         cfg.validate()
         frames = load_frames_with_ase(cfg)
     except Exception as exc:  # noqa: BLE001
         print(f"Conversion error: {exc}")
-        return 1
 
     if not frames:
         print("Error: no labeled frames found in QE output")
-        return 1
+        return
 
     write_extxyz(cfg.data_out_path, frames)
 
@@ -110,16 +116,32 @@ def convert_qe_out_to_extxyz(cfg: MaceConfig) -> int:
         print(f"- {name}: {desc}")
     print(f"Parsed frames: {len(frames)}")
     print(f"Wrote extxyz: {cfg.data_out_path}")
-    return 0
 
 
-def main() -> int:
-    config = MaceConfig(
-        group=LIF_KJPAW_GROUP,
-        frame_stride=10,
-        max_frames=20,
-    )
-    return convert_qe_out_to_extxyz(config)
+def main() -> None:
+    ready = [
+        "LIFINTERFACE_KJPAW_V1",
+        "LIF64_KJPAW_V2",
+        "LIF_KJPAW",
+        "LIWITHF_V3",
+        "BLI_V2",
+        "LIBF4_V4",
+        "",
+    ]
+    # lack = [group for group in GROUPS if group not in ready]
+    lack = [
+        "LIWITHF_NPT_FINAL",
+        "LIWITHF_ISOLATED",
+        "LIFINTERFACE_KJPAW_NPT_V2",
+        "LIFINTERFACE_KJPAW_NPT",
+    ]
+    for group in lack:
+        config = MaceConfig(
+            group=group,
+            frame_stride=5,
+            max_frames=100,
+        )
+        convert_qe_out_to_extxyz(config)
 
 
 if __name__ == "__main__":

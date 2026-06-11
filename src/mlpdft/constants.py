@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+from token import GREATER
 
 
 @dataclass
@@ -13,8 +14,18 @@ class ModelSpec:
 PATH_REPO = Path(__file__).resolve().parent.parent.parent
 
 # Groups
-LIF64_GROUP = "LIF64_KJPAW_V2"
-LIF_KJPAW_GROUP = "LIF_KJPAW"
+GROUPS_LIF = [
+    "LIFINTERFACE_KJPAW_V1",
+    "LIF64_KJPAW_V2",
+    "LIF_KJPAW",
+    # "BLI3_ISOLATED",
+    "LIWITHF_V3",
+    "LIF64_ISOLATED",
+]
+
+GROUPS_BLIF = ["BLI_V2", "LIBF4_V4", "LIBF4"]
+# LIF64_GROUP = "LIF64_KJPAW_V2"
+# LIF_KJPAW_GROUP = "LIF_KJPAW"
 
 DATA_DIR = PATH_REPO / "dataset"
 XYZ_DIR = "xyz_files"
@@ -45,9 +56,7 @@ RESULTS_DIR = OUTPUTS_DIR / "results"
 MODELS_DIR = OUTPUTS_DIR / "models"
 LOGS_DIR = OUTPUTS_DIR / "logs"
 
-FITSNAP_DIR = PATH_REPO / "fitsnap_models"
-
-FITSNAP_LIF_CHECKPOINTS_DIR = FITSNAP_DIR / "LI_F" / "checkpoints"
+FITSNAP_DIR = PATH_REPO / "fitsnap_models" / "LI_F"
 
 
 MODEL_REGISTRY = {

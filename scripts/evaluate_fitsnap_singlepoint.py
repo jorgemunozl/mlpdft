@@ -16,17 +16,46 @@ import torch
 import torch.nn as nn
 from ase.io import read
 
-# ── Paths ─────────────────────────────────────────────────────────────
-REPO = Path(__file__).resolve().parent.parent
+from mlpdft.constants import DATA_DIR, FITSNAP_DIR, PATH_REPO
 
-MODEL_PATH = REPO / "lammps_example" / "FitTorch_Pytorch.pt"
-DESCRIPTOR_PATH = REPO / "lammps_example" / "LiF_pot.mliap.descriptor"
-XYZ_PATH = REPO / "dataset" / "LIF_KJPAW" / "xyz_files" / "LIF_KJPAW_10_20.extxyz"
+
+# ── Tee: write to both stdout and a file ─────────────────────────────
+class Tee:
+    """Duplicates all printed output to both stdout and an open file."""
+
+    def __init__(self, file):
+        self.file = file
+        self.stdout = sys.stdout
+
+    def write(self, text):
+        self.stdout.write(text)
+        self.file.write(text)
+
+    def flush(self):
+        self.stdout.flush()
+        self.file.flush()
+
+    def __enter__(self):
+        sys.stdout = self
+        return self
+
+    def __exit__(self, *exc):
+        sys.stdout = self.stdout
+
+
+# ── Paths ─────────────────────────────────────────────────────────────
+
+MODEL_PATH = FITSNAP_DIR / "checkpoints" / "FitTorch_Pytorch.pt"
+DESCRIPTOR_PATH = FITSNAP_DIR / "LiF64_NEWJSON_pot.mliap.descriptor"
+XYZ_PATH = DATA_DIR / "LIF_KJPAW" / "xyz_files" / "LIF_KJPAW_10_20.extxyz"
 
 N_ELEMENTS = 2
 ELEMENT_NAMES = ["Li", "F"]
 ATOM_TYPE_MAP = {"Li": 1, "F": 2}
 MASSES = {1: 6.941, 2: 18.998}
+
+FRAME_STRIDE = 5
+NUM_FRAMES = 100
 
 
 # ── Helper: build subnetworks from a loaded TorchWrapper ──────────────
@@ -142,80 +171,105 @@ def main():
 
     # 2. Load reference data
     print("\n[2] Loading reference data...")
-    atoms_list = read(str(XYZ_PATH), index=":")
-    print(f"    {len(atoms_list)} frames, {len(atoms_list[0])} atoms each")
+    xyz_path_groups = []
 
-    # 3. Evaluate each frame
-    print("\n[3] Evaluating frames...")
-    e_preds = []
-    e_refs = []
-    f_preds = []
-    f_refs = []
+    GROUPS_LIF = [
+        "LIWITHF_NPT_FINAL",
+        "LIWITHF_ISOLATED",
+        "LIFINTERFACE_KJPAW_NPT_V2",
+        "LIFINTERFACE_KJPAW_NPT",
+    ]
+    metrics_out_groups = []
+    for group in GROUPS_LIF:
+        name = f"{group}_{FRAME_STRIDE}_{NUM_FRAMES}"
+        xyz = DATA_DIR / f"{group}" / "xyz_files" / f"{name}.extxyz"
 
-    for i, atoms in enumerate(atoms_list):
-        e_ref = atoms.info["REF_energy"]
-        f_ref = atoms.arrays["REF_forces"]
-
-        e_pred, f_pred = evaluate_frame(atoms, subnets, n_desc)
-
-        # Check atom count consistency
-        if len(f_pred) != len(f_ref):
-            print(
-                f"    ⚠ Frame {i}: predicted {len(f_pred)} atoms vs "
-                f"reference {len(f_ref)} atoms (SKIPPING)"
-            )
-            continue
-
-        e_preds.append(e_pred)
-        e_refs.append(e_ref)
-        f_preds.append(f_pred)
-        f_refs.append(f_ref)
-
-        print(
-            f"    Frame {i:2d}:  E_ref={e_ref:14.6f}  "
-            f"E_pred={e_pred:14.6f}  ΔE={e_pred - e_ref:+.6f}"
+        metrics_out = (
+            PATH_REPO / "src" / "mlpdft" / "fitsnap" / "metrics" / f"{name}.txt"
         )
+        metrics_out_groups.append(metrics_out)
+        xyz_path_groups.append(xyz)
 
-    if not e_preds:
-        print("\nNo valid frames to compute metrics.")
-        return
+    for xyz_path_group, metrics_out in zip(xyz_path_groups, metrics_out_groups):
+        # Results .txt file lives next to the .extxyz file
+        results_path = metrics_out
 
-    # 4. Metrics
-    print("\n" + "=" * 60)
-    print("RESULTS")
-    print("=" * 60)
+        atoms_list = read(str(xyz_path_group), index=":")
+        print(f"    {len(atoms_list)} frames, {len(atoms_list[0])} atoms each")
 
-    e_preds = np.array(e_preds)
-    e_refs = np.array(e_refs)
+        # 3. Evaluate each frame
+        print("\n[3] Evaluating frames...")
+        e_preds = []
+        e_refs = []
+        f_preds = []
+        f_refs = []
 
-    energy_mae = np.abs(e_preds - e_refs).mean()
-    energy_rmse = np.sqrt(((e_preds - e_refs) ** 2).mean())
-    energy_maxae = np.abs(e_preds - e_refs).max()
+        for i, atoms in enumerate(atoms_list):
+            e_ref = atoms.info["REF_energy"]
+            f_ref = atoms.arrays["REF_forces"]
 
-    print(f"\n  Energy (eV):")
-    print(f"    MAE  = {energy_mae:.6f}")
-    print(f"    RMSE = {energy_rmse:.6f}")
-    print(f"    MaxAE= {energy_maxae:.6f}")
+            e_pred, f_pred = evaluate_frame(atoms, subnets, n_desc)
 
-    all_f_pred = np.concatenate(f_preds)
-    all_f_ref = np.concatenate(f_refs)
+            # Check atom count consistency
+            if len(f_pred) != len(f_ref):
+                print(
+                    f"    ⚠ Frame {i}: predicted {len(f_pred)} atoms vs "
+                    f"reference {len(f_ref)} atoms (SKIPPING)"
+                )
+                continue
 
-    force_diff = all_f_pred - all_f_ref
-    force_mae = np.abs(force_diff).mean()
-    force_rmse = np.sqrt((force_diff**2).mean())
-    force_component_mae = np.abs(force_diff).mean(axis=0)
-    force_maxae = np.abs(force_diff).max()
+            e_preds.append(e_pred)
+            e_refs.append(e_ref)
+            f_preds.append(f_pred)
+            f_refs.append(f_ref)
 
-    print(f"\n  Forces (eV/Å):")
-    print(f"    MAE  (all)     = {force_mae:.6f}")
-    print(f"    RMSE (all)     = {force_rmse:.6f}")
-    print(
-        f"    MAE  (x/y/z)   = {force_component_mae[0]:.6f}  "
-        f"{force_component_mae[1]:.6f}  {force_component_mae[2]:.6f}"
-    )
-    print(f"    MaxAE          = {force_maxae:.6f}")
+            print(
+                f"    Frame {i:2d}:  E_ref={e_ref:14.6f}  "
+                f"E_pred={e_pred:14.6f}  ΔE={e_pred - e_ref:+.6f}"
+            )
 
-    print("\nDone.")
+        if not e_preds:
+            print("\nNo valid frames to compute metrics.")
+            return
+
+        # 4. Metrics — tee to both console and .txt file
+        with open(results_path, "w") as f, Tee(f):
+            print("=" * 60)
+            print("RESULTS")
+            print("=" * 60)
+
+            e_preds_np = np.array(e_preds)
+            e_refs_np = np.array(e_refs)
+
+            energy_mae = np.abs(e_preds_np - e_refs_np).mean()
+            energy_rmse = np.sqrt(((e_preds_np - e_refs_np) ** 2).mean())
+            energy_maxae = np.abs(e_preds_np - e_refs_np).max()
+
+            print(f"\n  Energy (eV):")
+            print(f"    MAE  = {energy_mae:.6f}")
+            print(f"    RMSE = {energy_rmse:.6f}")
+            print(f"    MaxAE= {energy_maxae:.6f}")
+
+            all_f_pred = np.concatenate(f_preds)
+            all_f_ref = np.concatenate(f_refs)
+
+            force_diff = all_f_pred - all_f_ref
+            force_mae = np.abs(force_diff).mean()
+            force_rmse = np.sqrt((force_diff**2).mean())
+            force_component_mae = np.abs(force_diff).mean(axis=0)
+            force_maxae = np.abs(force_diff).max()
+
+            print(f"\n  Forces (eV/Å):")
+            print(f"    MAE  (all)     = {force_mae:.6f}")
+            print(f"    RMSE (all)     = {force_rmse:.6f}")
+            print(
+                f"    MAE  (x/y/z)   = {force_component_mae[0]:.6f}  "
+                f"{force_component_mae[1]:.6f}  {force_component_mae[2]:.6f}"
+            )
+            print(f"    MaxAE          = {force_maxae:.6f}")
+            print()
+
+        print(f"\nDone. Results saved to {results_path}")
 
 
 if __name__ == "__main__":

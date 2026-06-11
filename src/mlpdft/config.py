@@ -6,9 +6,8 @@ from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Literal, Optional
 
-from constants import (
+from mlpdft.constants import (
     DATA_DIR,
-    LIF64_GROUP,
     MODEL_REGISTRY,
     PREDICTION_DIR,
     XYZ_DIR,
@@ -23,7 +22,7 @@ class MaceConfig:
     """
 
     group: str = field(
-        default=LIF64_GROUP,
+        default="",
         metadata={"description": "Group name"},
     )
 
