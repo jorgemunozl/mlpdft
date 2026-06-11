@@ -50,7 +50,7 @@ ENERGY_OFFSET = {
     9: F_ISOLATED,
 }
 
-OUTPUTS_DIR = PATH_REPO / "src" / "outputs"
+OUTPUTS_DIR = PATH_REPO / "src" / "mlpdft" / "outputs"
 CHECKPOINTS_DIR = OUTPUTS_DIR / "checkpoints"
 RESULTS_DIR = OUTPUTS_DIR / "results"
 MODELS_DIR = OUTPUTS_DIR / "models"
