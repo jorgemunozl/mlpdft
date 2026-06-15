@@ -16,16 +16,16 @@ PATH_REPO = Path(__file__).resolve().parent.parent.parent
 # Groups
 GROUPS_LIF = [
     "LIFINTERFACE_KJPAW_V1",
+    "LIFINTERFACE_KJPAW_NPT_V2",
+    "LIFINTERFACE_KJPAW_NPT",
+    "LIWITHF_NPT_FINAL",
+    "LIWITHF_ISOLATED",
     "LIF64_KJPAW_V2",
-    "LIF_KJPAW",
-    # "BLI3_ISOLATED",
     "LIWITHF_V3",
     "LIF64_ISOLATED",
 ]
 
 GROUPS_BLIF = ["BLI_V2", "LIBF4_V4", "LIBF4"]
-# LIF64_GROUP = "LIF64_KJPAW_V2"
-# LIF_KJPAW_GROUP = "LIF_KJPAW"
 
 DATA_DIR = PATH_REPO / "dataset"
 XYZ_DIR = "xyz_files"

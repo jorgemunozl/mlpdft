@@ -3,8 +3,12 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass, field, fields
+from io import StringIO
 from pathlib import Path
 from typing import Literal, Optional
+
+from ase import Atoms
+from ase.io import read
 
 from mlpdft.constants import (
     DATA_DIR,
@@ -63,13 +67,13 @@ class MaceConfig:
         metadata={"description": "Output path"},
     )
 
-    frame_stride: int = field(
+    frame_stride: int | None = field(
         default=10,
         metadata={"description": "Keep one frame every N parsed frames (>=1)"},
     )
 
     max_frames: int | None = field(
-        default=20,
+        default=None,
         metadata={"description": "Optional cap on written frames after striding"},
     )
 
@@ -120,6 +124,21 @@ class MaceConfig:
         metadata={"description": "Prefix for info fields in output atoms objects"},
     )
 
+    @staticmethod
+    def obtain_max_frames(data_in_path: Path) -> int | None:
+        """
+        Count the number of valid frames in a Quantum ESPRESSO pw.x output file
+        by parsing it with ASE's espresso-out reader.
+
+        Returns the total frame count, or None if the file does not exist.
+        """
+        if not data_in_path.exists():
+            return None
+        text = data_in_path.read_text(encoding="latin-1")
+        raw = read(StringIO(text), format="espresso-out", index=":")
+        frames = [raw] if isinstance(raw, Atoms) else list(raw)
+        return len(frames)
+
     def __post_init__(self):
         self.model = MODEL_REGISTRY[self.model_key]
         self.resolved_energy_offset_per_atom = (
@@ -131,6 +150,13 @@ class MaceConfig:
 
     def solve_paths(self):
         data_in_path = DATA_DIR / self.group / Path(str(self.group) + ".out")
+        if self.frame_stride is None:
+            self.frame_stride = 1
+        if self.max_frames is None:
+            max = self.obtain_max_frames(data_in_path)
+            # print(f"MAX FRAMES: {max}")
+            self.max_frames = int(max / self.frame_stride)
+            # print(f"MAX FRAMES (STRIDED): {self.max_frames}")
         data_out_path = (
             DATA_DIR
             / Path(self.group)
@@ -140,6 +166,7 @@ class MaceConfig:
         self.data_in_path = data_in_path
         self.data_out_path = data_out_path
 
+        # MACE MODEL PREDICTIONS
         model_output_path = (
             PREDICTION_DIR
             / self.group
@@ -219,9 +246,5 @@ class Mace_TrainerConfig(MaceConfig):
         },
     )
 
-    def write_to_json(self, path: str) -> None:
-        with open(path, "w") as f:
-            json.dump(self.__dict__, f)
-
-    def validate(self) -> None:
+    def write_config_train(self, path: str):
         pass

@@ -120,26 +120,18 @@ def convert_qe_out_to_extxyz(cfg: MaceConfig) -> None:
 
 def main() -> None:
     ready = [
-        "LIFINTERFACE_KJPAW_V1",
-        "LIF64_KJPAW_V2",
-        "LIF_KJPAW",
         "LIWITHF_V3",
-        "BLI_V2",
-        "LIBF4_V4",
-        "",
-    ]
-    # lack = [group for group in GROUPS if group not in ready]
-    lack = [
-        "LIWITHF_NPT_FINAL",
-        "LIWITHF_ISOLATED",
+        "LIFINTERFACE_KJPAW_V1",
         "LIFINTERFACE_KJPAW_NPT_V2",
         "LIFINTERFACE_KJPAW_NPT",
     ]
+    lack = GROUPS_LIF
+    lack = [group for group in lack if group not in ready]
     for group in lack:
         config = MaceConfig(
             group=group,
             frame_stride=5,
-            max_frames=100,
+            max_frames=None,
         )
         convert_qe_out_to_extxyz(config)
 

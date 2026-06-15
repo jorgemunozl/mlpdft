@@ -1,6 +1,3 @@
-from mace.cli.run_train import run
-from mace.tools import build_default_arg_parser
-
 from config import Mace_TrainerConfig
 from constants import (
     CHECKPOINTS_DIR,
@@ -10,6 +7,10 @@ from constants import (
     MODELS_DIR,
     RESULTS_DIR,
 )
+from mace.cli.run_train import run
+from mace.tools import build_default_arg_parser
+
+# Scrap data from Hugging Face
 
 config_poc = Mace_TrainerConfig(
     model_key="0-small",
@@ -65,3 +66,5 @@ args.lora_rank = 8
 
 # Train the model
 run(args)
+
+# Sent checkpoint to Hugging Face
