@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 from dataclasses import dataclass, field, fields
 from io import StringIO
@@ -9,10 +8,14 @@ from typing import Literal, Optional
 
 from ase import Atoms
 from ase.io import read
+from huggingface_hub import HfApi, create_repo
 
 from mlpdft.constants import (
+    CHECKPOINTS_DIR,
     DATA_DIR,
+    HF_REPO_ID,
     MODEL_REGISTRY,
+    MODELS_DIR,
     PREDICTION_DIR,
     XYZ_DIR,
     ModelSpec,
@@ -27,7 +30,7 @@ class MaceConfig:
 
     group: str = field(
         default="",
-        metadata={"description": "Group name"},
+        metadata={"description": "Group name e.g. LiF64_kjpaw"},
     )
 
     model_key: Literal["0b3-medium", "0-small", "0-omat-medium"] = field(
@@ -37,7 +40,7 @@ class MaceConfig:
 
     model: ModelSpec = field(
         init=False,
-        metadata={"description": "Resolved MACE model specification"},
+        metadata={"description": "Key, path and name of the MACE model"},
     )
 
     energy_offset_per_atom: float | None = field(
@@ -115,7 +118,10 @@ class MaceConfig:
         metadata={"description": "Compute node energy"},
     )
 
-    device: Literal["cpu", "cuda"] = "cpu"
+    device: Literal["cpu", "cuda"] = field(
+        default="cpu",
+        metadata={"description": "Device to use for training"},
+    )
 
     dtype: Literal["float32", "float64"] = "float32"
 
@@ -195,6 +201,8 @@ class MaceConfig:
 
 @dataclass
 class Mace_TrainerConfig(MaceConfig):
+    """Training configuration that inherits model, device, dtype etc. from MaceConfig."""
+
     experiment_name: str = field(
         default="experiment",
         metadata={"description": ""},
@@ -209,10 +217,6 @@ class Mace_TrainerConfig(MaceConfig):
     )
     valid_file: str = field(
         default="",
-        metadata={"description": ""},
-    )
-    batch_size: int = field(
-        default=1,
         metadata={"description": ""},
     )
     max_num_epochs: int = field(
@@ -246,5 +250,48 @@ class Mace_TrainerConfig(MaceConfig):
         },
     )
 
+    def __post_init__(self):
+        # Resolve model spec and energy offset (same logic as MaceConfig)
+        self.model = MODEL_REGISTRY[self.model_key]
+        self.resolved_energy_offset_per_atom = (
+            self.model.energy_offset_per_atom
+            if self.energy_offset_per_atom is None
+            else self.energy_offset_per_atom
+        )
+        # Only resolve group paths if a group was explicitly set.
+        if self.group:
+            self.solve_paths()
+
     def write_config_train(self, path: str):
         pass
+
+    def send_model_to_hf(self):
+        api = HfApi()
+
+        HF_MODEL_REPO_ID = HF_REPO_ID
+        repo_url = create_repo(
+            repo_id=HF_MODEL_REPO_ID,
+            repo_type="model",
+            exist_ok=True,
+        )
+        print(f"[hf] Model repo ready → {repo_url}")
+
+        model_files = list(Path(MODELS_DIR).glob(f"{self.experiment_name}*.model"))
+        for model_file in model_files:
+            api.upload_file(
+                path_or_fileobj=str(model_file),
+                path_in_repo=model_file.name,
+                repo_id=HF_MODEL_REPO_ID,
+                repo_type="model",
+            )
+            print(f"[hf] Uploaded {model_file.name}")
+
+        best_ckpt = Path(CHECKPOINTS_DIR) / f"{self.experiment_name}_best.pt"
+        if best_ckpt.exists():
+            api.upload_file(
+                path_or_fileobj=str(best_ckpt),
+                path_in_repo=best_ckpt.name,
+                repo_id=HF_MODEL_REPO_ID,
+                repo_type="model",
+            )
+            print(f"[hf] Uploaded {best_ckpt.name}")

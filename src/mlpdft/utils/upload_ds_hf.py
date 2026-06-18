@@ -9,17 +9,16 @@ from ase.io import read, write
 from huggingface_hub import HfApi, create_repo
 
 from mlpdft.config import Mace_TrainerConfig
-from mlpdft.constants import DATA_DIR, GROUPS_LIF, XYZ_DIR
-
-# ---------- settings ----------
-HF_REPO_ID = "jorgemunozl/minimal_li_f_mace_dataset"
-FRAME_STRIDE = 5
-MAX_FRAMES = None  # use all frames after striding
-MERGED_FILENAME = "minimal_li_f_mace_dataset.extxyz"
-# ------------------------------
-
-# Template path (sibling of this script)
-TEMPLATE_PATH = Path(__file__).resolve().parent / "dataset_readme_template.md"
+from mlpdft.constants import (
+    DATA_DIR,
+    FRAME_STRIDE,
+    GROUPS_LIF,
+    HF_REPO_ID,
+    MAX_FRAMES,
+    MERGED_FILENAME,
+    TEMPLATE_PATH,
+    XYZ_DIR,
+)
 
 # ---------------------------------------------------------------------------
 # 1. Resolve expected .extxyz path per group

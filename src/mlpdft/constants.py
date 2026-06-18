@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from pathlib import Path
-from token import GREATER
 
 
 @dataclass
@@ -9,6 +8,17 @@ class ModelSpec:
     path: Path
     name: str
     energy_offset_per_atom: float = 0.0
+
+
+# ---------- dataset settings ----------
+HF_REPO_ID = "jorgemunozl/minimal_li_f_mace_dataset"
+
+
+FRAME_STRIDE = 5
+MAX_FRAMES = None  # use all frames after striding
+MERGED_FILENAME = "minimal_li_f_mace_dataset.extxyz"
+
+# Template path (sibling of this script)
 
 
 PATH_REPO = Path(__file__).resolve().parent.parent.parent
@@ -27,14 +37,18 @@ GROUPS_LIF = [
 
 GROUPS_BLIF = ["BLI_V2", "LIBF4_V4", "LIBF4"]
 
+GROUPS = GROUPS_LIF + GROUPS_BLIF
+
 DATA_DIR = PATH_REPO / "dataset"
 XYZ_DIR = "xyz_files"
 
 CACHE_DIR = Path("~/.cache/mace").expanduser()
 
-OUTPUTS_DIR = PATH_REPO / "src" / "outputs"
+OUTPUTS_DIR = PATH_REPO / "mlpdft" / "src" / "outputs"
 PREDICTION_DIR = OUTPUTS_DIR / "predictions"
-UTILS_DIR = PATH_REPO / "src" / "utils"
+UTILS_DIR = PATH_REPO / "mlpdft" / "src" / "utils"
+
+TEMPLATE_PATH = UTILS_DIR / "dataset_readme_template.md"
 
 ENERGY_KEY = "REF_energy"
 FORCE_KEY = "REF_forces"

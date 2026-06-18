@@ -1,104 +1,258 @@
-# mlpdft — MACE vs FitSNAP (LiF proof of concept)
+# mlpdft — MACE fine-tuning & evaluation on Li–F DFT data
 
-Experiments and helpers for comparing **[MACE](https://github.com/ACEsuit/mace)** to **[FitSNAP](https://github.com/FitSNAP/FitSNAP)** on lithium–fluoride DFT data. This is not a general-purpose library: it holds runnable scripts, evaluation code, trained FitSNAP artifacts, and slides.
+Experiments around **fine-tuning MACE foundation models** (MACE-MP, MACE-OFF,
+MACE-OMAT) on lithium–fluoride DFT (Quantum ESPRESSO) data, plus comparison
+with a **FitSNAP** SNAP baseline.
 
-Training data and FitSNAP input decks live **outside** the repo (shared project storage). Pass paths explicitly to the scripts below.
+---
 
 ## Layout
 
 ```text
 .
-├── beamer/           # Beamer deck (dataset, FitSNAP baseline, MACE, evaluation)
-├── model_LiF/        # FitSNAP outputs for the LiF model used in comparisons
-├── scripts/          # FitSNAP runners, converters, demos, small MACE utilities
-├── src/              # MACE evaluation on held-out frames
-├── pyproject.toml    # uv: mace-torch + CPU PyTorch
-└── README.md
+├── beamer/                      # Presentation slides (Typst + LaTeX)
+├── dataset/                     # QE .out files + generated .extxyz per group
+├── fitsnap_models/              # FitSNAP model checkpoints (external)
+├── main.ipynb                   # Colab notebook (quickstart)
+├── scripts/
+│   ├── evaluate_fitsnap_singlepoint.py   # Single-point eval of FitSNAP on .extxyz
+│   ├── inspect_fitsnap_pt.py             # Inspect FitSNAP .pt checkpoints
+│   └── run_train.sh                      # MACE training shell script template
+├── src/
+│   └── mlpdft/
+│       ├── config.py            # MaceConfig / Mace_TrainerConfig dataclasses
+│       ├── constants.py         # Group lists, paths, model registry, energy offsets
+│       ├── evaluate.py          # Evaluate a MACE model on .extxyz data
+│       ├── evaluate_mace_metrics.py  # Batch MACE eval across all groups
+│       ├── mace_scrap.py        # Load MACE model from path
+│       ├── md.py                # Molecular Dynamics with MACE potentials
+│       ├── train.py             # Fine-tune MACE foundation model (LoRA)
+│       ├── utils.py             # Shared helpers (JSON, perconfig, metrics)
+│       ├── utils/
+│       │   ├── qe_out_to_extxyz.py           # QE .out → multi-frame .extxyz
+│       │   ├── upload_ds_hf.py               # Merge groups + upload to HF Hub
+│       │   ├── dataset_readme_template.md    # HF dataset card template
+│       │   ├── calculate_energy_offset.py    # Compute atomic energy offsets
+│       │   ├── calculate_offset.py           # Alternative offset calculator
+│       │   └── visualize_model.py            # Model architecture diagram
+│       └── fitsnap/
+│           ├── evaluate_dataset.py           # FitSNAP inference via LAMMPS+mliappy
+│           ├── evaluate_fitsnap.py           # (deprecated)
+│           ├── evaluate_wrapper.py
+│           ├── test.py
+│           └── metrics/                      # Stored FitSNAP metrics (.txt)
+└── pyproject.toml               # uv: mace-torch + huggingface-hub + CPU PyTorch
 ```
 
-## Trained model (`model_LiF/`)
+---
 
-Checkpoints, SNAP potential files, and FitSNAP metrics for the **LiF** potential (the one used for tests in this project). See [model_LiF/README.md](model_LiF/README.md).
+## Dataset
 
-Typical contents: `LiF_Pytorch.pt`, `FitTorch_Pytorch.pt`, `LiF64_NEWJSON_pot.*`, `perconfig.dat`, `LiF-example.in`.
+All DFT data lives under `dataset/`. Each group is a Quantum ESPRESSO
+`pw.x` run:
+
+| Group | Description |
+|-------|-------------|
+| `LIF64_KJPAW_V2` | Bulk LiF — NVE / NPT trajectories |
+| `LIF64_ISOLATED` | Isolated bulk LiF frames |
+| `LIFINTERFACE_KJPAW_V1` | LiF interface (first version) |
+| `LIFINTERFACE_KJPAW_NPT` | LiF interface — NPT |
+| `LIFINTERFACE_KJPAW_NPT_V2` | LiF interface — NPT (second version) |
+| `LIWITHF_V3` | Li + F slabs (third version) |
+| `LIWITHF_ISOLATED` | Isolated Li + F frames |
+| `LIWITHF_NPT_FINAL` | Li + F — NPT (final) |
+| `BLI_V2` | B–Li system |
+| `LIBF4_V4` | Li–B–F system |
+| `LIBF4` | Li–B–F |
+
+The full merged dataset is published on Hugging Face:
+
+> **https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset**
+
+### Convert QE output → `.extxyz`
+
+```bash
+uv run python -c "
+from mlpdft.config import MaceConfig
+from mlpdft.utils.qe_out_to_extxyz import convert_qe_out_to_extxyz
+
+config = MaceConfig(
+    group='LIFINTERFACE_KJPAW_V1',
+    frame_stride=5,
+    max_frames=None,       # use all frames after striding
+)
+convert_qe_out_to_extxyz(config)
+"
+```
+
+Each configuration carries:
+- `REF_energy` — total DFT energy (eV) in `atoms.info`
+- `REF_forces` — per-atom forces (eV/Å) in `atoms.arrays`
+- `stress` — stress tensor (when available)
+- `config_type` — group label
+
+### Merge all groups & upload to Hugging Face
+
+```bash
+export HF_TOKEN="hf_…"
+uv run python src/mlpdft/utils/upload_ds_hf.py
+```
+
+The script reads every group's `.extxyz`, merges all frames into a single
+file, builds a dataset card from
+[`dataset_readme_template.md`](src/mlpdft/utils/dataset_readme_template.md),
+and uploads everything to the Hub.
+
+---
+
+## Fine-tuning MACE
+
+[`src/mlpdft/train.py`](src/mlpdft/train.py) fine-tunes a MACE foundation
+model with **LoRA** on any of the available groups:
+
+```bash
+uv run python src/mlpdft/train.py
+```
+
+The script uses `Mace_TrainerConfig` — edit the config at the top of the
+file to change group, model key, hyperparameters, etc.:
+
+```python
+config = Mace_TrainerConfig(
+    model_key="0-small",          # or "0b3-medium", "0-omat-medium"
+    group="LIF_KJPAW",            # dataset group
+    experiment_name="small_first_second",
+    r_max=0.1,
+    device="cpu",
+    max_num_epochs=2,
+    batch_size=1,
+    lora=True,
+    lora_rank=8,
+)
+```
+
+Checkpoints, models, logs, and results are written to
+`src/mlpdft/outputs/`.
+
+### Shell alternative
+
+A full CLI template with every `mace_run_train` flag is at
+[`scripts/run_train.sh`](scripts/run_train.sh).
+
+---
+
+## Evaluation
+
+### MACE on a single group
+
+```python
+from mlpdft.config import MaceConfig
+from mlpdft.evaluate import eval
+
+config = MaceConfig(
+    model_key="0-omat-medium",
+    group="LIF_KJPAW",
+    frame_stride=10,
+    max_frames=20,
+)
+eval(config)
+```
+
+Predictions are written to an `.extxyz` file with `energy`, `forces`, and
+optionally `node_energy` prefixed fields.
+
+### Batch MACE evaluation (all groups)
+
+[`src/mlpdft/evaluate_mace_metrics.py`](src/mlpdft/evaluate_mace_metrics.py)
+runs the `0-omat-medium` model on **all groups** and prints a summary table
+with energy/force MAE, RMSE, and MaxAE:
+
+```bash
+uv run python src/mlpdft/evaluate_mace_metrics.py
+```
+
+### FitSNAP single-point evaluation
+
+```bash
+uv run python scripts/evaluate_fitsnap_singlepoint.py
+```
+
+Loads a trained FitTorch model into LAMMPS + mliappy, evaluates on `.extxyz`
+frames, and writes metrics `.txt` files to `src/mlpdft/fitsnap/metrics/`.
+
+### Inspect a FitSNAP checkpoint
+
+```bash
+uv run python scripts/inspect_fitsnap_pt.py fitsnap_models/LI_F/checkpoints/LiF_Pytorch.pt
+```
+
+---
+
+## Molecular Dynamics
+
+[`src/mlpdft/md.py`](src/mlpdft/md.py) runs MD from the first frame of a
+dataset using a MACE potential:
+
+```python
+from mlpdft.config import MaceConfig
+from mlpdft.md import run_md
+
+config = MaceConfig(
+    model_key="0-omat-medium",
+    group="LIF_KJPAW",
+    frame_stride=10,
+    max_frames=20,
+)
+run_md(config, temperature_K=300.0, n_steps=10_000)
+```
+
+Supported thermostats: Langevin, Nose–Hoover chain, Velocity Verlet.
+Trajectories and logs are saved alongside the model output directory.
+
+---
+
+## FitSNAP metrics
+
+Stored in [`src/mlpdft/fitsnap/metrics/`](src/mlpdft/fitsnap/metrics/).
+A Typst table summarises energy and force errors across all datasets:
+
+```bash
+typst compile src/mlpdft/fitsnap/metrics/metrics_table.typ
+```
+
+---
 
 ## Python environment
 
-[`pyproject.toml`](pyproject.toml) installs **`mace-torch`** with **`torch` from the PyTorch CPU wheel index** (avoids pulling CUDA wheels on Linux).
+[`pyproject.toml`](pyproject.toml) installs **`mace-torch`** and
+**`huggingface-hub`** with **`torch` from the CPU-only PyTorch index**
+(avoids pulling NVIDIA CUDA wheels on Linux).
 
 ```bash
 cd /path/to/mlpdft
 uv sync
-# Optional: keep MACE-MP checkpoints under the repo
+# Cache MACE‑MP checkpoints under the repo
 export XDG_CACHE_HOME=$PWD/.cache
 ```
 
-## Scripts (`scripts/`)
+---
 
-| Path | Role |
-|------|------|
-| `run_fitsnap3_patched.py` | Run FitSNAP 3 from a `.in` file. Paths resolve from the **repo root**. Patches `randint` for **Python 3.14+**. |
-| `run_lif64_fitsnap.py` | Convenience wrapper around `run_fitsnap3_patched.py` for a LiF64 NEWJSON deck (you supply the `.in` file and JSON directory). |
-| `fitsnap_json_scrape.py` | Minimal scrape: `scrape_groups` → `motion_configs` → `scrape_configs`. |
-| `fitsnap_snap_matrix.py` | `snap_design_matrix()`: scrape → `process_configs` → SNAP bispectrum matrix `A`. |
-| `snap_bispectrum.py` | CLI: print `A.shape`, optional `-o` saves NumPy `.npy`. Needs LAMMPS with SNAP. |
-| `fitsnap_json_to_extxyz.py` | FitSNAP-style JSON → `train.xyz` / `test.xyz` (same 80/20 split as FitSNAP `random_sampling=0`). Requires `--json-dir` and `--out-dir`. |
-| `mace_on_qe_out.py` | Last frame from a Quantum ESPRESSO **pw.x** `.out` → **MACE-MP** energy/forces on CPU. |
-| `print_mace_model_arch.py` | Load a MACE `.model` and print `r_max`, `num_interactions`, `hidden_irreps`, etc. |
-| `random_energy_demo.py` | Pedagogical: JSON frames → toy features → random linear “energy”. |
-| `toy_energy.py` | Shared toy-feature helpers. |
-| `random_energy_fitsnap.py` | CLI combining scrape + toy energy (no bispectrum). |
+## Presentation
 
-Pedagogical demos need a `--glob` (or similar) pointing at your JSON frames; there is no bundled dataset in this repo.
-
-## MACE evaluation (`src/`)
-
-Configure and run via `MaceEvalConfig` (no CLI flags):
-
-```python
-from pathlib import Path
-from mace_eval_fitsnap_test import MaceEvalConfig, run
-
-cfg = MaceEvalConfig(
-    test_extxyz=Path("/path/to/test.xyz"),
-    mace_model=Path("/path/to/checkpoints/final.model"),  # omit for MACE-MP zero-shot
-    device="cuda",
-    out_csv=Path("outputs/mace_eval.csv"),
-)
-run(cfg)
-```
-
-For JSON or `perconfig.dat` splits, set `json_root` and optionally `perconfig`. Per-config energy and force errors are in **eV** and **eV/Å**.
-
-Or execute the `if __name__ == "__main__"` block in [`src/mace_eval_fitsnap_test.py`](src/mace_eval_fitsnap_test.py) after editing the example `MaceEvalConfig` there.
-
-To build `test.xyz` from JSON elsewhere:
+[`beamer/main.typst`](beamer/main.typst) — proof-of-concept deck (Typst).
 
 ```bash
-uv run python scripts/fitsnap_json_to_extxyz.py \
-  --json-dir /path/to/NEWJSON/DEFAULT \
-  --out-dir /path/to/xyz
+typst compile beamer/main.typst
 ```
 
-## Beamer
-
-[`beamer/main.tex`](beamer/main.tex) — proof-of-concept deck: external dataset catalog, FitSNAP baseline (`model_LiF/`), MACE architecture, zero-shot and finetuning notes.
-
-```bash
-cd beamer && pdflatex main.tex
-```
+---
 
 ## Prerequisites
 
-- **FitSNAP 3** (`fitsnap3lib`) and, for SNAP bispectrum workflows, **LAMMPS** with SNAP support.
-- **uv** (or another way to install from `pyproject.toml`) for MACE helpers and `src/mace_eval_fitsnap_test.py`.
-
-## Run FitSNAP (external data)
-
-Point `run_fitsnap3_patched.py` at a FitSNAP `.in` file on your machine (with `dataPath` set to your JSON):
-
-```bash
-uv run python scripts/run_fitsnap3_patched.py /path/to/your.deck.in
-```
-
-Outputs follow the `[OUTFILE]` section of that input (potential files, metrics, `perconfig.dat`, etc.).
+- **`uv`** — Python package manager
+- **MACE foundation models** — downloaded automatically on first use to
+  `~/.cache/mace/` (or `$XDG_CACHE_HOME`)
+- **FitSNAP / LAMMPS** — only needed for FitSNAP evaluation scripts
+  (`evaluate_fitsnap_singlepoint.py`, `evaluate_dataset.py`)
+- **Hugging Face token** — only needed for `upload_ds_hf.py`
+  (`export HF_TOKEN="hf_…"` or `huggingface-cli login`)
