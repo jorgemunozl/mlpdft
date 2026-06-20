@@ -44,9 +44,10 @@ XYZ_DIR = "xyz_files"
 
 CACHE_DIR = Path("~/.cache/mace").expanduser()
 
-OUTPUTS_DIR = PATH_REPO / "mlpdft" / "src" / "outputs"
+SRC_DIR = PATH_REPO / "mlpdft" / "src"
+OUTPUTS_DIR = SRC_DIR / "outputs"
 PREDICTION_DIR = OUTPUTS_DIR / "predictions"
-UTILS_DIR = PATH_REPO / "mlpdft" / "src" / "utils"
+UTILS_DIR = SRC_DIR / "utils"
 
 TEMPLATE_PATH = UTILS_DIR / "dataset_readme_template.md"
 
@@ -64,7 +65,6 @@ ENERGY_OFFSET = {
     9: F_ISOLATED,
 }
 
-OUTPUTS_DIR = PATH_REPO / "src" / "mlpdft" / "outputs"
 CHECKPOINTS_DIR = OUTPUTS_DIR / "checkpoints"
 RESULTS_DIR = OUTPUTS_DIR / "results"
 MODELS_DIR = OUTPUTS_DIR / "models"

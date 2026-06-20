@@ -17,8 +17,8 @@ from mlpdft.constants import (
     HF_REPO_ID,
     MODEL_REGISTRY,
     MODELS_DIR,
-    OUTPUTS_DIR,
     PREDICTION_DIR,
+    SRC_DIR,
     XYZ_DIR,
     ModelSpec,
 )
@@ -428,7 +428,7 @@ class Mace_TrainerConfig(MaceConfig):
             self.solve_paths()
 
         self.metadata.config_path = str(
-            (OUTPUTS_DIR / "configs" / f"{self.metadata.experiment_name}.json")
+            (SRC_DIR / "configs" / f"{self.metadata.experiment_name}.json")
         )
 
     def write_config_train(self):
