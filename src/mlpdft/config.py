@@ -166,6 +166,7 @@ class MaceConfig:
 
     def download_model(self):
         if self.model.hf_id is not None:
+            os.makedirs(MODELS_DIR / self.model_key, exist_ok=True)
             model = hf_hub_download(
                 repo_id=self.model.hf_id,
                 filename=str(self.model.path.name),

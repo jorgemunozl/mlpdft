@@ -36,7 +36,7 @@ path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME)
 # ---------------------------------------------------------------------------
 config = Mace_TrainerConfig(
     model_key="0-omat-medium",
-    device="cpu",
+    device="cuda",
     dtype="float64",  # 0-omat-medium is float64; must match or LoRA dtypes conflict
     hyperparams=MaceTrainingHyperparams(
         r_max=0.1,
