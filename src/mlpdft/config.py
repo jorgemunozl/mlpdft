@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import json
 import os
-from dataclasses import dataclass, field, fields
+from dataclasses import asdict, dataclass, field, fields
 from io import StringIO
 from pathlib import Path
 from typing import Literal, Optional
@@ -16,6 +17,7 @@ from mlpdft.constants import (
     HF_REPO_ID,
     MODEL_REGISTRY,
     MODELS_DIR,
+    OUTPUTS_DIR,
     PREDICTION_DIR,
     XYZ_DIR,
     ModelSpec,
@@ -200,54 +202,217 @@ class MaceConfig:
 
 
 @dataclass
-class Mace_TrainerConfig(MaceConfig):
-    """Training configuration that inherits model, device, dtype etc. from MaceConfig."""
+class MaceTrainingHyperparams:
+    """Core hyperparameters for MACE fine-tuning (model architecture, loss, optimizer, scheduler, etc.)."""
 
-    experiment_name: str = field(
-        default="experiment",
-        metadata={"description": ""},
-    )
+    # Model architecture
     r_max: float = field(
-        default=0.1,
-        metadata={"description": ""},
+        default=5.0,
+        metadata={"description": "Cutoff radius (Å)"},
     )
-    train_file: str = field(
-        default="",
-        metadata={"description": ""},
+    num_channels: int = field(
+        default=128,
+        metadata={"description": "Number of message-passing channels"},
     )
-    valid_file: str = field(
-        default="",
-        metadata={"description": ""},
+    max_L: int = field(
+        default=1,
+        metadata={
+            "description": "Maximum spherical harmonics L (0=scalars, 1=vectors)"
+        },
     )
-    max_num_epochs: int = field(
-        default=4,
-        metadata={"description": ""},
+    max_ell: int = field(
+        default=3,
+        metadata={"description": "Maximum spherical harmonics ell order"},
     )
+    num_interactions: int = field(
+        default=2,
+        metadata={"description": "Number of interaction blocks"},
+    )
+    correlation: int = field(
+        default=3,
+        metadata={"description": "Body order (3 = 4-body)"},
+    )
+    num_radial_basis: int = field(
+        default=8,
+        metadata={"description": "Number of radial basis functions"},
+    )
+    num_cutoff_basis: int = field(
+        default=5,
+        metadata={"description": "Number of cutoff basis functions"},
+    )
+
+    # Data keys
     energy_key: str = field(
         default="REF_energy",
-        metadata={"description": ""},
+        metadata={"description": "Key for reference energies in the dataset"},
     )
     force_key: str = field(
         default="REF_forces",
-        metadata={"description": ""},
+        metadata={"description": "Key for reference forces in the dataset"},
+    )
+    train_file: str = field(
+        default="",
+        metadata={"description": "Path to training data file"},
+    )
+    valid_file: str = field(
+        default="",
+        metadata={"description": "Path to validation data file"},
+    )
+
+    # Batch / epoch settings
+    batch_size: int = field(
+        default=10,
+        metadata={"description": "Training batch size"},
+    )
+    max_num_epochs: int = field(
+        default=300,
+        metadata={"description": "Maximum number of training epochs"},
     )
     valid_batch_size: int = field(
         default=1,
-        metadata={"description": "Batch size used for validation"},
+        metadata={"description": "Validation batch size"},
     )
     valid_frac: float = field(
         default=0.1,
-        metadata={"description": "Fraction of data used for validation"},
+        metadata={"description": "Fraction of data held out for validation"},
     )
     pin_memory: bool = field(
         default=False,
         metadata={"description": "Pin memory for DataLoader"},
     )
+
+    # Loss weights
+    loss: str = field(
+        default="weighted",
+        metadata={"description": "Loss function type"},
+    )
+    forces_weight: float = field(
+        default=1.0,
+        metadata={"description": "Weight of the force contribution to the loss"},
+    )
+    energy_weight: float = field(
+        default=1.0,
+        metadata={"description": "Weight of the energy contribution to the loss"},
+    )
+
+    # Optimizer
+    optimizer: str = field(
+        default="adam",
+        metadata={"description": "Optimizer name"},
+    )
+    lr: float = field(
+        default=0.01,
+        metadata={"description": "Learning rate"},
+    )
+    amsgrad: bool = field(
+        default=True,
+        metadata={"description": "Use AMSGrad variant of Adam"},
+    )
+    weight_decay: float = field(
+        default=5e-7,
+        metadata={"description": "L2 weight decay regularization"},
+    )
+    clip_grad: float = field(
+        default=10.0,
+        metadata={"description": "Gradient clipping threshold"},
+    )
+
+    # Scheduler
+    scheduler: str = field(
+        default="ReduceLROnPlateau",
+        metadata={"description": "Learning rate scheduler type"},
+    )
+    lr_factor: float = field(
+        default=0.8,
+        metadata={"description": "LR scheduler decay factor"},
+    )
+    scheduler_patience: int = field(
+        default=50,
+        metadata={"description": "Epochs to wait before LR decay"},
+    )
+
+    # Stage two (SWA)
+    swa: bool = field(
+        default=True,
+        metadata={"description": "Enable stage two (SWA)"},
+    )
+    start_swa: int = field(
+        default=240,
+        metadata={"description": "Epoch to begin stage two"},
+    )
+    swa_lr: float = field(
+        default=1e-3,
+        metadata={"description": "Learning rate for stage two"},
+    )
+
+    # EMA
+    ema: bool = field(
+        default=True,
+        metadata={"description": "Enable exponential moving average of weights"},
+    )
+    ema_decay: float = field(
+        default=0.99,
+        metadata={"description": "EMA decay rate"},
+    )
+
+    # Early stopping
+    patience: int = field(
+        default=100,
+        metadata={"description": "Patience for early stopping (epochs)"},
+    )
+    eval_interval: int = field(
+        default=1,
+        metadata={"description": "Evaluation interval (epochs)"},
+    )
+
+    # LoRA fine-tuning
+    lora: bool = field(
+        default=True,
+        metadata={"description": "Enable LoRA fine-tuning"},
+    )
+    lora_rank: int = field(
+        default=8,
+        metadata={"description": "Rank of LoRA decomposition"},
+    )
+
+
+@dataclass
+class MaceTrainingMetadata:
+    """Metadata about the training run."""
+
+    experiment_name: str = field(
+        default="experiment",
+        metadata={"description": "Name of the experiment (used for output files)"},
+    )
+    seed: int = field(
+        default=123,
+        metadata={"description": "Random seed for reproducibility"},
+    )
+    config_path: str = field(
+        default="",
+        metadata={"description": "Path to save / load the training config JSON"},
+    )
     model_dir: str = field(
         default="models",
-        metadata={
-            "description": "Directory to save both compile and no compile model checkpoints and results"
-        },
+        metadata={"description": "Directory for model checkpoints and results"},
+    )
+
+
+@dataclass
+class Mace_TrainerConfig(MaceConfig):
+    """Training configuration that composes hyperparameters and metadata.
+
+    Inherits model selection, device, dtype, and evaluation-oriented fields
+    from MaceConfig.
+    """
+
+    hyperparams: MaceTrainingHyperparams = field(
+        default_factory=MaceTrainingHyperparams,
+        metadata={"description": "Core training hyperparameters"},
+    )
+    metadata: MaceTrainingMetadata = field(
+        default_factory=MaceTrainingMetadata,
+        metadata={"description": "Run metadata (experiment name, seed, etc.)"},
     )
 
     def __post_init__(self):
@@ -262,8 +427,27 @@ class Mace_TrainerConfig(MaceConfig):
         if self.group:
             self.solve_paths()
 
-    def write_config_train(self, path: str):
-        pass
+        self.metadata.config_path = str(
+            (OUTPUTS_DIR / "configs" / f"{self.metadata.experiment_name}.json")
+        )
+
+    def write_config_train(self):
+        """Serialize training config (hyperparams + metadata) to a JSON file."""
+        config_dict = {
+            "hyperparams": asdict(self.hyperparams),
+            "metadata": asdict(self.metadata),
+        }
+        with open(self.metadata.config_path, "w") as f:
+            json.dump(config_dict, f, indent=2)
+
+    @classmethod
+    def load_config_train(cls, path: str) -> Mace_TrainerConfig:
+        """Load training config from a JSON file and return a new instance."""
+        with open(path, "r") as f:
+            config_dict = json.load(f)
+        hyperparams = MaceTrainingHyperparams(**config_dict["hyperparams"])
+        metadata = MaceTrainingMetadata(**config_dict["metadata"])
+        return cls(hyperparams=hyperparams, metadata=metadata)
 
     def send_model_to_hf(self):
         api = HfApi()
@@ -276,7 +460,9 @@ class Mace_TrainerConfig(MaceConfig):
         )
         print(f"[hf] Model repo ready → {repo_url}")
 
-        model_files = list(Path(MODELS_DIR).glob(f"{self.experiment_name}*.model"))
+        model_files = list(
+            Path(MODELS_DIR).glob(f"{self.metadata.experiment_name}*.model")
+        )
         for model_file in model_files:
             api.upload_file(
                 path_or_fileobj=str(model_file),
@@ -286,7 +472,7 @@ class Mace_TrainerConfig(MaceConfig):
             )
             print(f"[hf] Uploaded {model_file.name}")
 
-        best_ckpt = Path(CHECKPOINTS_DIR) / f"{self.experiment_name}_best.pt"
+        best_ckpt = Path(CHECKPOINTS_DIR) / f"{self.metadata.experiment_name}_best.pt"
         if best_ckpt.exists():
             api.upload_file(
                 path_or_fileobj=str(best_ckpt),

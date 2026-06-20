@@ -2,7 +2,11 @@ from huggingface_hub import hf_hub_download
 from mace.cli.run_train import run
 from mace.tools import build_default_arg_parser
 
-from mlpdft.config import Mace_TrainerConfig
+from mlpdft.config import (
+    Mace_TrainerConfig,
+    MaceTrainingHyperparams,
+    MaceTrainingMetadata,
+)
 from mlpdft.constants import (
     CHECKPOINTS_DIR,
     DATA_DIR,
@@ -15,7 +19,7 @@ from mlpdft.constants import (
     XYZ_DIR,
 )
 
-# Scrap data from Hugging Face
+# Download dataset from Hugging Face
 dataset = hf_hub_download(
     repo_id=HF_REPO_ID,
     filename=MERGED_FILENAME,
@@ -24,100 +28,108 @@ dataset = hf_hub_download(
 )
 
 path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME)
+# path_data = str(DATA_DIR / XYZ_DIR / "test.extxyz")
 
-# Config Proof of Concept
-config_poc = Mace_TrainerConfig(
+# ---------------------------------------------------------------------------
+# Config — all hyperparameter values come from the dataclass defaults.
+# Only override what differs from the defaults.
+# ---------------------------------------------------------------------------
+config = Mace_TrainerConfig(
     model_key="0-omat-medium",
-    experiment_name="first training attempt",
-    r_max=5.0,  # Å — 0.1 was way too small for any chemical bond
     device="cpu",
-    max_num_epochs=300,
-    batch_size=10,
+    dtype="float64",  # 0-omat-medium is float64; must match or LoRA dtypes conflict
+    hyperparams=MaceTrainingHyperparams(
+        r_max=0.1,
+        max_num_epochs=1,
+        batch_size=1,
+    ),
+    metadata=MaceTrainingMetadata(
+        experiment_name="mock_test",
+    ),
 )
+config.write_config_train()
 
-config = config_poc
-
+# ---------------------------------------------------------------------------
+# Build the MACE argument namespace from config fields
+# ---------------------------------------------------------------------------
 parser = build_default_arg_parser()
-args = parser.parse_args(["--name", config.experiment_name])
+args = parser.parse_args(["--name", config.metadata.experiment_name])
 
-args.seed = 123
+args.seed = config.metadata.seed
 
-# DIRS
+# Dirs
 args.checkpoints_dir = CHECKPOINTS_DIR
 args.results_dir = RESULTS_DIR
 args.model_dir = MODELS_DIR
 args.log_dir = LOGS_DIR
 
-# PRECISION
-args.default_dtype = (
-    "float64"  # 0-omat-medium is float64; must match or LoRA dtypes conflict
-)
-
-# DEVICE
+# Precision & device
+args.default_dtype = config.dtype
 args.device = config.device
 
-# MODEL ARCHITECTURE — inherited from the foundation model, but we spell them out explicitly
+# Model architecture
 args.model = "MACE"
-args.r_max = config.r_max
-args.num_channels = 128
-args.max_L = 1  # 0-omat-medium uses L=1 (vectors); 0-small uses L=0 (scalars only)
-args.max_ell = 3  # spherical harmonics l_max
-args.num_interactions = 2  # number of interaction blocks
-args.correlation = 3  # body order (3 = 4-body)
-args.num_radial_basis = 8
-args.num_cutoff_basis = 5
+args.r_max = config.hyperparams.r_max
+args.num_channels = config.hyperparams.num_channels
+args.max_L = config.hyperparams.max_L
+args.max_ell = config.hyperparams.max_ell
+args.num_interactions = config.hyperparams.num_interactions
+args.correlation = config.hyperparams.correlation
+args.num_radial_basis = config.hyperparams.num_radial_basis
+args.num_cutoff_basis = config.hyperparams.num_cutoff_basis
 
-# DATA KEYS
-args.energy_key = config.energy_key
-args.force_key = config.force_key
+# Data keys
+args.energy_key = config.hyperparams.energy_key
+args.force_key = config.hyperparams.force_key
 
-# DATASET
-args.pin_memory = config.pin_memory
+# Dataset
+args.pin_memory = config.hyperparams.pin_memory
 args.E0s = str(ENERGY_OFFSET)
-
-# Here set up the hf dataset
 args.train_file = path_data
 
-# LOSS — gentle weights for fine-tuning (foundation model already predicts well)
-args.loss = "weighted"
-args.forces_weight = 1.0  # default is 100 — too aggressive for FT
-args.energy_weight = 1.0
-args.valid_batch_size = config.valid_batch_size
-args.valid_frac = config.valid_frac
-args.batch_size = config.batch_size
-args.max_num_epochs = config.max_num_epochs
+# Loss
+args.loss = config.hyperparams.loss
+args.forces_weight = config.hyperparams.forces_weight
+args.energy_weight = config.hyperparams.energy_weight
+args.valid_batch_size = config.hyperparams.valid_batch_size
+args.valid_frac = config.hyperparams.valid_frac
+args.batch_size = config.hyperparams.batch_size
+args.max_num_epochs = config.hyperparams.max_num_epochs
 
-# OPTIMIZER
-args.optimizer = "adam"
-args.lr = 0.01  # standard LR for MACE fine-tuning (from README)
-args.amsgrad = True
-args.weight_decay = 5e-7  # light L2 regularization
-args.clip_grad = 10.0  # prevent gradient explosion
+# Optimizer
+args.optimizer = config.hyperparams.optimizer
+args.lr = config.hyperparams.lr
+args.amsgrad = config.hyperparams.amsgrad
+args.weight_decay = config.hyperparams.weight_decay
+args.clip_grad = config.hyperparams.clip_grad
 
-# SCHEDULER
-args.scheduler = "ReduceLROnPlateau"
-args.lr_factor = 0.8
-args.scheduler_patience = 50
+# Scheduler
+args.scheduler = config.hyperparams.scheduler
+args.lr_factor = config.hyperparams.lr_factor
+args.scheduler_patience = config.hyperparams.scheduler_patience
 
-# STAGE TWO (previously called SWA) — boosts energy accuracy in final ~20% epochs
-args.swa = True
-args.start_swa = 240  # begin stage two at epoch 240
-args.swa_lr = 1e-3
+# Stage two (SWA)
+args.swa = config.hyperparams.swa
+args.start_swa = config.hyperparams.start_swa
+args.swa_lr = config.hyperparams.swa_lr
 
-# EMA — smooths final weights for better stability
-args.ema = True
-args.ema_decay = 0.99
+# EMA
+args.ema = config.hyperparams.ema
+args.ema_decay = config.hyperparams.ema_decay
 
-# EARLY STOPPING
-args.patience = 100  # stop if validation loss plateaus for 100 epochs
-args.eval_interval = 1
+# Early stopping
+args.patience = config.hyperparams.patience
+args.eval_interval = config.hyperparams.eval_interval
 
-# Fine-tuning
-args.foundation_model = config.model.path
-args.lora = True
-args.lora_rank = 8
+# LoRA fine-tuning
+args.foundation_model = config.model.path  # resolved from model_key in __post_init__
+args.lora = config.hyperparams.lora
+args.lora_rank = config.hyperparams.lora_rank
 
-# Train the model
+# ---------------------------------------------------------------------------
+# Train
+# ---------------------------------------------------------------------------
 run(args)
 
+config.write_config_train()
 config.send_model_to_hf()
