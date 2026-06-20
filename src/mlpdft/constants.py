@@ -12,8 +12,8 @@ class ModelSpec:
 
 
 # ---------- dataset settings ----------
-HF_REPO_ID = "jorgemunozl/minimal_li_f_mace_dataset"
-
+PREFIX_HF = "jorgemunozl"
+DATASET_NAME = "first_mace_test"
 
 FRAME_STRIDE = 5
 MAX_FRAMES = None  # use all frames after striding

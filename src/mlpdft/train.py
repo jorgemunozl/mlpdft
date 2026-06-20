@@ -10,18 +10,19 @@ from mlpdft.config import (
 from mlpdft.constants import (
     CHECKPOINTS_DIR,
     DATA_DIR,
+    DATASET_NAME,
     ENERGY_OFFSET,
-    HF_REPO_ID,
     LOGS_DIR,
     MERGED_FILENAME,
     MODELS_DIR,
+    PREFIX_HF,
     RESULTS_DIR,
     XYZ_DIR,
 )
 
 # Download dataset from Hugging Face
 dataset = hf_hub_download(
-    repo_id=HF_REPO_ID,
+    repo_id=PREFIX_HF + "/" + DATASET_NAME,
     filename=MERGED_FILENAME,
     repo_type="dataset",
     local_dir=str(DATA_DIR / XYZ_DIR),
@@ -39,9 +40,12 @@ config = Mace_TrainerConfig(
     device="cuda",
     dtype="float64",  # 0-omat-medium is float64; must match or LoRA dtypes conflict
     hyperparams=MaceTrainingHyperparams(
-        r_max=0.1,
-        max_num_epochs=1,
-        batch_size=1,
+        r_max=5,
+        max_num_epochs=10,
+        batch_size=8,
+        patience=10,
+        eval_interval=10,
+        swa=False,
     ),
     metadata=MaceTrainingMetadata(
         experiment_name="mock_test",
@@ -58,10 +62,10 @@ args = parser.parse_args(["--name", config.metadata.experiment_name])
 args.seed = config.metadata.seed
 
 # Dirs
-args.checkpoints_dir = CHECKPOINTS_DIR
-args.results_dir = RESULTS_DIR
-args.model_dir = MODELS_DIR
-args.log_dir = LOGS_DIR
+args.checkpoints_dir = CHECKPOINTS_DIR / config.metadata.experiment_name
+args.results_dir = RESULTS_DIR / config.metadata.experiment_name
+args.model_dir = MODELS_DIR / config.metadata.experiment_name
+args.log_dir = LOGS_DIR / config.metadata.experiment_name
 
 # Precision & device
 args.default_dtype = config.dtype

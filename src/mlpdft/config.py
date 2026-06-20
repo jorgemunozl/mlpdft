@@ -14,10 +14,10 @@ from huggingface_hub import HfApi, create_repo, hf_hub_download
 from mlpdft.constants import (
     CHECKPOINTS_DIR,
     DATA_DIR,
-    HF_REPO_ID,
     MODEL_REGISTRY,
     MODELS_DIR,
     PREDICTION_DIR,
+    PREFIX_HF,
     SRC_DIR,
     XYZ_DIR,
     ModelSpec,
@@ -470,7 +470,7 @@ class Mace_TrainerConfig(MaceConfig):
     def send_model_to_hf(self):
         api = HfApi()
 
-        HF_MODEL_REPO_ID = HF_REPO_ID
+        HF_MODEL_REPO_ID = PREFIX_HF + "/" + self.metadata.experiment_name
         repo_url = create_repo(
             repo_id=HF_MODEL_REPO_ID,
             repo_type="model",
@@ -478,8 +478,11 @@ class Mace_TrainerConfig(MaceConfig):
         )
         print(f"[hf] Model repo ready → {repo_url}")
 
+        os.makedirs(MODELS_DIR / self.metadata.experiment_name, exist_ok=True)
         model_files = list(
-            Path(MODELS_DIR).glob(f"{self.metadata.experiment_name}*.model")
+            Path(MODELS_DIR / self.metadata.experiment_name).glob(
+                f"{self.metadata.experiment_name}*.model"
+            )
         )
         for model_file in model_files:
             api.upload_file(
