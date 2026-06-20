@@ -9,7 +9,7 @@ from typing import Literal, Optional
 
 from ase import Atoms
 from ase.io import read
-from huggingface_hub import HfApi, create_repo
+from huggingface_hub import HfApi, create_repo, hf_hub_download
 
 from mlpdft.constants import (
     CHECKPOINTS_DIR,
@@ -148,13 +148,30 @@ class MaceConfig:
         return len(frames)
 
     def __post_init__(self):
+        # Valid that model exist
         self.model = MODEL_REGISTRY[self.model_key]
+
+        # Validate model path
+        if not self.model.path.exists():
+            print(f"Model path does not exist: {self.model.path}")
+            print(f"Downloading model: {self.model.path}")
+            self.download_model()
+
         self.resolved_energy_offset_per_atom = (
             self.model.energy_offset_per_atom
             if self.energy_offset_per_atom is None
             else self.energy_offset_per_atom
         )
         self.solve_paths()
+
+    def download_model(self):
+        if self.model.hf_id is not None:
+            model = hf_hub_download(
+                repo_id=self.model.hf_id,
+                filename=str(self.model.path.name),
+                repo_type="model",
+                local_dir=str(MODELS_DIR / self.model_key),
+            )
 
     def solve_paths(self):
         data_in_path = DATA_DIR / self.group / Path(str(self.group) + ".out")

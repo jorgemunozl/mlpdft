@@ -7,6 +7,7 @@ class ModelSpec:
     key: str
     path: Path
     name: str
+    hf_id: str = None
     energy_offset_per_atom: float = 0.0
 
 
@@ -42,9 +43,7 @@ GROUPS = GROUPS_LIF + GROUPS_BLIF
 DATA_DIR = PATH_REPO / "dataset"
 XYZ_DIR = "xyz_files"
 
-CACHE_DIR = Path("~/.cache/mace").expanduser()
-
-SRC_DIR = PATH_REPO / "mlpdft" / "src"
+SRC_DIR = PATH_REPO / "src" / "mlpdft"
 OUTPUTS_DIR = SRC_DIR / "outputs"
 PREDICTION_DIR = OUTPUTS_DIR / "predictions"
 UTILS_DIR = SRC_DIR / "utils"
@@ -76,19 +75,20 @@ FITSNAP_DIR = PATH_REPO / "fitsnap_models" / "LI_F"
 MODEL_REGISTRY = {
     "0b3-medium": ModelSpec(
         key="0b3-medium",
-        path=CACHE_DIR / "mace-mp-0b3-medium.model",
         name="mace-mp-0b3-medium",
+        path="",
         energy_offset_per_atom=0.0,
     ),
     "0-small": ModelSpec(
         key="0-small",
-        path=CACHE_DIR / "20231210mace128L0_energy_epoch249model",
         name="mace-mp-0-small",
+        path="",
         energy_offset_per_atom=0.0,
     ),
     "0-omat-medium": ModelSpec(
         key="0-omat-medium",
-        path=CACHE_DIR / "mace-omat-0-medium.model",
+        path=MODELS_DIR / "0-omat-medium" / "mace-omat-0-medium.model",
+        hf_id="jorgemunozl/mace_omat_medium",
         name="mace-mp-0-omat-medium",
         energy_offset_per_atom=0.0,
     ),
