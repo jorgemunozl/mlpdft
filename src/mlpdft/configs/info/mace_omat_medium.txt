@@ -1,0 +1,158 @@
+======================================================================
+  Model Class        : ScaleShiftMACE
+  Total parameters   : 9,063,204
+  Approx size (fp32) : 34.6 MB
+  File               : mace_omat_medium.model
+  File size          : 75.8 MB
+
+  ──────────────────────────────────────────────────────────────────
+  ARCHITECTURE
+  ──────────────────────────────────────────────────────────────────
+  r_max (cutoff)        : 6.000 Å
+  num_interactions      : 2
+  heads                 : ['default']
+  hidden_irreps         : 128x0e+128x1o
+    → num_channels     : 128
+    → max_L            : 1
+  max_ell (SH lm max)   : 3
+  correlation           : 3 (4-body order)
+  num_radial_basis      : 10
+  num_cutoff_basis      : 5
+  radial_type           : BesselBasis
+  distance_transform    : AgnesiTransform
+  avg_num_neighbors     : 61.96
+  readout_cls           : NonLinearReadoutBlock
+
+  ──────────────────────────────────────────────────────────────────
+  ELEMENTS
+  ──────────────────────────────────────────────────────────────────
+  num_elements          : 89
+  atomic_numbers (Z)    : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 89, 90, 91, 92, 93, 94]
+  symbols               : ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu']
+
+  ──────────────────────────────────────────────────────────────────
+  ENERGY REFERENCE (E0s)
+  ──────────────────────────────────────────────────────────────────
+  scale_shift.scale     : tensor(0.7736, dtype=torch.float64)
+  scale_shift.shift     : tensor(0., dtype=torch.float64)
+  E0 table (per element):
+    Z=  1 (H ) : -1.11734008 eV
+    Z=  2 (He) :  0.00096759 eV
+    Z=  3 (Li) : -0.29754725 eV
+    Z=  4 (Be) : -0.01781697 eV
+    Z=  5 (B ) : -0.26885011 eV
+    Z=  6 (C ) : -1.26173507 eV
+    Z=  7 (N ) : -3.12438806 eV
+    Z=  8 (O ) : -1.54838784 eV
+    Z=  9 (F ) : -0.51882044 eV
+    Z= 10 (Ne) : -0.01241601 eV
+    Z= 11 (Na) : -0.22883163 eV
+    Z= 12 (Mg) : -0.00951015 eV
+    Z= 13 (Al) : -0.21630193 eV
+    Z= 14 (Si) : -0.82639030 eV
+    Z= 15 (P ) : -1.88816619 eV
+    Z= 16 (S ) : -0.89160769 eV
+    Z= 17 (Cl) : -0.25828273 eV
+    Z= 18 (Ar) : -0.04925973 eV
+    Z= 19 (K ) : -0.22697913 eV
+    Z= 20 (Ca) : -0.09277950 eV
+    Z= 21 (Sc) : -2.11396364 eV
+    Z= 22 (Ti) : -2.50054871 eV
+    Z= 23 (V ) : -3.70477179 eV
+    Z= 24 (Cr) : -5.60261985 eV
+    Z= 25 (Mn) : -5.32541181 eV
+    Z= 26 (Fe) : -3.52004933 eV
+    Z= 27 (Co) : -1.93555024 eV
+    Z= 28 (Ni) : -0.93519690 eV
+    Z= 29 (Cu) : -0.60025846 eV
+    Z= 30 (Zn) : -0.16513320 eV
+    Z= 31 (Ga) : -0.32990651 eV
+    Z= 32 (Ge) : -0.77971828 eV
+    Z= 33 (As) : -1.68367812 eV
+    Z= 34 (Se) : -0.76941032 eV
+    Z= 35 (Br) : -0.22213843 eV
+    Z= 36 (Kr) : -0.03358790 eV
+    Z= 37 (Rb) : -0.18817240 eV
+    Z= 38 (Sr) : -0.06826294 eV
+    Z= 39 (Y ) : -2.17084228 eV
+    Z= 40 (Zr) : -2.28579303 eV
+    Z= 41 (Nb) : -3.13429753 eV
+    Z= 42 (Mo) : -4.60211419 eV
+    Z= 43 (Tc) : -3.45201492 eV
+    Z= 44 (Ru) : -2.38073513 eV
+    Z= 45 (Rh) : -1.46855515 eV
+    Z= 46 (Pd) : -1.47731260 eV
+    Z= 47 (Ag) : -0.33954585 eV
+    Z= 48 (Cd) : -0.16843877 eV
+    Z= 49 (In) : -0.35470981 eV
+    Z= 50 (Sn) : -0.83642657 eV
+    Z= 51 (Sb) : -1.41101987 eV
+    Z= 52 (Te) : -0.65740879 eV
+    Z= 53 (I ) : -0.18964571 eV
+    Z= 54 (Xe) : -0.00857582 eV
+    Z= 55 (Cs) : -0.13771876 eV
+    Z= 56 (Ba) : -0.03457659 eV
+    Z= 57 (La) : -0.45580806 eV
+    Z= 58 (Ce) : -1.33091750 eV
+    Z= 59 (Pr) : -0.29671824 eV
+    Z= 60 (Nd) : -0.30391193 eV
+    Z= 61 (Pm) : -0.30898427 eV
+    Z= 62 (Sm) : -0.25470891 eV
+    Z= 63 (Eu) : -8.38001538 eV
+    Z= 64 (Gd) : -10.38896525 eV
+    Z= 65 (Tb) : -0.30595050 eV
+    Z= 66 (Dy) : -0.30676216 eV
+    Z= 67 (Ho) : -0.30874667 eV
+    Z= 68 (Er) : -0.31610927 eV
+    Z= 69 (Tm) : -0.25190039 eV
+    Z= 70 (Yb) : -0.06431414 eV
+    Z= 71 (Lu) : -0.31997586 eV
+    Z= 72 (Hf) : -3.52770927 eV
+    Z= 73 (Ta) : -3.54492209 eV
+    Z= 74 (W ) : -4.65658356 eV
+    Z= 75 (Re) : -4.70108713 eV
+    Z= 76 (Os) : -2.88257209 eV
+    Z= 77 (Ir) : -1.46779304 eV
+    Z= 78 (Pt) : -0.50269936 eV
+    Z= 79 (Au) : -0.28801193 eV
+    Z= 80 (Hg) : -0.12454674 eV
+    Z= 81 (Tl) : -0.31737194 eV
+    Z= 82 (Pb) : -0.77644932 eV
+    Z= 83 (Bi) : -1.32627283 eV
+    Z= 89 (Ac) : -0.26827152 eV
+    Z= 90 (Th) : -0.90817426 eV
+    Z= 91 (Pa) : -2.47653193 eV
+    Z= 92 (U ) : -4.90438537 eV
+    Z= 93 (Np) : -7.63378961 eV
+    Z= 94 (Pu) : -10.77237713 eV
+
+  ──────────────────────────────────────────────────────────────────
+  FEATURE FLAGS
+  ──────────────────────────────────────────────────────────────────
+
+  ──────────────────────────────────────────────────────────────────
+  PARAMETER BREAKDOWN (top 20 tensors by size)
+  ──────────────────────────────────────────────────────────────────
+  interactions.0.skip_tp.weight                                       [5832704]  5,832,704 params
+  interactions.1.skip_tp.weight                                       [1458176]  1,458,176 params
+  products.0.symmetric_contractions.contractions.1.weights_max         [89, 51, 128]   580,992 params
+  products.0.symmetric_contractions.contractions.0.weights_max         [89, 23, 128]   262,016 params
+  products.1.symmetric_contractions.contractions.0.weights_max         [89, 23, 128]   262,016 params
+  interactions.1.linear.weight                                         [163840]   163,840 params
+  interactions.1.conv_tp_weights.layer3.weight                       [64, 1280]    81,920 params
+  products.0.symmetric_contractions.contractions.1.weights.0          [89, 6, 128]    68,352 params
+  interactions.0.linear.weight                                          [65536]    65,536 params
+  products.0.symmetric_contractions.contractions.0.weights.0          [89, 4, 128]    45,568 params
+  products.1.symmetric_contractions.contractions.0.weights.0          [89, 4, 128]    45,568 params
+  interactions.0.conv_tp_weights.layer3.weight                        [64, 512]    32,768 params
+  interactions.1.linear_up.weight                                       [32768]    32,768 params
+  products.0.linear.weight                                              [32768]    32,768 params
+  interactions.0.linear_up.weight                                       [16384]    16,384 params
+  products.1.linear.weight                                              [16384]    16,384 params
+  node_embedding.linear.weight                                          [11392]    11,392 params
+  products.0.symmetric_contractions.contractions.0.weights.1          [89, 1, 128]    11,392 params
+  products.0.symmetric_contractions.contractions.1.weights.1          [89, 1, 128]    11,392 params
+  products.1.symmetric_contractions.contractions.0.weights.1          [89, 1, 128]    11,392 params
+  ...                                                                            (11 more)
+
+======================================================================

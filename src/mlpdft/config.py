@@ -177,7 +177,8 @@ class MaceConfig:
         if self.max_frames is None:
             max = self.obtain_max_frames(data_in_path)
             # print(f"MAX FRAMES: {max}")
-            self.max_frames = int(max / self.frame_stride)
+            if max is not None:
+                self.max_frames = int(max / self.frame_stride)
             # print(f"MAX FRAMES (STRIDED): {self.max_frames}")
         data_out_path = (
             DATA_DIR
