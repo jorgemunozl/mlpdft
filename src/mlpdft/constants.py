@@ -4,11 +4,11 @@ from pathlib import Path
 
 @dataclass
 class ModelSpec:
-    key: str
-    path: Path
-    name: str
-    hf_id: str = None
-    energy_offset_per_atom: float = 0.0
+    def __init__(self, key: str):
+        self.key = key
+        self.path = Path(OUTPUTS_DIR / self.key / f"{self.key}.model")
+        self.hf_id = PREFIX_HF + "/" + self.key
+        self.compiled_path = Path(OUTPUTS_DIR / self.key / f"{self.key}_compiled.model")
 
 
 # ---------- dataset settings ----------
@@ -73,23 +73,10 @@ FITSNAP_DIR = PATH_REPO / "fitsnap_models" / "LI_F"
 
 
 MODEL_REGISTRY = {
-    "0b3-medium": ModelSpec(
-        key="0b3-medium",
-        name="mace-mp-0b3-medium",
-        path="",
-        energy_offset_per_atom=0.0,
+    "mace_omat_medium": ModelSpec(
+        key="mace_omat_medium",
     ),
-    "0-small": ModelSpec(
-        key="0-small",
-        name="mace-mp-0-small",
-        path="",
-        energy_offset_per_atom=0.0,
-    ),
-    "0-omat-medium": ModelSpec(
-        key="0-omat-medium",
-        path=MODELS_DIR / "0-omat-medium" / "mace-omat-0-medium.model",
-        hf_id="jorgemunozl/mace_omat_medium",
-        name="mace-mp-0-omat-medium",
-        energy_offset_per_atom=0.0,
+    "mock_2_test": ModelSpec(
+        key="mock_2_test",
     ),
 }

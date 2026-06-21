@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Evaluate MACE omat-medium model on all available groups and save metrics
+Evaluate Model on all available groups and save metrics
 to outputs/metrics/ in the same format as the existing FitSNAP metrics.
+Use compiled model
 """
 
 from __future__ import annotations
@@ -14,34 +15,21 @@ import torch
 from mace import data
 from mace.tools import torch_geometric, torch_tools, utils
 
+from mlpdft.config import MaceConfig
 from mlpdft.constants import (
     DATA_DIR,
     ENERGY_KEY,
     FORCE_KEY,
-    MODEL_REGISTRY,
-    OUTPUTS_DIR,
+    GROUPS_LIF,
+    SRC_DIR,
     XYZ_DIR,
 )
 
-GROUPS = [
-    "LIF64_ISOLATED",
-    "LIF64_KJPAW_V2",
-    "LIFINTERFACE_KJPAW_V1",
-    "LIFINTERFACE_KJPAW_NPT",
-    "LIFINTERFACE_KJPAW_NPT_V2",
-    "LIF_KJPAW",
-    "LIWITHF_V3",
-    "LIWITHF_ISOLATED",
-    "LIWITHF_NPT_FINAL",
-    "BLI_V2",
-    "LIBF4_V4",
-]
+DEVICE = "cpu"
+DTYPE = "float32"
 
 FRAME_STRIDE = 5
 MAX_FRAMES = 100
-MODEL_KEY = "0-omat-medium"
-DEVICE = "cpu"
-DTYPE = "float32"
 
 
 def _get_model_float_dtype(model: torch.nn.Module) -> torch.dtype:
@@ -226,27 +214,24 @@ def main() -> None:
     torch_tools.set_default_dtype(DTYPE)
 
     device = torch.device(DEVICE)
-    model_spec = MODEL_REGISTRY[MODEL_KEY]
-    model_path = Path(model_spec.path).expanduser()
+    config = MaceConfig(
+        model_key="mock_2_test", frame_stride=FRAME_STRIDE, max_frames=MAX_FRAMES
+    )
 
-    print(f"Loading model: {model_spec.name}")
-    print(f"  Path: {model_path}")
-    if not model_path.exists():
-        print(f"  ERROR: model file not found at {model_path}")
-        raise SystemExit(1)
-
-    model = torch.load(str(model_path), map_location=device)
+    print(f"Loading model: {config.model_key:}")
+    print(f"  Path: {config.model.compiled_path}")
+    model = torch.load(str(config.model.compiled_path), map_location=device)
     model = model.to(device)
     model.eval()
     model_dtype = _get_model_float_dtype(model)
     print(f"  Dtype: {model_dtype}")
 
-    metrics_dir = OUTPUTS_DIR / "metrics"
+    metrics_dir = SRC_DIR / "metrics" / config.model_key
     metrics_dir.mkdir(parents=True, exist_ok=True)
 
     all_results = []
 
-    for group in GROUPS:
+    for group in GROUPS_LIF:
         print(f"\n{'=' * 60}")
         print(f"Group: {group}")
         print(f"{'=' * 60}")
@@ -255,7 +240,7 @@ def main() -> None:
         if metrics is None:
             continue
 
-        output_filename = f"{group}_{FRAME_STRIDE}_{MAX_FRAMES}.txt"
+        output_filename = f"{group}_{config.frame_stride}_{config.max_frames}.txt"
         output_path = metrics_dir / output_filename
         write_metrics_txt(metrics, output_path)
         print(f"  Saved: {output_path}")

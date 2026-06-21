@@ -8,15 +8,12 @@ from mlpdft.config import (
     MaceTrainingMetadata,
 )
 from mlpdft.constants import (
-    CHECKPOINTS_DIR,
     DATA_DIR,
     DATASET_NAME,
     ENERGY_OFFSET,
-    LOGS_DIR,
     MERGED_FILENAME,
-    MODELS_DIR,
+    OUTPUTS_DIR,
     PREFIX_HF,
-    RESULTS_DIR,
     XYZ_DIR,
 )
 
@@ -38,13 +35,14 @@ path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME)
 config = Mace_TrainerConfig(
     model_key="0-omat-medium",
     device="cuda",
-    dtype="float64",  # 0-omat-medium is float64; must match or LoRA dtypes conflict
+    dtype="float64",  # it cant be 32 float
     hyperparams=MaceTrainingHyperparams(
         r_max=5,
         max_num_epochs=10,
         batch_size=8,
-        patience=10,
+        patience=4,
         eval_interval=10,
+        valid_frac=0.5,
         swa=False,
     ),
     metadata=MaceTrainingMetadata(
@@ -62,10 +60,10 @@ args = parser.parse_args(["--name", config.metadata.experiment_name])
 args.seed = config.metadata.seed
 
 # Dirs
-args.checkpoints_dir = CHECKPOINTS_DIR / config.metadata.experiment_name
-args.results_dir = RESULTS_DIR / config.metadata.experiment_name
-args.model_dir = MODELS_DIR / config.metadata.experiment_name
-args.log_dir = LOGS_DIR / config.metadata.experiment_name
+args.checkpoints_dir = OUTPUTS_DIR / config.metadata.experiment_name / "checkpoints"
+args.results_dir = OUTPUTS_DIR / config.metadata.experiment_name / "results"
+args.model_dir = OUTPUTS_DIR / config.metadata.experiment_name / "models"
+args.log_dir = OUTPUTS_DIR / config.metadata.experiment_name / "logs"
 
 # Precision & device
 args.default_dtype = config.dtype

@@ -9,13 +9,14 @@ from typing import Literal, Optional
 
 from ase import Atoms
 from ase.io import read
-from huggingface_hub import HfApi, create_repo, hf_hub_download
+from huggingface_hub import HfApi, create_repo, hf_hub_download, snapshot_download
 
 from mlpdft.constants import (
-    CHECKPOINTS_DIR,
     DATA_DIR,
     MODEL_REGISTRY,
     MODELS_DIR,
+    OUTPUTS_DIR,
+    PATH_REPO,
     PREDICTION_DIR,
     PREFIX_HF,
     SRC_DIR,
@@ -35,7 +36,7 @@ class MaceConfig:
         metadata={"description": "Group name e.g. LiF64_kjpaw"},
     )
 
-    model_key: Literal["0b3-medium", "0-small", "0-omat-medium"] = field(
+    model_key: str = field(
         default="0b3-medium",
         metadata={"description": "MACE model key"},
     )
@@ -157,21 +158,16 @@ class MaceConfig:
             print(f"Downloading model: {self.model.path}")
             self.download_model()
 
-        self.resolved_energy_offset_per_atom = (
-            self.model.energy_offset_per_atom
-            if self.energy_offset_per_atom is None
-            else self.energy_offset_per_atom
-        )
         self.solve_paths()
 
     def download_model(self):
         if self.model.hf_id is not None:
-            os.makedirs(MODELS_DIR / self.model_key, exist_ok=True)
-            model = hf_hub_download(
+            dir = OUTPUTS_DIR / self.model_key
+            os.makedirs(dir, exist_ok=True)
+            model = snapshot_download(
                 repo_id=self.model.hf_id,
-                filename=str(self.model.path.name),
                 repo_type="model",
-                local_dir=str(MODELS_DIR / self.model_key),
+                local_dir=str(dir),
             )
 
     def solve_paths(self):
@@ -467,7 +463,8 @@ class Mace_TrainerConfig(MaceConfig):
         metadata = MaceTrainingMetadata(**config_dict["metadata"])
         return cls(hyperparams=hyperparams, metadata=metadata)
 
-    def send_model_to_hf(self):
+    def send_model_train_to_hf(self):
+        # Send model, logs, resumes, config, everything I have!
         api = HfApi()
 
         HF_MODEL_REPO_ID = PREFIX_HF + "/" + self.metadata.experiment_name
@@ -478,27 +475,12 @@ class Mace_TrainerConfig(MaceConfig):
         )
         print(f"[hf] Model repo ready → {repo_url}")
 
-        os.makedirs(MODELS_DIR / self.metadata.experiment_name, exist_ok=True)
-        model_files = list(
-            Path(MODELS_DIR / self.metadata.experiment_name).glob(
-                f"{self.metadata.experiment_name}*.model"
-            )
-        )
-        for model_file in model_files:
+        training_files = list(Path(REPO_DIR).glob(f"{self.metadata.experiment_name}*"))
+        for file in training_files:
             api.upload_file(
-                path_or_fileobj=str(model_file),
-                path_in_repo=model_file.name,
+                path_or_fileobj=str(file),
+                path_in_repo=file.name,
                 repo_id=HF_MODEL_REPO_ID,
                 repo_type="model",
             )
-            print(f"[hf] Uploaded {model_file.name}")
-
-        best_ckpt = Path(CHECKPOINTS_DIR) / f"{self.metadata.experiment_name}_best.pt"
-        if best_ckpt.exists():
-            api.upload_file(
-                path_or_fileobj=str(best_ckpt),
-                path_in_repo=best_ckpt.name,
-                repo_id=HF_MODEL_REPO_ID,
-                repo_type="model",
-            )
-            print(f"[hf] Uploaded {best_ckpt.name}")
+            print(f"[hf] Uploaded {file.name}")

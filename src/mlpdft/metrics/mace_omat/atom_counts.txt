@@ -1,0 +1,22 @@
+============================================================
+ATOM COUNTS PER DATASET
+============================================================
+
+LIF_KJPAW: [no data]
+
+Group                               Frames    Atoms  Composition                         Status
+-------------------------------------------------------------------------------------------------------------
+lif64_isolated                          57       64  f: 32, li: 32                       ✓ uniform
+lif64_kjpaw_v2                         100       64  f: 32, li: 32                       ✓ uniform
+lifinterface_kjpaw_v1                  100      122  f: 36, li: 86                       ✓ uniform
+lifinterface_kjpaw_npt                 100      122  f: 36, li: 86                       ✓ uniform
+lifinterface_kjpaw_npt_v2              100      122  f: 36, li: 86                       ✓ uniform
+liwithf_v3                             100       54  f: 1, li: 53                        ✓ uniform
+liwithf_isolated                        38       54  f: 1, li: 53                        ✓ uniform
+liwithf_npt_final                      100       54  f: 1, li: 53                        ✓ uniform
+bli_v2                                 100       32  b: 16, li: 16                       ✓ uniform
+libf4_v4                               100       18  b: 3, f: 12, li: 3                  ✓ uniform
+
+============================================================
+Saved to: /home/jorge/project/mlpdft/src/mlpdft/outputs/metrics/atom_counts.txt
+============================================================

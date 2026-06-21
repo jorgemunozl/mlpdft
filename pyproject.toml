@@ -23,4 +23,4 @@ url = "https://download.pytorch.org/whl/cu124"
 explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cuda" }
+torch = { index = "pytorch-cpu" }

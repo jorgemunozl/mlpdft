@@ -1,48 +1,21 @@
-# mlpdft — MACE fine-tuning & evaluation on Li–F DFT data
+# mlpdft, Message Passing Neural Networks for Ionic Molecular Dynamics
 
-Experiments around **fine-tuning MACE foundation models** (MACE-MP, MACE-OFF,
-MACE-OMAT) on lithium–fluoride DFT (Quantum ESPRESSO) data, plus comparison
-with a **FitSNAP** SNAP baseline.
+![MPNN Architecture](beamer/images/mpnn_illustration.png)
+
+Inference study
+Active learning
+Experiments around **fine-tuning MACE foundation models**
+(MACE-MP, MACE-OFF, MACE-OMAT) on lithium–fluoride DFT (Quantum ESPRESSO)
+data, plus comparison with a **FitSNAP** SNAP baseline.
 
 ---
 
-## Layout
+**Hugging Face**
 
-```text
-.
-├── beamer/                      # Presentation slides (Typst + LaTeX)
-├── dataset/                     # QE .out files + generated .extxyz per group
-├── fitsnap_models/              # FitSNAP model checkpoints (external)
-├── main.ipynb                   # Colab notebook (quickstart)
-├── scripts/
-│   ├── evaluate_fitsnap_singlepoint.py   # Single-point eval of FitSNAP on .extxyz
-│   ├── inspect_fitsnap_pt.py             # Inspect FitSNAP .pt checkpoints
-│   └── run_train.sh                      # MACE training shell script template
-├── src/
-│   └── mlpdft/
-│       ├── config.py            # MaceConfig / Mace_TrainerConfig dataclasses
-│       ├── constants.py         # Group lists, paths, model registry, energy offsets
-│       ├── evaluate.py          # Evaluate a MACE model on .extxyz data
-│       ├── evaluate_mace_metrics.py  # Batch MACE eval across all groups
-│       ├── mace_scrap.py        # Load MACE model from path
-│       ├── md.py                # Molecular Dynamics with MACE potentials
-│       ├── train.py             # Fine-tune MACE foundation model (LoRA)
-│       ├── utils.py             # Shared helpers (JSON, perconfig, metrics)
-│       ├── utils/
-│       │   ├── qe_out_to_extxyz.py           # QE .out → multi-frame .extxyz
-│       │   ├── upload_ds_hf.py               # Merge groups + upload to HF Hub
-│       │   ├── dataset_readme_template.md    # HF dataset card template
-│       │   ├── calculate_energy_offset.py    # Compute atomic energy offsets
-│       │   ├── calculate_offset.py           # Alternative offset calculator
-│       │   └── visualize_model.py            # Model architecture diagram
-│       └── fitsnap/
-│           ├── evaluate_dataset.py           # FitSNAP inference via LAMMPS+mliappy
-│           ├── evaluate_fitsnap.py           # (deprecated)
-│           ├── evaluate_wrapper.py
-│           ├── test.py
-│           └── metrics/                      # Stored FitSNAP metrics (.txt)
-└── pyproject.toml               # uv: mace-torch + huggingface-hub + CPU PyTorch
-```
+| Resource | Link |
+|----------|------|
+| Dataset | [`jorgemunozl/minimal_li_f_mace_dataset`](https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset) |
+| Fine-tuned MACE-OMAT model | [`jorgemunozl/mace_omat_medium`](https://huggingface.co/jorgemunozl/mace_omat_medium) |
 
 ---
 
@@ -65,9 +38,7 @@ All DFT data lives under `dataset/`. Each group is a Quantum ESPRESSO
 | `LIBF4_V4` | Li–B–F system |
 | `LIBF4` | Li–B–F |
 
-The full merged dataset is published on Hugging Face:
-
-> **https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset**
+The full merged dataset is published on [Hugging Face](https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset).
 
 ### Convert QE output → `.extxyz`
 
