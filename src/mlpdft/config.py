@@ -5,18 +5,16 @@ import os
 from dataclasses import asdict, dataclass, field, fields
 from io import StringIO
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 from ase import Atoms
 from ase.io import read
-from huggingface_hub import HfApi, create_repo, hf_hub_download, snapshot_download
+from huggingface_hub import HfApi, create_repo, snapshot_download
 
 from mlpdft.constants import (
     DATA_DIR,
     MODEL_REGISTRY,
-    MODELS_DIR,
     OUTPUTS_DIR,
-    PATH_REPO,
     PREDICTION_DIR,
     PREFIX_HF,
     SRC_DIR,
@@ -36,8 +34,8 @@ class MaceConfig:
         metadata={"description": "Group name e.g. LiF64_kjpaw"},
     )
 
-    model_key: str = field(
-        default="0b3-medium",
+    model_key: Literal["mock_2_test", "mace_omat_medium"] = field(
+        default="mace_omat_medium",
         metadata={"description": "MACE model key"},
     )
 
@@ -79,41 +77,8 @@ class MaceConfig:
     )
 
     max_frames: int | None = field(
-        default=None,
+        default=0,
         metadata={"description": "Optional cap on written frames after striding"},
-    )
-
-    include_stress: bool = field(
-        default=False,
-        metadata={
-            "description": "If true, copy QE stress labels into output frames when available"
-        },
-    )
-
-    config_type: str = field(
-        default="Default",
-        metadata={
-            "description": "Value stored in Atoms.info['config_type'] for each frame"
-        },
-    )
-
-    perconfig: Optional[Path] = field(
-        default=None, metadata={"description": "Path to per-configuration file"}
-    )
-
-    batch_size: int = field(
-        default=1,
-        metadata={"description": "Batch size for evaluation"},
-    )
-
-    compute_stress: bool = field(
-        default=False,
-        metadata={"description": "Compute stress"},
-    )
-
-    compute_bec: bool = field(
-        default=False,
-        metadata={"description": "Compute BEC"},
     )
 
     node_energy: bool = field(
@@ -128,11 +93,6 @@ class MaceConfig:
 
     dtype: Literal["float32", "float64"] = "float32"
 
-    info_prefix: str = field(
-        default=" ",
-        metadata={"description": "Prefix for info fields in output atoms objects"},
-    )
-
     @staticmethod
     def obtain_max_frames(data_in_path: Path) -> int | None:
         """
@@ -141,6 +101,7 @@ class MaceConfig:
 
         Returns the total frame count, or None if the file does not exist.
         """
+        print(f"[obtain_max_frames] {data_in_path}")
         if not data_in_path.exists():
             return None
         text = data_in_path.read_text(encoding="latin-1")
@@ -207,7 +168,7 @@ class MaceConfig:
         self.model_output = model_output_path
 
     def validate(self) -> None:
-        if self.frame_stride <= 0:
+        if self.frame_stride is not None and self.frame_stride <= 0:
             raise ValueError("frame_stride must be >= 1")
 
     @classmethod
@@ -433,11 +394,6 @@ class Mace_TrainerConfig(MaceConfig):
     def __post_init__(self):
         # Resolve model spec and energy offset (same logic as MaceConfig)
         self.model = MODEL_REGISTRY[self.model_key]
-        self.resolved_energy_offset_per_atom = (
-            self.model.energy_offset_per_atom
-            if self.energy_offset_per_atom is None
-            else self.energy_offset_per_atom
-        )
         # Only resolve group paths if a group was explicitly set.
         if self.group:
             self.solve_paths()
@@ -476,7 +432,7 @@ class Mace_TrainerConfig(MaceConfig):
         )
         print(f"[hf] Model repo ready → {repo_url}")
 
-        training_files = list(Path(REPO_DIR).glob(f"{self.metadata.experiment_name}*"))
+        training_files = list(Path().glob(f"{self.metadata.experiment_name}*"))
         for file in training_files:
             api.upload_file(
                 path_or_fileobj=str(file),

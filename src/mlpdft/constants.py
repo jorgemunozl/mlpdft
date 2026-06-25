@@ -13,11 +13,13 @@ class ModelSpec:
 
 # ---------- dataset settings ----------
 PREFIX_HF = "jorgemunozl"
+
+# MAIN DATASET
 DATASET_NAME = "first_mace_test"
+MERGED_FILENAME = "minimal_li_f_mace_dataset.extxyz"
 
 FRAME_STRIDE = 5
 MAX_FRAMES = None  # use all frames after striding
-MERGED_FILENAME = "minimal_li_f_mace_dataset.extxyz"
 
 # Template path (sibling of this script)
 

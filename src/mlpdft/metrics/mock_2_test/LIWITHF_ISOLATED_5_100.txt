@@ -2,10 +2,20 @@
 RESULTS
 ============================================================
 
-  Energy (eV):
+  Energy — total (eV):
     MAE  = 2.334502
     RMSE = 2.334602
     MaxAE= 2.374295
+
+  Energy — per atom (eV/atom):
+    MAE  = 0.043232
+    RMSE = 0.043233
+    MaxAE= 0.043968
+
+  Energy — per atom (meV/atom):
+    MAE  = 43.23
+    RMSE = 43.23
+    MaxAE= 43.97
 
   Forces (eV/Å):
     MAE  (all)     = 0.138115

@@ -138,11 +138,17 @@ def compute_metrics_for_group(
 
     natoms_list = np.array([len(atoms) for atoms in atoms_list])
 
-    # Energy metrics (total energy, eV)
+    # Energy metrics: total energy (eV)
     energy_errors = energies_pred - energies_ref
     energy_mae = np.mean(np.abs(energy_errors))
     energy_rmse = np.sqrt(np.mean(energy_errors**2))
     energy_maxae = np.max(np.abs(energy_errors))
+
+    # Energy metrics: per-atom (eV/atom) — matching MACE's rmse_e_per_atom
+    energy_errors_per_atom = energy_errors / natoms_list
+    energy_mae_per_atom = np.mean(np.abs(energy_errors_per_atom))
+    energy_rmse_per_atom = np.sqrt(np.mean(energy_errors_per_atom**2))
+    energy_maxae_per_atom = np.max(np.abs(energy_errors_per_atom))
 
     # Force metrics
     all_force_errors = []
@@ -178,6 +184,9 @@ def compute_metrics_for_group(
         "energy_mae": energy_mae,
         "energy_rmse": energy_rmse,
         "energy_maxae": energy_maxae,
+        "energy_mae_per_atom": energy_mae_per_atom,
+        "energy_rmse_per_atom": energy_rmse_per_atom,
+        "energy_maxae_per_atom": energy_maxae_per_atom,
         "force_mae_all": force_mae_all,
         "force_rmse_all": force_rmse_all,
         "force_mae_x": force_mae_x,
@@ -195,10 +204,20 @@ def write_metrics_txt(metrics: dict, output_path: Path) -> None:
         "RESULTS",
         "============================================================",
         "",
-        f"  Energy (eV):",
+        f"  Energy — total (eV):",
         f"    MAE  = {metrics['energy_mae']:.6f}",
         f"    RMSE = {metrics['energy_rmse']:.6f}",
         f"    MaxAE= {metrics['energy_maxae']:.6f}",
+        "",
+        f"  Energy — per atom (eV/atom):",
+        f"    MAE  = {metrics['energy_mae_per_atom']:.6f}",
+        f"    RMSE = {metrics['energy_rmse_per_atom']:.6f}",
+        f"    MaxAE= {metrics['energy_maxae_per_atom']:.6f}",
+        "",
+        f"  Energy — per atom (meV/atom):",
+        f"    MAE  = {metrics['energy_mae_per_atom'] * 1000:.2f}",
+        f"    RMSE = {metrics['energy_rmse_per_atom'] * 1000:.2f}",
+        f"    MaxAE= {metrics['energy_maxae_per_atom'] * 1000:.2f}",
         "",
         f"  Forces (eV/Å):",
         f"    MAE  (all)     = {metrics['force_mae_all']:.6f}",
@@ -230,8 +249,14 @@ def main() -> None:
     metrics_dir.mkdir(parents=True, exist_ok=True)
 
     all_results = []
+    ready = ["LIFINTERFACE_KJPAW_NPT_V2", "LIFINTERFACE_KJPAW_NPT_V1"]
+    print(f"Ready groups: {ready}")
 
-    for group in GROUPS_LIF:
+    lack = [group for group in GROUPS_LIF if group not in ready]
+
+    print(f"Remaining groups: {lack}")
+
+    for group in lack:
         print(f"\n{'=' * 60}")
         print(f"Group: {group}")
         print(f"{'=' * 60}")
@@ -252,16 +277,43 @@ def main() -> None:
     print("SUMMARY — MACE omat-medium metrics")
     print(f"{'=' * 80}")
     print(
-        f"{'Group':<35} {'Energy MAE':>12} {'Energy RMSE':>12} {'Force MAE':>10} {'Force RMSE':>10} {'Force MaxAE':>12}"
+        f"{'Group':<35} {'E RMSE tot':>12} {'E RMSE/at':>12} {'E RMSE/at':>12} {'F RMSE':>10} {'F rel RMSE':>10}"
     )
-    print("-" * 80)
+    print(
+        f"{'':<35} {'(eV)':>12} {'(eV/atom)':>12} {'(meV/atom)':>12} {'(eV/Å)':>10} {'(%)':>10}"
+    )
+    print("-" * 91)
     for r in all_results:
+        ref_rms = _compute_ref_force_rms(r["group"])
+        rel_f = (
+            f"{r['force_rmse_all'] / ref_rms:>10.2%}"
+            if ref_rms is not None
+            else f"{'N/A':>10}"
+        )
         print(
-            f"{r['group']:<35} {r['energy_mae']:>12.4f} {r['energy_rmse']:>12.4f} "
-            f"{r['force_mae_all']:>10.4f} {r['force_rmse_all']:>10.4f} {r['force_maxae']:>12.4f}"
+            f"{r['group']:<35} {r['energy_rmse']:>12.4f} {r['energy_rmse_per_atom']:>12.6f} "
+            f"{r['energy_rmse_per_atom'] * 1000:>12.2f} {r['force_rmse_all']:>10.4f} {rel_f}"
         )
     print(f"{'=' * 80}")
     print(f"Results saved in: {metrics_dir}")
+
+
+def _compute_ref_force_rms(group: str) -> float | None:
+    """Compute RMS of reference forces for a group, for relative force RMSE."""
+    extxyz_path = (
+        DATA_DIR / group / XYZ_DIR / f"{group}_{FRAME_STRIDE}_{MAX_FRAMES}.extxyz"
+    )
+    if not extxyz_path.exists():
+        return None
+    atoms_list = ase.io.read(str(extxyz_path), index=":")
+    all_forces = []
+    for atoms in atoms_list:
+        if FORCE_KEY in atoms.arrays:
+            all_forces.append(atoms.arrays[FORCE_KEY].ravel())
+    if not all_forces:
+        return None
+    all_forces = np.concatenate(all_forces)
+    return np.sqrt(np.mean(all_forces**2))
 
 
 if __name__ == "__main__":
