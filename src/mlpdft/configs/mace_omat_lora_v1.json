@@ -23,7 +23,7 @@
     "optimizer": "adam",
     "lr": 0.01,
     "amsgrad": true,
-    "weight_decay": 5e-07,
+    "weight_decay": 5e-7,
     "clip_grad": 10.0,
     "scheduler": "ReduceLROnPlateau",
     "lr_factor": 0.8,
@@ -39,7 +39,7 @@
     "lora_rank": 8
   },
   "metadata": {
-    "experiment_name": "mock_2_test",
+    "experiment_name": "mace_omat_lora_v1",
     "seed": 123,
     "config_path": "/root/work/mlpdft/src/mlpdft/configs/mock_2_test.json",
     "model_dir": "models"

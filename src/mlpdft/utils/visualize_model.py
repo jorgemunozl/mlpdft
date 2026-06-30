@@ -271,8 +271,8 @@ def main():
         "--model_key",
         "-k",
         type=str,
-        default="mock_2_test",
-        help="Model key in the registry (default: mock_2_test)",
+        default="mace_omat_lora_v1",
+        help="Model key in the registry (default: mace_omat_lora_v1)",
     )
     parser.add_argument(
         "--compiled",

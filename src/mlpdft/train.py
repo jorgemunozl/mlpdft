@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from huggingface_hub import hf_hub_download
 from mace.cli.run_train import run
 from mace.tools import build_default_arg_parser
@@ -14,6 +16,7 @@ from mlpdft.constants import (
     MERGED_FILENAME,
     OUTPUTS_DIR,
     PREFIX_HF,
+    SRC_DIR,
     XYZ_DIR,
 )
 
@@ -26,6 +29,8 @@ dataset = hf_hub_download(
 )
 
 path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME)
+
+# Test for check that trainig is working properly
 # path_data = str(DATA_DIR / XYZ_DIR / "test.extxyz")
 
 # ---------------------------------------------------------------------------
@@ -33,7 +38,7 @@ path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME)
 # Only override what differs from the defaults.
 # ---------------------------------------------------------------------------
 config = Mace_TrainerConfig(
-    model_key="0-omat-medium",
+    model_key="mace_omat_medium",
     device="cuda",
     dtype="float64",  # it cant be 32 float
     hyperparams=MaceTrainingHyperparams(
@@ -51,15 +56,21 @@ config = Mace_TrainerConfig(
 )
 config.write_config_train()
 
-# ---------------------------------------------------------------------------
-# Build the MACE argument namespace from config fields
-# ---------------------------------------------------------------------------
+# Load the config from the saved JSON file
+# path = Path(SRC_DIR) / "configs" / "mock_test.json"
+# config = Mace_TrainerConfig.load_config_train(path)
+
 parser = build_default_arg_parser()
 args = parser.parse_args(["--name", config.metadata.experiment_name])
+
+# INDEPENDENT
+args.E0s = str(ENERGY_OFFSET)
+args.train_file = path_data
 
 args.seed = config.metadata.seed
 
 # Dirs
+args.work_dir = str(OUTPUTS_DIR / config.metadata.experiment_name)
 args.checkpoints_dir = OUTPUTS_DIR / config.metadata.experiment_name / "checkpoints"
 args.results_dir = OUTPUTS_DIR / config.metadata.experiment_name / "results"
 args.model_dir = OUTPUTS_DIR / config.metadata.experiment_name / "models"
@@ -86,8 +97,6 @@ args.force_key = config.hyperparams.force_key
 
 # Dataset
 args.pin_memory = config.hyperparams.pin_memory
-args.E0s = str(ENERGY_OFFSET)
-args.train_file = path_data
 
 # Loss
 args.loss = config.hyperparams.loss
@@ -134,4 +143,4 @@ args.lora_rank = config.hyperparams.lora_rank
 run(args)
 
 config.write_config_train()
-config.send_model_to_hf()
+config.send_model_train_to_hf()

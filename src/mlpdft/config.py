@@ -21,6 +21,7 @@ from mlpdft.constants import (
     XYZ_DIR,
     ModelSpec,
 )
+from mlpdft.train import path
 
 
 @dataclass
@@ -34,7 +35,7 @@ class MaceConfig:
         metadata={"description": "Group name e.g. LiF64_kjpaw"},
     )
 
-    model_key: Literal["mock_2_test", "mace_omat_medium"] = field(
+    model_key: Literal["mace_omat_lora_v1", "mace_omat_medium"] = field(
         default="mace_omat_medium",
         metadata={"description": "MACE model key"},
     )
@@ -412,9 +413,9 @@ class Mace_TrainerConfig(MaceConfig):
             json.dump(config_dict, f, indent=2)
 
     @classmethod
-    def load_config_train(cls, path: str) -> Mace_TrainerConfig:
+    def load_config_train(cls, path_json: Path) -> Mace_TrainerConfig:
         """Load training config from a JSON file and return a new instance."""
-        with open(path, "r") as f:
+        with open(path_json, "r") as f:
             config_dict = json.load(f)
         hyperparams = MaceTrainingHyperparams(**config_dict["hyperparams"])
         metadata = MaceTrainingMetadata(**config_dict["metadata"])

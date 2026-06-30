@@ -234,7 +234,7 @@ def main() -> None:
 
     device = torch.device(DEVICE)
     config = MaceConfig(
-        model_key="mock_2_test", frame_stride=FRAME_STRIDE, max_frames=MAX_FRAMES
+        model_key="mace_omat_lora_v1", frame_stride=FRAME_STRIDE, max_frames=MAX_FRAMES
     )
 
     print(f"Loading model: {config.model_key:}")

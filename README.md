@@ -1,46 +1,74 @@
-# mlpdft, Message Passing Neural Networks for Ionic Molecular Dynamics
+<div align="center">
+
+# ⚡ _mlpdft_ — Leveraging Foundational Models for Accurate & Blazingly Fast Li–F–B Cells
+
+[![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue?logo=python&logoColor=white)](https://python.org)
+[![PyTorch](https://img.shields.io/badge/pytorch-%3E%3D2.2-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org)
+[![MACE](https://img.shields.io/badge/mace--torch-%3E%3D0.3.6-8A2BE2)](https://github.com/ACEsuit/mace)
+[![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+[![Hugging Face](https://img.shields.io/badge/🤗_HF-mlpdft--collection-ff9d00)](https://hf.co/collections/jorgemunozl/message-passing-neural-networks-for-lithium-fluoride-cells)
+
+<br>
 
 ![MPNN Architecture](beamer/images/mpnn_illustration.png)
 
-Inference study
-Active learning
-Experiments around **fine-tuning MACE foundation models**
-(MACE-MP, MACE-OFF, MACE-OMAT) on lithium–fluoride DFT (Quantum ESPRESSO)
-data, plus comparison with a **FitSNAP** SNAP baseline.
+**Inference study · Active learning · Fine-tuning MACE foundation models · FitSNAP baseline**
+
+</div>
 
 ---
 
-**Hugging Face**
+## 🧠 What is this?
+
+This project explores **fine-tuning MACE foundation models** — MACE‑MP,
+MACE‑OFF, and **MACE‑OMAT** — on lithium–fluoride DFT data computed with
+Quantum ESPRESSO. The goal: replace expensive DFT calculations with a
+fast, accurate message‑passing neural network potential for ionic battery
+materials. A **FitSNAP** (SNAP + MLP) model serves as the classical
+baseline.
+
+---
+
+## 🤗 Hugging Face
+
+<div align="center">
 
 | Resource | Link |
-|----------|------|
-| Dataset | [`jorgemunozl/minimal_li_f_mace_dataset`](https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset) |
-| Fine-tuned MACE-OMAT model | [`jorgemunozl/mace_omat_medium`](https://huggingface.co/jorgemunozl/mace_omat_medium) |
+|:--------:|------|
+| 📦 Dataset | [`jorgemunozl/minimal_li_f_mace_dataset`](https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset) |
+| 🚀 Fine-tuned model | [`jorgemunozl/mace_omat_medium`](https://huggingface.co/jorgemunozl/mace_omat_medium) |
+
+</div>
 
 ---
 
-## Dataset
+## 📊 Dataset
 
 All DFT data lives under `dataset/`. Each group is a Quantum ESPRESSO
 `pw.x` run:
 
-| Group | Description |
-|-------|-------------|
-| `LIF64_KJPAW_V2` | Bulk LiF — NVE / NPT trajectories |
-| `LIF64_ISOLATED` | Isolated bulk LiF frames |
-| `LIFINTERFACE_KJPAW_V1` | LiF interface (first version) |
-| `LIFINTERFACE_KJPAW_NPT` | LiF interface — NPT |
-| `LIFINTERFACE_KJPAW_NPT_V2` | LiF interface — NPT (second version) |
-| `LIWITHF_V3` | Li + F slabs (third version) |
-| `LIWITHF_ISOLATED` | Isolated Li + F frames |
-| `LIWITHF_NPT_FINAL` | Li + F — NPT (final) |
-| `BLI_V2` | B–Li system |
-| `LIBF4_V4` | Li–B–F system |
-| `LIBF4` | Li–B–F |
+<table>
+<tr>
+  <th>Group</th>
+  <th>Description</th>
+</tr>
+<tr><td><code>LIF64_KJPAW_V2</code></td><td>Bulk LiF — NVE / NPT trajectories</td></tr>
+<tr><td><code>LIF64_ISOLATED</code></td><td>Isolated bulk LiF frames</td></tr>
+<tr><td><code>LIFINTERFACE_KJPAW_V1</code></td><td>LiF interface (first version)</td></tr>
+<tr><td><code>LIFINTERFACE_KJPAW_NPT</code></td><td>LiF interface — NPT</td></tr>
+<tr><td><code>LIFINTERFACE_KJPAW_NPT_V2</code></td><td>LiF interface — NPT (second version)</td></tr>
+<tr><td><code>LIWITHF_V3</code></td><td>Li + F slabs (third version)</td></tr>
+<tr><td><code>LIWITHF_ISOLATED</code></td><td>Isolated Li + F frames</td></tr>
+<tr><td><code>LIWITHF_NPT_FINAL</code></td><td>Li + F — NPT (final)</td></tr>
+<tr><td><code>BLI_V2</code></td><td>B–Li system</td></tr>
+<tr><td><code>LIBF4_V4</code></td><td>Li–B–F system</td></tr>
+<tr><td><code>LIBF4</code></td><td>Li–B–F</td></tr>
+</table>
 
-The full merged dataset is published on [Hugging Face](https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset).
+The full merged dataset is published on
+[🤗 Hugging Face](https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset).
 
-### Convert QE output → `.extxyz`
+### 🔄 Convert QE output → `.extxyz`
 
 ```bash
 uv run python -c "
@@ -76,7 +104,7 @@ and uploads everything to the Hub.
 
 ---
 
-## Fine-tuning MACE
+## 🎯 Fine-tuning MACE
 
 [`src/mlpdft/train.py`](src/mlpdft/train.py) fine-tunes a MACE foundation
 model with **LoRA** on any of the available groups:
@@ -105,14 +133,16 @@ config = Mace_TrainerConfig(
 Checkpoints, models, logs, and results are written to
 `src/mlpdft/outputs/`.
 
-### Shell alternative
+<details>
+<summary>🔧 Shell alternative</summary>
 
 A full CLI template with every `mace_run_train` flag is at
 [`scripts/run_train.sh`](scripts/run_train.sh).
+</details>
 
 ---
 
-## Evaluation
+## 📈 Evaluation
 
 ### MACE on a single group
 
@@ -159,7 +189,7 @@ uv run python scripts/inspect_fitsnap_pt.py fitsnap_models/LI_F/checkpoints/LiF_
 
 ---
 
-## Molecular Dynamics
+## 🔬 Molecular Dynamics
 
 [`src/mlpdft/md.py`](src/mlpdft/md.py) runs MD from the first frame of a
 dataset using a MACE potential:
@@ -177,12 +207,12 @@ config = MaceConfig(
 run_md(config, temperature_K=300.0, n_steps=10_000)
 ```
 
-Supported thermostats: Langevin, Nose–Hoover chain, Velocity Verlet.
+Supported thermostats: **Langevin**, **Nosé–Hoover chain**, **Velocity Verlet**.
 Trajectories and logs are saved alongside the model output directory.
 
 ---
 
-## FitSNAP metrics
+## 📐 FitSNAP metrics
 
 Stored in [`src/mlpdft/fitsnap/metrics/`](src/mlpdft/fitsnap/metrics/).
 A Typst table summarises energy and force errors across all datasets:
@@ -193,7 +223,7 @@ typst compile src/mlpdft/fitsnap/metrics/metrics_table.typ
 
 ---
 
-## Python environment
+## 🐍 Python environment
 
 [`pyproject.toml`](pyproject.toml) installs **`mace-torch`** and
 **`huggingface-hub`** with **`torch` from the CPU-only PyTorch index**
@@ -208,7 +238,7 @@ export XDG_CACHE_HOME=$PWD/.cache
 
 ---
 
-## Presentation
+## 🎞 Presentation
 
 [`beamer/main.typst`](beamer/main.typst) — proof-of-concept deck (Typst).
 
@@ -218,7 +248,7 @@ typst compile beamer/main.typst
 
 ---
 
-## Prerequisites
+## ✅ Prerequisites
 
 - **`uv`** — Python package manager
 - **MACE foundation models** — downloaded automatically on first use to

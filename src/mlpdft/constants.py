@@ -15,7 +15,7 @@ class ModelSpec:
 PREFIX_HF = "jorgemunozl"
 
 # MAIN DATASET
-DATASET_NAME = "first_mace_test"
+DATASET_NAME = "molecular_dynamics_li_f_qe_v1"
 MERGED_FILENAME = "minimal_li_f_mace_dataset.extxyz"
 
 FRAME_STRIDE = 5
@@ -78,7 +78,7 @@ MODEL_REGISTRY = {
     "mace_omat_medium": ModelSpec(
         key="mace_omat_medium",
     ),
-    "mock_2_test": ModelSpec(
-        key="mock_2_test",
+    "mace_omat_lora_v1": ModelSpec(
+        key="mace_omat_lora_v1",
     ),
 }
