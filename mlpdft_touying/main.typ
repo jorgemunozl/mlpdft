@@ -27,9 +27,11 @@
 
 #title-slide()
 
-= The dataset we already have
+= What we actually have and why we are here
 
-== Examples of configuration-group names (catalog)
+== A battery - ish dataset
+I
+=== Examples of configuration-group names (catalog)
 
 #grid(
   columns: (1fr, 1fr),
@@ -75,9 +77,9 @@
   ),
 )
 
-= The FitSNAP model we actually have
+== The FitSNAP model we actually have
 
-== Configuration of the FitSNAP model we have
+=== Configuration of the FitSNAP model we have
 
 - *FitSNAP stack* in words:
   - *Scraper* — reads quantum-chemistry frames (e.g. JSON) into structures.
@@ -86,114 +88,154 @@
   - *Layers:* PyTorch MLP `num_desc → 256 → 128 → 64 → 64 → 1`, `multi_element_option = 2` (per-element nets).
   - *Training:* learning rate `5e-6`, `70` epochs, batch `50`.
 
-== Metrics for the FitSNAP model
+=== Metrics for the FitSNAP model
 
 #figure(
   image("images/Metrics MLPDFT.png", width: 80%),
   caption: [Metrics obtained by two models],
 )
 
-= The MACE model under the hood
+= And ACE model
 
 == What the MACE model is
 
-#figure(
-  image("images/image.png", width: 80%),
-  caption: [I. Batatia et al. 2022],
+#slide(
+  figure(
+    image("images/image.png", width: 80%),
+    caption: [I. Batatia et al. 2022],
+  ),
 )
 
-== Message Passing Neural Networks
-
-#figure(
-  image("images/mpnn.png", width: 80%),
-  caption: [Message Passing Neural Network Concept],
+#slide(
+  figure(
+    image("images/mpnn.png", width: 80%),
+    caption: [Message Passing Neural Network Concept],
+  ),
 )
 
-== MACE Step (1): Atom Embedding
+#set par(spacing: 0.5em)
+#slide(
+  grid(
+    columns: (1fr, 1fr),
+    [
+      *MACE Step (1): Atom Embedding*
+      A molecule or crystal is represented as a *graph*:
+      atoms are nodes, edges connect pairs within a cutoff radius $r_c$.
 
-A molecule or crystal is represented as a *graph*:
-atoms are nodes, edges connect pairs within a cutoff radius $r_c$.
+      Each atom $i$ is assigned an initial feature vector:
+      $ bold(h)_i^((0)) = bold(W)_(Z_i) $
 
-Each atom $i$ is assigned an initial feature vector:
-$ bold(h)_i^((0)) = bold(W)_(Z_i) $
+      a learned embedding indexed by atomic number $Z_i$ (lookup table).
 
-a learned embedding indexed by atomic number $Z_i$ (lookup table).
+      *Goal:* produce, for each atom, a scalar energy $E_i$
+      that reflects its local chemical environment.
+      The total energy is $E = sum_i E_i$.
+    ],
+    [
 
-*Goal:* produce, for each atom, a scalar energy $E_i$
-that reflects its local chemical environment.
-The total energy is $E = sum_i E_i$.
+    ],
+  ),
+)
 
-== Key: Depth on MPNN
 
-- $t=0$, the atom/node only can see itself.
-- $t=1$, the atom can see its neighborhoods — *TWO BODY*.
-- $t=2$, the atom can see the neighborhoods from its neighborhoods — TRIPLETS — *THREE BODY*
+#slide(
+  [
+    *Depth on MPNN*
 
-Three and higher order bodies are computationally expensive.
+    - $t=0$, the atom/node only can see itself.
+    - $t=1$, the atom can see its neighborhoods — *TWO BODY*.
+    - $t=2$, the atom can see the neighborhoods from its neighborhoods — TRIPLETS — *THREE BODY*
 
-== MACE Step (2): Interaction Block
+    Three and higher order bodies are computationally expensive.
+  ],
+)
 
-For each atom $i$, messages from neighbors $j$ are built as:
-$ bold(m)_(i j) = sum_k W_k R_k(r_(i j)) dot Y_l^m(hat(r)_(i j)) ⊗ bold(h)_j^((t)) $
+#slide(
+  [
+    *MACE Step (2): Interaction Block*
 
-$W_k$ learned matrix.
+    For each atom $i$, messages from neighbors $j$ are built as:
+    $ bold(m)_(i j) = sum_k W_k R_k(r_(i j)) dot Y_l^m(hat(r)_(i j)) ⊗ bold(h)_j^((t)) $
 
-- $Y_l^m(hat(r)_(i j))$: *spherical harmonics* — fixed geometric
-  functions encoding the _direction_ to neighbor $j$.
-- $R_k(r_(i j))$: *radial network* — a small MLP acting on the
-  scalar distance. _This is where most parameters live._
-- $⊗$: tensor product combining neighbor features with
-  edge geometry, preserving equivariance via
-  Clebsch--Gordan coefficients.
+    $W_k$ learned matrix.
 
-Messages are aggregated: $bold(m)_i = sum_(j in cal(N)(i)) bold(m)_(i j)$
+    - $Y_l^m(hat(r)_(i j))$: *spherical harmonics* — fixed geometric
+      functions encoding the _direction_ to neighbor $j$.
+    - $R_k(r_(i j))$: *radial network* — a small MLP acting on the
+      scalar distance. _This is where most parameters live._
+    - $⊗$: tensor product combining neighbor features with
+      edge geometry, preserving equivariance via
+      Clebsch--Gordan coefficients.
 
-== MACE Step (3): Equivariant Product Block
+    Messages are aggregated: $bold(m)_i = sum_(j in cal(N)(i)) bold(m)_(i j)$
+  ],
+)
 
-After aggregating neighbors, atom $i$ holds a feature vector
-$bold(m)_i$ encoding its local environment.
+#slide(
+  [
+    MACE Step (2): Interaction Block
 
-*The problem:* one message passing layer only captures
-pairwise $(i,j)$ interactions — that is *2-body*.
+    For each atom $i$, messages from neighbors $j$ are built as:
+    $ bold(m)_(i j) = sum_k W_k R_k(r_(i j)) dot Y_l^m(hat(r)_(i j)) ⊗ bold(h)_j^((t)) $
 
-*The MACE idea:* take tensor products of $bold(m)_i$
-with itself $nu$ times:
-$
-  bold(m)_i ⊗ bold(m)_i ⊗ dots.h.c
-  quad (nu " times")
-$
+    $W_k$ learned matrix.
+  ],
+)
 
-This mixes contributions from _different_ neighbors $j, k$
-simultaneously, producing *$(nu+1)$-body correlations*
-without any extra message passing.
+#slide(
+  [
+    MACE Step (3): Equivariant Product Block
 
-- With $nu = 2$: reaches *3-body* after layer 1,
-  compounding across layers.
-- The CG coefficients ensure the result stays
-  *equivariant* — no parameters, fixed by symmetry.
+    After aggregating neighbors, atom $i$ holds a feature vector
+    $bold(m)_i$ encoding its local environment.
 
-== MACE Step (4): Readout
+    *The problem:* one message passing layer only captures
+    pairwise $(i,j)$ interactions — that is *2-body*.
 
-After $T$ interaction layers, each atom $i$ holds a feature vector
-$bold(h)_i^((t))$ with components of different equivariance order $L$.
+    *The MACE idea:* take tensor products of $bold(m)_i$
+    with itself $nu$ times:
+    $
+      bold(m)_i ⊗ bold(m)_i ⊗ dots.h.c
+      quad (nu " times")
+    $
 
-Each layer contributes a partial atomic energy via its $L=0$ features:
-$ E_i = E_i^((0)) + E_i^((1)) + ... + E_i^((T)) $
+    This mixes contributions from _different_ neighbors $j, k$
+    simultaneously, producing *$(nu+1)$-body correlations*
+    without any extra message passing.
 
-where each $E_i^((t))$ is a linear projection of
-$bold(h)_i^((t))|_(L=0)$,
-except the last layer which uses a small MLP.
+    - With $nu = 2$: reaches *3-body* after layer 1,
+      compounding across layers.
+    - The CG coefficients ensure the result stays
+      *equivariant* — no parameters, fixed by symmetry.
 
-The total energy and forces are then:
-$
-  E = sum_i E_i, \
-  bold(F)_i = - (partial E) / (partial bold(r)_i)
-$
+  ],
+)
 
-*Forces are free* — no extra network needed, just
-automatic differentiation through the entire graph.
+#slide(
+  [
+    After $T$ interaction layers, each atom $i$ holds a feature vector
+    $bold(h)_i^((t))$ with components of different equivariance order $L$.
 
-== MACE-MP-0 Parameters Distribution
+    Each layer contributes a partial atomic energy via its $L=0$ features:
+    $ E_i = E_i^((0)) + E_i^((1)) + ... + E_i^((T)) $
+
+    where each $E_i^((t))$ is a linear projection of
+    $bold(h)_i^((t))|_(L=0)$,
+    except the last layer which uses a small MLP.
+
+    The total energy and forces are then:
+    $
+      E = sum_i E_i, \
+      bold(F)_i = - (partial E) / (partial bold(r)_i)
+    $
+
+    *Forces are free* — no extra network needed, just
+    automatic differentiation through the entire graph.
+  ],
+)
+
+
+=== MACE-MP-0 Parameters Distribution
 
 #figure(
   table(
@@ -238,9 +280,9 @@ automatic differentiation through the entire graph.
   caption: [Dominant submodules inside one interaction layer],
 )
 
-= The differents MACE flavors and how you pick your favorite one
+== The differents MACE flavors and how you pick your favorite one
 
-== How you are going to pick your flavor
+=== How you are going to pick your flavor
 
 #figure(
   table(
@@ -298,7 +340,16 @@ What is really happening on the first epochs a knowledge destillation strategy
   caption: "The different freezing strategies used in MACE fine-tuning",
 )
 
+== Freezing Strategy
+
+#figure(
+  image("images/frozen.png", width: 60%),
+  caption: [Only the last layers are unfrozen],
+)
+
 == Multi Head Fine Tuning
+
+=== Interesting actually
 
 What the heck is this
 
@@ -514,41 +565,36 @@ What the heck is this
   caption: "Model performance metrics after fine-tuning",
 )
 
-== Mace Own Results
+== Mace Own Results — Per-Group Breakdown
 
-#align(center, table(
-  columns: (auto, auto, auto, auto),
-  stroke: 0.5pt,
-  inset: 6pt,
+#figure(
+  image("images/energy_rmse_per_group.pdf", width: 80%),
+  caption: [Energy RMSE per atom (meV/atom) — MACE mock\_2\_test],
+)
 
-  table.cell(fill: luma(230))[*config\_type*],
-  table.cell(fill: luma(230))[*RMSE E (meV / atom)*],
-  table.cell(fill: luma(230))[*RMSE F (meV / Å)*],
-  table.cell(fill: luma(230))[*relative F RMSE (%)*],
+#v(0.5em)
 
-  [`train_Default`],
-  [$193.8$],
-  [$142.2$],
-  [$21.50$],
-
-  [`valid_Default`],
-  [$178.7$],
-  [$143.4$],
-  [$23.19$],
-))
+#figure(
+  image("images/force_rmse_per_group.pdf", width: 70%),
+  caption: [Force RMSE (meV/Å) — MACE vs FitSNAP per group],
+)
 
 = Changes after the first training lessons
 
 == Iterative Learning
 
 #figure(
-  image("images/iterative_training.png", width: 45%),
-  caption: "Iterative training example",
+  image("images/iterative_training.png", width: 40%),
+  caption: [Iterative training example],
 )
 
 == Active Learning
 
 #figure(
   image("images/active_learning_commitee.png", width: 40%),
-  caption: "Active learning example",
+  caption: [Active learning example],
 )
+
+== Test Plot
+
+Good!

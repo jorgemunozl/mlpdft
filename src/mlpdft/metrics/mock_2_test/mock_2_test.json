@@ -1,0 +1,55 @@
+{
+  "model_key": "mock_2_test",
+  "frame_stride": 5,
+  "max_frames": 100,
+  "results": [
+    {
+      "group": "LIF64_ISOLATED",
+      "short_label": "LIF64_ISOL",
+      "energy_rmse_per_atom": 0.15921000000000002,
+      "force_rmse_all": 0.207768
+    },
+    {
+      "group": "LIF64_KJPAW_V2",
+      "short_label": "LIF64_V2",
+      "energy_rmse_per_atom": 0.00733,
+      "force_rmse_all": 0.014805
+    },
+    {
+      "group": "LIFINTERFACE_KJPAW_NPT",
+      "short_label": "KJPAW_NPT",
+      "energy_rmse_per_atom": 0.90987,
+      "force_rmse_all": 0.327214
+    },
+    {
+      "group": "LIFINTERFACE_KJPAW_NPT_V2",
+      "short_label": "KJPAW_NPT_V2",
+      "energy_rmse_per_atom": 0.44132,
+      "force_rmse_all": 0.281368
+    },
+    {
+      "group": "LIFINTERFACE_KJPAW_V1",
+      "short_label": "KJPAW_V1",
+      "energy_rmse_per_atom": 0.5586599999999999,
+      "force_rmse_all": 0.442725
+    },
+    {
+      "group": "LIWITHF_ISOLATED",
+      "short_label": "ISOLATED",
+      "energy_rmse_per_atom": 0.04323,
+      "force_rmse_all": 0.177187
+    },
+    {
+      "group": "LIWITHF_NPT_FINAL",
+      "short_label": "NPT_FINAL",
+      "energy_rmse_per_atom": 0.09670999999999999,
+      "force_rmse_all": 0.036341
+    },
+    {
+      "group": "LIWITHF_V3",
+      "short_label": "V3",
+      "energy_rmse_per_atom": 0.03284,
+      "force_rmse_all": 0.023809
+    }
+  ]
+}

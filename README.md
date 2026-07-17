@@ -35,8 +35,8 @@ baseline.
 
 | Resource | Link |
 |:--------:|------|
-| 📦 Dataset | [`jorgemunozl/minimal_li_f_mace_dataset`](https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset) |
-| 🚀 Fine-tuned model | [`jorgemunozl/mace_omat_medium`](https://huggingface.co/jorgemunozl/mace_omat_medium) |
+| 📦 Dataset | [`jorgemunozl/minimal_li_f_mace_dataset`](https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset) (PRIVATE) |
+| 🚀 Fine-tuned model | [`jorgemunozl/mace_omat_medium`](https://huggingface.co/jorgemunozl/mace_omat_medium) (OPEN) |
 
 </div>
 
@@ -64,9 +64,6 @@ All DFT data lives under `dataset/`. Each group is a Quantum ESPRESSO
 <tr><td><code>LIBF4_V4</code></td><td>Li–B–F system</td></tr>
 <tr><td><code>LIBF4</code></td><td>Li–B–F</td></tr>
 </table>
-
-The full merged dataset is published on
-[🤗 Hugging Face](https://huggingface.co/datasets/jorgemunozl/minimal_li_f_mace_dataset).
 
 ### 🔄 Convert QE output → `.extxyz`
 

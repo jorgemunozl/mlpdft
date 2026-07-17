@@ -26,6 +26,10 @@ MAX_FRAMES = None  # use all frames after striding
 
 PATH_REPO = Path(__file__).resolve().parent.parent.parent
 
+SLIDES_REPO = PATH_REPO / "mlpdft_touying"
+
+PLOT_DIR = SLIDES_REPO / "plots"
+
 # Groups
 GROUPS_LIF = [
     "LIFINTERFACE_KJPAW_V1",

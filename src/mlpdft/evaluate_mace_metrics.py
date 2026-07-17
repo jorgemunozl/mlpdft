@@ -7,6 +7,7 @@ Use compiled model
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import ase.io
@@ -196,37 +197,38 @@ def compute_metrics_for_group(
     }
 
 
-def write_metrics_txt(metrics: dict, output_path: Path) -> None:
-    """Write metrics in the same format as the existing FitSNAP .txt files."""
+def _to_native(obj):
+    """Recursively convert numpy scalars/arrays to native Python types."""
+    if isinstance(obj, (np.floating,)):
+        return float(obj)
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, dict):
+        return {k: _to_native(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_native(v) for v in obj]
+    return obj
+
+
+def write_metrics_json(
+    all_results: list[dict],
+    output_path: Path,
+    *,
+    model_key: str,
+    frame_stride: int,
+    max_frames: int,
+) -> None:
+    """Write all group metrics to a single JSON file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    lines = [
-        "============================================================",
-        "RESULTS",
-        "============================================================",
-        "",
-        f"  Energy — total (eV):",
-        f"    MAE  = {metrics['energy_mae']:.6f}",
-        f"    RMSE = {metrics['energy_rmse']:.6f}",
-        f"    MaxAE= {metrics['energy_maxae']:.6f}",
-        "",
-        f"  Energy — per atom (eV/atom):",
-        f"    MAE  = {metrics['energy_mae_per_atom']:.6f}",
-        f"    RMSE = {metrics['energy_rmse_per_atom']:.6f}",
-        f"    MaxAE= {metrics['energy_maxae_per_atom']:.6f}",
-        "",
-        f"  Energy — per atom (meV/atom):",
-        f"    MAE  = {metrics['energy_mae_per_atom'] * 1000:.2f}",
-        f"    RMSE = {metrics['energy_rmse_per_atom'] * 1000:.2f}",
-        f"    MaxAE= {metrics['energy_maxae_per_atom'] * 1000:.2f}",
-        "",
-        f"  Forces (eV/Å):",
-        f"    MAE  (all)     = {metrics['force_mae_all']:.6f}",
-        f"    RMSE (all)     = {metrics['force_rmse_all']:.6f}",
-        f"    MAE  (x/y/z)   = {metrics['force_mae_x']:.6f}  {metrics['force_mae_y']:.6f}  {metrics['force_mae_z']:.6f}",
-        f"    MaxAE          = {metrics['force_maxae']:.6f}",
-        "",
-    ]
-    output_path.write_text("\n".join(lines))
+    payload = {
+        "model_key": model_key,
+        "frame_stride": frame_stride,
+        "max_frames": max_frames,
+        "results": _to_native(all_results),
+    }
+    output_path.write_text(json.dumps(payload, indent=2))
 
 
 def main() -> None:
@@ -265,37 +267,35 @@ def main() -> None:
         if metrics is None:
             continue
 
-        output_filename = f"{group}_{config.frame_stride}_{config.max_frames}.txt"
-        output_path = metrics_dir / output_filename
-        write_metrics_txt(metrics, output_path)
-        print(f"  Saved: {output_path}")
-
         all_results.append(metrics)
 
+    # Write single JSON
+    json_path = metrics_dir / f"{config.model_key}.json"
+    write_metrics_json(
+        all_results,
+        json_path,
+        model_key=config.model_key,
+        frame_stride=config.frame_stride,
+        max_frames=config.max_frames,
+    )
+    print(f"\nSaved: {json_path}")
+
     # Print summary table
-    print(f"\n\n{'=' * 80}")
-    print("SUMMARY — MACE omat-medium metrics")
+    print(f"\n{'=' * 80}")
+    print(f"SUMMARY — {config.model_key} metrics")
     print(f"{'=' * 80}")
     print(
-        f"{'Group':<35} {'E RMSE tot':>12} {'E RMSE/at':>12} {'E RMSE/at':>12} {'F RMSE':>10} {'F rel RMSE':>10}"
+        f"{'Group':<35} {'E RMSE tot':>12} {'E RMSE/at':>12} {'E RMSE/at':>12} {'F RMSE':>10}"
     )
-    print(
-        f"{'':<35} {'(eV)':>12} {'(eV/atom)':>12} {'(meV/atom)':>12} {'(eV/Å)':>10} {'(%)':>10}"
-    )
-    print("-" * 91)
+    print(f"{'':<35} {'(eV)':>12} {'(eV/atom)':>12} {'(meV/atom)':>12} {'(eV/Å)':>10}")
+    print("-" * 81)
     for r in all_results:
-        ref_rms = _compute_ref_force_rms(r["group"])
-        rel_f = (
-            f"{r['force_rmse_all'] / ref_rms:>10.2%}"
-            if ref_rms is not None
-            else f"{'N/A':>10}"
-        )
         print(
             f"{r['group']:<35} {r['energy_rmse']:>12.4f} {r['energy_rmse_per_atom']:>12.6f} "
-            f"{r['energy_rmse_per_atom'] * 1000:>12.2f} {r['force_rmse_all']:>10.4f} {rel_f}"
+            f"{r['energy_rmse_per_atom'] * 1000:>12.2f} {r['force_rmse_all']:>10.4f}"
         )
     print(f"{'=' * 80}")
-    print(f"Results saved in: {metrics_dir}")
+    print(f"Results saved in: {json_path}")
 
 
 def _compute_ref_force_rms(group: str) -> float | None:
