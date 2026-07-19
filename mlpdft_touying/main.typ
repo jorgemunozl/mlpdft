@@ -95,7 +95,7 @@ I
   caption: [Metrics obtained by two models],
 )
 
-= And ACE model
+= High Ordern ACE model
 
 == What the MACE model is
 
@@ -305,7 +305,7 @@ I
   caption: "MACE foundation model variants and their training datasets",
 )
 
-= Zero-shot evaluation
+== Zero-shot evaluation
 
 == Zero-Shot MACE-MP Evaluation on LiF 54
 
@@ -323,7 +323,7 @@ I
   caption: "MACE OMAT first metrics obtained",
 )
 
-= Leveraging our Foundation Model
+= Leveraging foundational model
 
 == We are going to fine tunne the model
 
@@ -349,8 +349,6 @@ What is really happening on the first epochs a knowledge destillation strategy
 
 == Multi Head Fine Tuning
 
-=== Interesting actually
-
 What the heck is this
 
 == Strategies for Fine Tunning
@@ -367,7 +365,6 @@ What the heck is this
   caption: "Performance of fine-tuned MACE models on the ",
 )
 
-= Post Training Key Ideas and warnings
 
 == What we are trying to reach (Goals)
 
@@ -407,114 +404,120 @@ What the heck is this
   prior knowledge of ionic interactions, charge transfer,
   or metal coordination.
 
-= First Post Training Performance
+= Training time
 
-== Dataset
+== Goals - First Training
+
++ Get used to the pipeline (set everything around)
++ Know how much RAM and compute time training takes for a small dataset.
+
+== Dataset - First Training
 
 #align(center)[
-  #table(
-    columns: (auto, 2fr, auto),
-    stroke: 0.5pt,
-    inset: 6pt,
-    align: (center, left, center),
+  #figure(
+    table(
+      columns: (auto, 2fr, auto),
+      stroke: 0.5pt,
+      inset: 6pt,
+      align: (center, left, center),
 
-    table.cell(fill: luma(230))[*\#*],
-    table.cell(fill: luma(230))[*Group*],
-    table.cell(fill: luma(230))[*Frame count*],
+      table.cell(fill: luma(230))[*\#*],
+      table.cell(fill: luma(230))[*Group*],
+      table.cell(fill: luma(230))[*Frame count*],
 
-    [1], [`LIFINTERFACE_KJPAW_V1`], [149],
-    [2], [`LIFINTERFACE_KJPAW_NPT_V2`], [477],
-    [3], [`LIFINTERFACE_KJPAW_NPT`], [258],
-    [4], [`LIWITHF_NPT_FINAL`], [3236],
-    [5], [`LIWITHF_ISOLATED`], [38],
-    [6], [`LIF64_KJPAW_V2`], [2000],
-    [7], [`LIWITHF_V3`], [1195],
-    [8], [`LIF64_ISOLATED`], [56],
+      [1], [`LIFINTERFACE_KJPAW_V1`], [149],
+      [2], [`LIFINTERFACE_KJPAW_NPT_V2`], [477],
+      [3], [`LIFINTERFACE_KJPAW_NPT`], [258],
+      [4], [`LIWITHF_NPT_FINAL`], [3236],
+      [5], [`LIWITHF_ISOLATED`], [38],
+      [6], [`LIF64_KJPAW_V2`], [2000],
+      [7], [`LIWITHF_V3`], [1195],
+      [8], [`LIF64_ISOLATED`], [56],
+    ),
+    caption: [Total frames: 7409],
   )
-
-  #v(0.5em)
-  *Total frames:* 7409
 ]
 
-== Hyperparameter Selection for First Training
+== Hyperparameter Selection - First Training
+#text(size: 0.8em)[
+  #grid(
+    columns: (1fr, 1fr),
+    gutter: 0.5em,
 
-#grid(
-  columns: (1fr, 1fr),
-  gutter: 0.5em,
+    // left — second part: scheduler, regularization, lora
+    align(center, table(
+      columns: (auto, auto),
+      stroke: 0.4pt,
+      inset: 3pt,
 
-  // LEFT — second part: Scheduler, Regularization, LoRA
-  align(center, table(
-    columns: (auto, auto),
-    stroke: 0.4pt,
-    inset: 3pt,
+      table.cell(fill: luma(230))[*hyperparameter*],
+      table.cell(fill: luma(230))[*value*],
 
-    table.cell(fill: luma(230))[*Hyperparameter*],
-    table.cell(fill: luma(230))[*Value*],
+      // === model architecture ===
+      table.cell(fill: luma(220), colspan: 2)[*model architecture*],
 
-    // === Model Architecture ===
-    table.cell(fill: luma(220), colspan: 2)[*Model Architecture*],
+      [cutoff radius ($r_max$)], [$5$],
+      [channels], [$128$],
+      [max $l$], [$1$],
+      [max $ell$], [$3$],
+      [interactions], [$2$],
+      [correlation], [$3$],
+      [radial basis functions], [$8$],
+      [cutoff basis functions], [$5$],
 
-    [Cutoff radius ($r_max$)], [$5$],
-    [Channels], [$128$],
-    [Max $L$], [$1$],
-    [Max $ell$], [$3$],
-    [Interactions], [$2$],
-    [Correlation], [$3$],
-    [Radial basis functions], [$8$],
-    [Cutoff basis functions], [$5$],
+      // === training ===
+      table.cell(fill: luma(220), colspan: 2)[*training*],
 
-    // === Training ===
-    table.cell(fill: luma(220), colspan: 2)[*Training*],
+      [batch size], [$4$],
+      [max epochs], [$10$],
+      [validation fraction], [$0.5$],
+      [loss function], [`weighted`],
+      [$lambda_(text("forces"))$], [$1.0$],
+      [$lambda_(text("energy"))$], [$1.0$],
+    )),
 
-    [Batch size], [$4$],
-    [Max epochs], [$10$],
-    [Validation fraction], [$0.5$],
-    [Loss function], [`weighted`],
-    [$lambda_(text("forces"))$], [$1.0$],
-    [$lambda_(text("energy"))$], [$1.0$],
-  )),
+    // right — first part: model architecture, training, optimizer
+    align(center, table(
+      columns: (auto, auto),
+      stroke: 0.4pt,
+      inset: 3pt,
 
-  // RIGHT — first part: Model Architecture, Training, Optimizer
-  align(center, table(
-    columns: (auto, auto),
-    stroke: 0.4pt,
-    inset: 3pt,
+      table.cell(fill: luma(230))[*hyperparameter*],
+      table.cell(fill: luma(230))[*value*],
 
-    table.cell(fill: luma(230))[*Hyperparameter*],
-    table.cell(fill: luma(230))[*Value*],
+      // === optimizer ===
+      table.cell(fill: luma(220), colspan: 2)[*optimizer*],
 
-    // === Optimizer ===
-    table.cell(fill: luma(220), colspan: 2)[*Optimizer*],
+      [optimizer], [`adam`],
+      [learning rate], [$0.01$],
+      [amsgrad], [`true`],
+      [weight decay], [$5 times 10^(-7)$],
+      [gradient clip], [$10.0$],
 
-    [Optimizer], [`adam`],
-    [Learning rate], [$0.01$],
-    [AMSGrad], [`true`],
-    [Weight decay], [$5 times 10^(-7)$],
-    [Gradient clip], [$10.0$],
+      // === scheduler ===
+      table.cell(fill: luma(220), colspan: 2)[*scheduler*],
 
-    // === Scheduler ===
-    table.cell(fill: luma(220), colspan: 2)[*Scheduler*],
+      [type], [`reducelronplateau`],
+      [lr factor], [$0.8$],
+      [patience], [$50$],
 
-    [Type], [`ReduceLROnPlateau`],
-    [LR factor], [$0.8$],
-    [Patience], [$50$],
+      // === regularization ===
+      table.cell(fill: luma(220), colspan: 2)[*regularization*],
 
-    // === Regularization ===
-    table.cell(fill: luma(220), colspan: 2)[*Regularization*],
+      [ema], [`true`],
+      [ema decay], [$0.99$],
+      [early stopping patience], [$4$],
 
-    [EMA], [`true`],
-    [EMA decay], [$0.99$],
-    [Early stopping patience], [$4$],
+      // === lora ===
+      table.cell(fill: luma(220), colspan: 2)[*lora*],
 
-    // === LoRA ===
-    table.cell(fill: luma(220), colspan: 2)[*LoRA*],
+      [lora enabled], [`true`],
+      [lora rank], [$8$],
+    )),
+  ),
+]
 
-    [LoRA enabled], [`true`],
-    [LoRA rank], [$8$],
-  )),
-)
-
-== Resources Employed on the first training
+== Resources Employed - First training
 
 #grid(
   columns: (1fr, 1fr),
@@ -536,7 +539,7 @@ What the heck is this
           [RAM used], [19 GB],
           [GPU usage], [\(approx 100\%\)],
         ),
-        caption: "Resources employed",
+        caption: [Resources employed in the first training],
       )
     ]
 
@@ -544,31 +547,17 @@ What the heck is this
   [#figure(image("images/ada.webp", width: 70%), caption: "RTX 4000 ADA"),],
 )
 
-== MACE Results
+== MACE auto generated results - First Training
 
 #figure(
   image("images/mace_results.png", width: 70%),
   caption: "Mace Training Supervision",
 )
 
-== Model after FT performance / per atom
+== Group Results - First Training
 
 #figure(
-  image("images/metrics_mock_per.pdf", width: 100%),
-  caption: "Model performance metrics after fine-tuning / per atom",
-)
-
-== Model after FT performance / whole
-
-#figure(
-  image("images/metrics_mock.pdf", width: 100%),
-  caption: "Model performance metrics after fine-tuning",
-)
-
-== Mace Own Results — Per-Group Breakdown
-
-#figure(
-  image("images/energy_rmse_per_group.pdf", width: 80%),
+  image("images/energy_rmse_per_group.pdf", width: 70%),
   caption: [Energy RMSE per atom (meV/atom) — MACE mock\_2\_test],
 )
 
@@ -579,7 +568,137 @@ What the heck is this
   caption: [Force RMSE (meV/Å) — MACE vs FitSNAP per group],
 )
 
-= Changes after the first training lessons
+== Takeaways - First training
+
+The take aways
+
+== Goals - Second Training
+
+Experiment with Scaling Laws
+
+== Dataset - Second Training
+
+#align(center)[
+  #figure(
+    table(
+      columns: (auto, 2fr, auto),
+      stroke: 0.5pt,
+      inset: 6pt,
+      align: (center, left, center),
+
+      table.cell(fill: luma(230))[*\#*],
+      table.cell(fill: luma(230))[*Group*],
+      table.cell(fill: luma(230))[*Frame count*],
+
+      [1], [`LIFINTERFACE_KJPAW_V1`], [248],
+      [2], [`LIFINTERFACE_KJPAW_V2`], [781],
+      [3], [`LIFINTERFACE_KJPAW_NPT_V2`], [795],
+      [4], [`LIFINTERFACE_KJPAW_NPT`], [431],
+      [5], [`LIWITHF_NPT_FINAL`], [5394],
+      [6], [`LIWITHF_ISOLATED`], [63],
+      [7], [`LIF64_KJPAW_V2`], [3333],
+      [8], [`LIF64_KJPAW_NPT`], [3333],
+      [9], [`LIF64_KJPAW_NPT_V3`], [3333],
+      [10], [`LIWITHF_V3`], [1992],
+      [11], [`LIF64_ISOLATED`], [94],
+    ),
+    caption: [Total frames: 19,797 (stride 3)],
+  )
+]
+
+
+== Hyperparameter Selection - Second Training
+
+
+#text(size: 0.8em)[
+  #grid(
+    columns: (1fr, 1fr),
+    gutter: 0.5em,
+
+    // LEFT — second part: Scheduler, Regularization, LoRA
+    align(center, table(
+      columns: (auto, auto),
+      stroke: 0.4pt,
+      inset: 3pt,
+
+      table.cell(fill: luma(230))[*Hyperparameter*],
+      table.cell(fill: luma(230))[*Value*],
+
+      // === Model Architecture ===
+      table.cell(fill: luma(220), colspan: 2)[*Model Architecture*],
+
+      [Cutoff radius ($r_max$)], [$5$],
+      [Channels], [$128$],
+      [Max $L$], [$1$],
+      [Max $ell$], [$3$],
+      [Interactions], [$2$],
+      [Correlation], [$3$],
+      [Radial basis functions], [$8$],
+      [Cutoff basis functions], [$5$],
+
+      // === Training ===
+      table.cell(fill: luma(220), colspan: 2)[*Training*],
+
+      [Batch size], [$4$],
+      [Max epochs], [$10$],
+      [Validation fraction], [$0.5$],
+      [Loss function], [`weighted`],
+      [$lambda_(text("forces"))$], [$1.0$],
+      [$lambda_(text("energy"))$], [$1.0$],
+    )),
+
+    // RIGHT — first part: Model Architecture, Training, Optimizer
+    align(center, table(
+      columns: (auto, auto),
+      stroke: 0.4pt,
+      inset: 3pt,
+
+      table.cell(fill: luma(230))[*Hyperparameter*],
+      table.cell(fill: luma(230))[*Value*],
+
+      // === Optimizer ===
+      table.cell(fill: luma(220), colspan: 2)[*Optimizer*],
+
+      [Optimizer], [`adam`],
+      [Learning rate], [$0.01$],
+      [AMSGrad], [`true`],
+      [Weight decay], [$5 times 10^(-7)$],
+      [Gradient clip], [$10.0$],
+
+      // === Scheduler ===
+      table.cell(fill: luma(220), colspan: 2)[*Scheduler*],
+
+      [Type], [`ReduceLROnPlateau`],
+      [LR factor], [$0.8$],
+      [Patience], [$50$],
+
+      // === Regularization ===
+      table.cell(fill: luma(220), colspan: 2)[*Regularization*],
+
+      [EMA], [`true`],
+      [EMA decay], [$0.99$],
+      [Early stopping patience], [$4$],
+
+      // === LoRA ===
+      table.cell(fill: luma(220), colspan: 2)[*LoRA*],
+
+      [LoRA enabled], [`true`],
+      [LoRA rank], [$8$],
+    )),
+  ),
+]
+
+
+== Resources Employed - Second Training
+
+== Mace auto generated results - Second Training
+
+== Group Results - Second Training
+
+
+== Takeaways - Second Training
+
+
 
 == Iterative Learning
 
@@ -594,7 +713,3 @@ What the heck is this
   image("images/active_learning_commitee.png", width: 40%),
   caption: [Active learning example],
 )
-
-== Test Plot
-
-Good!

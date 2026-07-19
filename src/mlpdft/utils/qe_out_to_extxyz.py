@@ -7,27 +7,20 @@ Edit `DEFAULT_CONFIG` below and run the script.
 
 from __future__ import annotations
 
-from io import StringIO
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-from ase import Atoms
-from ase.io import read, write
+from ase.io import write
 
 from mlpdft.config import MaceConfig
 from mlpdft.constants import ENERGY_KEY, FORCE_KEY, GROUPS_LIF
 
 
 def load_frames_with_ase(cfg: MaceConfig) -> list[Atoms]:
-    # Some QE output files embed binary data alongside text (e.g. from
-    # high-precision or restart dumps).  Using latin-1 maps every byte 1:1
-    # to a character, preserving the text sections that ASE's parser needs
-    # while keeping the binary sections benign (no replacement chars).
-    text = cfg.data_in_path.read_text(encoding="latin-1")
-    raw = read(StringIO(text), format="espresso-out", index=":")
-
-    frames = [raw] if isinstance(raw, Atoms) else list(raw)
+    # Reuse cached raw frames from solve_paths (avoids double‑parsing the
+    # large QE .out file).
+    frames = cfg.read_raw_frames()
 
     if not frames:
         return []
@@ -127,10 +120,11 @@ def main() -> None:
     ]
     lack = GROUPS_LIF
     lack = [group for group in lack if group not in ready]
+    lack = GROUPS_LIF
     for group in lack:
         config = MaceConfig(
             group=group,
-            frame_stride=5,
+            frame_stride=3,
             max_frames=None,
         )
         convert_qe_out_to_extxyz(config)

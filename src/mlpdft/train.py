@@ -11,24 +11,23 @@ from mlpdft.config import (
 )
 from mlpdft.constants import (
     DATA_DIR,
-    DATASET_NAME,
+    DATASET_NAME_2,
     ENERGY_OFFSET,
-    MERGED_FILENAME,
+    MERGED_FILENAME_DS_2,
     OUTPUTS_DIR,
     PREFIX_HF,
-    SRC_DIR,
     XYZ_DIR,
 )
 
 # Download dataset from Hugging Face
 dataset = hf_hub_download(
-    repo_id=PREFIX_HF + "/" + DATASET_NAME,
-    filename=MERGED_FILENAME,
+    repo_id=PREFIX_HF + "/" + DATASET_NAME_2,
+    filename=MERGED_FILENAME_DS_2,
     repo_type="dataset",
     local_dir=str(DATA_DIR / XYZ_DIR),
 )
 
-path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME)
+path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME_DS_2)
 
 # Test for check that trainig is working properly
 # path_data = str(DATA_DIR / XYZ_DIR / "test.extxyz")
@@ -42,16 +41,16 @@ config = Mace_TrainerConfig(
     device="cuda",
     dtype="float64",  # it cant be 32 float
     hyperparams=MaceTrainingHyperparams(
-        r_max=5,
-        max_num_epochs=10,
+        r_max=8,
+        max_num_epochs=30,
         batch_size=8,
         patience=4,
-        eval_interval=10,
-        valid_frac=0.5,
+        eval_interval=5,
+        valid_frac=0.15,
         swa=False,
     ),
     metadata=MaceTrainingMetadata(
-        experiment_name="mock_test",
+        experiment_name="mace_omat_lora_v2",
     ),
 )
 config.write_config_train()

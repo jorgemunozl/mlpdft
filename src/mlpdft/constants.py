@@ -15,10 +15,13 @@ class ModelSpec:
 PREFIX_HF = "jorgemunozl"
 
 # MAIN DATASET
-DATASET_NAME = "molecular_dynamics_li_f_qe_v1"
-MERGED_FILENAME = "minimal_li_f_mace_dataset.extxyz"
+DATASET_NAME_1 = "molecular_dynamics_li_f_qe"
+DATASET_NAME_2 = "molecular_dynamics_li_f_qe_v2"
 
-FRAME_STRIDE = 5
+MERGED_FILENAME_DS_1 = "minimal_li_f_mace_dataset.extxyz"
+MERGED_FILENAME_DS_2 = "li_f_mace_dataset_v2.extxyz"
+
+FRAME_STRIDE = 3
 MAX_FRAMES = None  # use all frames after striding
 
 # Template path (sibling of this script)
@@ -31,11 +34,14 @@ PLOT_DIR = SLIDES_REPO / "plots"
 # Groups
 GROUPS_LIF = [
     "LIFINTERFACE_KJPAW_V1",
+    "LIFINTERFACE_KJPAW_V2",
     "LIFINTERFACE_KJPAW_NPT_V2",
     "LIFINTERFACE_KJPAW_NPT",
     "LIWITHF_NPT_FINAL",
     "LIWITHF_ISOLATED",
     "LIF64_KJPAW_V2",
+    "LIF64_KJPAW_NPT",
+    "LIF64_KJPAW_NPT_V3",
     "LIWITHF_V3",
     "LIF64_ISOLATED",
 ]

@@ -93,6 +93,33 @@ class MaceConfig:
 
     dtype: Literal["float32", "float64"] = "float32"
 
+    config_type: str = field(
+        default="",
+        metadata={
+            "description": "Config type label written into each frame (defaults to group name)"
+        },
+    )
+
+    include_stress: bool = field(
+        default=False,
+        metadata={"description": "Whether to include stress tensor from QE output"},
+    )
+
+    _raw_frames: list | None = field(default=None, init=False, repr=False)
+
+    def read_raw_frames(self) -> list:
+        """Parse the QE .out file once and cache the raw frame list."""
+        if self._raw_frames is not None:
+            return self._raw_frames
+        print(f"[read_raw_frames] {self.data_in_path}")
+        if not self.data_in_path.exists():
+            self._raw_frames = []
+            return []
+        text = self.data_in_path.read_text(encoding="latin-1")
+        raw = read(StringIO(text), format="espresso-out", index=":")
+        self._raw_frames = [raw] if isinstance(raw, Atoms) else list(raw)
+        return self._raw_frames
+
     @staticmethod
     def obtain_max_frames(data_in_path: Path) -> int | None:
         """
@@ -132,22 +159,21 @@ class MaceConfig:
             )
 
     def solve_paths(self):
-        data_in_path = DATA_DIR / self.group / Path(str(self.group) + ".out")
+        if not self.config_type:
+            self.config_type = self.group
+        self.data_in_path = DATA_DIR / self.group / Path(str(self.group) + ".out")
         if self.frame_stride is None:
             self.frame_stride = 1
         if self.max_frames is None:
-            max = self.obtain_max_frames(data_in_path)
-            # print(f"MAX FRAMES: {max}")
-            if max is not None:
-                self.max_frames = int(max / self.frame_stride)
-            # print(f"MAX FRAMES (STRIDED): {self.max_frames}")
+            raw = self.read_raw_frames()
+            if raw:
+                self.max_frames = int(len(raw) / self.frame_stride)
         data_out_path = (
             DATA_DIR
             / Path(self.group)
             / XYZ_DIR
             / f"{self.group}_{self.frame_stride}_{self.max_frames}.extxyz"
         )
-        self.data_in_path = data_in_path
         self.data_out_path = data_out_path
 
         # MACE MODEL PREDICTIONS
