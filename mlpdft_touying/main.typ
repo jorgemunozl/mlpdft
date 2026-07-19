@@ -325,9 +325,18 @@ I
 
 = Leveraging foundational model
 
-== State of post training
+== Current state of post-training
 
-Fine tunning is a field well study thanks the NLP success
+Methods applicable to MLIPs after the initial training run:
+
+- *Fine-tuning* — adapt a pre-trained foundation model to a new composition / phase space.
+- *LoRA* — fine-tune with low-rank adapters; fewer parameters, less catastrophic forgetting.
+- *Active learning* — iteratively query new configurations where the model is uncertain,
+  label them with DFT, and retrain.
+- *Uncertainty quantification* — ensemble or committee models flag extrapolative regions.
+- *Delta learning* — learn the correction between a cheap baseline (e.g. empirical potential)
+  and the target DFT.
+- *Distillation* — compress a large, accurate model into a smaller, faster one.
 
 == Catastrophic Forgetting
 
@@ -347,9 +356,7 @@ What is really happening on the first epochs a knowledge destillation strategy
   caption: [Only the last layers are unfrozen],
 )
 
-== Multi Head Fine Tuning
-
-What the heck is this
+// == Multi Head Fine Tuning What the heck is this
 
 == Strategies for Fine Tunning
 
@@ -606,38 +613,34 @@ Experiment with Scaling Laws
   )
 ]
 
-
 == Hyperparameter Selection - Second Training
 
-#text(size: 0.8em)[
-  #grid(
-    columns: 1fr,
-    gutter: 0.5em,
-    figure(
-      table(
-        columns: (auto, auto),
-        stroke: 0.4pt,
-        inset: 3pt,
+#figure(
+  table(
+    columns: (auto, auto),
+    stroke: 0.4pt,
+    inset: 3pt,
 
-        table.cell(fill: luma(230))[*Hyperparameter*],
-        table.cell(fill: luma(230))[*Value*],
+    table.cell(fill: luma(230))[*Hyperparameter*],
+    table.cell(fill: luma(230))[*Value*],
 
-        // === Model Architecture ===
-        table.cell(fill: luma(220), colspan: 2)[*Model Architecture*],
+    // === Model Architecture ===
+    table.cell(fill: luma(220), colspan: 2)[*Model Architecture*],
 
-        [Cutoff radius ($r_max$)], [$8$],
+    [Cutoff radius ($r_max$)], [$8$],
 
-        // === Training ===
-        table.cell(fill: luma(220), colspan: 2)[*Training*],
+    // === Training ===
+    table.cell(fill: luma(220), colspan: 2)[*Training*],
 
-        [Max epochs], [$40$],
-        [Validation fraction], [$0.15$],
-      ),
-      caption: [Hyperparameter values],
-    )
-  )
-  Intended changes, channels 128 max 𝑙 1 max ℓ 3 interactions 2 correlation 3 radial basis functions 8 cutoff basis functions 5
-]
+    [Max epochs], [$40$],
+    [Validation fraction], [$0.15$],
+  ),
+  caption: [Hyperparameter values],
+)
+
+*Intended changes to evaluate:* MACE architecture parameters — channels ($128$), max $l$ ($1$), max $ell$ ($3$), interactions ($2$), correlation ($3$), radial basis ($8$), cutoff basis ($5$).
+
+Goal: tweak each one and understand *why* it shifts performance for this dataset.
 
 == Resources Employed - Second Training
 
