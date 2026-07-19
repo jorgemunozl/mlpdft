@@ -21,7 +21,6 @@ from mlpdft.constants import (
     XYZ_DIR,
     ModelSpec,
 )
-from mlpdft.train import path
 
 
 @dataclass
@@ -176,6 +175,134 @@ class MaceConfig:
     def describe_fields(cls) -> dict[str, str]:
         """Return a field->description map for documentation or logging."""
         return {f.name: f.metadata.get("description", "") for f in fields(cls)}
+
+
+@dataclass
+class ActiveLearningConfig(MaceConfig):
+    # ── committee ────────────────────────────────────────────────
+    model_paths: list[str] = field(
+        default_factory=list,
+        metadata={
+            "description": (
+                "Paths to 2+ MACE .model files.  May also include registry "
+                "keys (e.g. 'mace_omat_medium') which are resolved to paths. "
+                "A committee is formed when 2+ models are provided."
+            )
+        },
+    )
+
+    # ── input / output ───────────────────────────────────────────
+    config: str = field(
+        default="",
+        metadata={"description": "Initial XYZ configuration file"},
+    )
+    output: str = field(
+        default="",
+        metadata={"description": "Output trajectory (.extxyz). Appends if it exists."},
+    )
+
+    # ── MD parameters ────────────────────────────────────────────
+    temperature_K: float = field(
+        default=300.0,
+        metadata={"description": "Temperature (Kelvin)"},
+    )
+    timestep: float = field(
+        default=1.0,
+        metadata={"description": "Integration timestep (fs)"},
+    )
+    friction: float = field(
+        default=0.01,
+        metadata={"description": "Langevin friction coefficient (1/fs)"},
+    )
+    nsteps: int = field(
+        default=1_000,
+        metadata={"description": "Maximum number of MD steps"},
+    )
+
+    # ── active-learning control ──────────────────────────────────
+    error_threshold: float = field(
+        default=0.1,
+        metadata={
+            "description": (
+                "Maximum relative force standard deviation across the committee "
+                "before stopping the MD (higher = more tolerant)"
+            )
+        },
+    )
+    config_index: int = field(
+        default=-1,
+        metadata={"description": "Frame index in the XYZ file (-1 = last frame)"},
+    )
+
+    # ── I/O control ──────────────────────────────────────────────
+    nsave: int = field(
+        default=10,
+        metadata={"description": "Save trajectory frame every N steps"},
+    )
+    nprint: int = field(
+        default=10,
+        metadata={"description": "Print status every N steps"},
+    )
+    ncheckerror: int = field(
+        default=10,
+        metadata={"description": "Check uncertainty every N steps"},
+    )
+    compute_stress: bool = field(
+        default=False,
+        metadata={"description": "Whether to compute stress"},
+    )
+    info_prefix: str = field(
+        default="MACE_",
+        metadata={"description": "Prefix for energy, forces and stress keys"},
+    )
+
+    # ── misc ─────────────────────────────────────────────────────
+    seed: int = field(
+        default=123,
+        metadata={"description": "RNG seed for velocity initialisation"},
+    )
+
+    # ── post-init ────────────────────────────────────────────────
+    def __post_init__(self):
+        # Skip MaceConfig.__post_init__ — we don't need QE paths.
+        # Resolve model paths through MODEL_REGISTRY if keys are used.
+        self._resolve_model()
+
+    def _resolve_model(self) -> None:
+        """Expand registry keys in *model_paths* to real paths."""
+        resolved: list[str] = []
+        for item in self.model_paths:
+            if item in MODEL_REGISTRY:
+                spec = MODEL_REGISTRY[item]
+                resolved.append(str(spec.path.expanduser()))
+            else:
+                resolved.append(item)
+        self.model_paths = resolved
+
+    # ── conversion ───────────────────────────────────────────────
+    def to_namespace(self):
+        """Produce an ``argparse.Namespace`` consumable by
+        ``mace.cli.active_learning_md.run()``."""
+        import argparse as _argparse
+
+        ns = _argparse.Namespace()
+        ns.model = self.model_paths
+        ns.config = self.config
+        ns.output = self.output
+        ns.device = self.device
+        ns.default_dtype = self.dtype
+        ns.temperature_K = self.temperature_K
+        ns.timestep = self.timestep
+        ns.friction = self.friction
+        ns.nsteps = self.nsteps
+        ns.error_threshold = self.error_threshold
+        ns.config_index = self.config_index
+        ns.nsave = self.nsave
+        ns.nprint = self.nprint
+        ns.ncheckerror = self.ncheckerror
+        ns.compute_stress = self.compute_stress
+        ns.info_prefix = self.info_prefix
+        return ns
 
 
 @dataclass

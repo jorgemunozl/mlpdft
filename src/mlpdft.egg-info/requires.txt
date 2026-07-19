@@ -1,2 +1,3 @@
 torch<3,>=2.2
 mace-torch>=0.3.6
+huggingface-hub>=1.19.0

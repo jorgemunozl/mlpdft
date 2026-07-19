@@ -22,8 +22,6 @@ FRAME_STRIDE = 5
 MAX_FRAMES = None  # use all frames after striding
 
 # Template path (sibling of this script)
-
-
 PATH_REPO = Path(__file__).resolve().parent.parent.parent
 
 SLIDES_REPO = PATH_REPO / "mlpdft_touying"
@@ -86,3 +84,5 @@ MODEL_REGISTRY = {
         key="mace_omat_lora_v1",
     ),
 }
+
+ACTIVE_LEARNING_DIR = OUTPUTS_DIR / "active_learning"
