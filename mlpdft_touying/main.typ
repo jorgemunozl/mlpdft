@@ -325,9 +325,9 @@ I
 
 = Leveraging foundational model
 
-== We are going to fine tunne the model
+== State of post training
 
-Fine tunning is a field well study thanks the NLP success.
+Fine tunning is a field well study thanks the NLP success
 
 == Catastrophic Forgetting
 
@@ -609,85 +609,35 @@ Experiment with Scaling Laws
 
 == Hyperparameter Selection - Second Training
 
-
 #text(size: 0.8em)[
   #grid(
-    columns: (1fr, 1fr),
+    columns: 1fr,
     gutter: 0.5em,
+    figure(
+      table(
+        columns: (auto, auto),
+        stroke: 0.4pt,
+        inset: 3pt,
 
-    // LEFT — second part: Scheduler, Regularization, LoRA
-    align(center, table(
-      columns: (auto, auto),
-      stroke: 0.4pt,
-      inset: 3pt,
+        table.cell(fill: luma(230))[*Hyperparameter*],
+        table.cell(fill: luma(230))[*Value*],
 
-      table.cell(fill: luma(230))[*Hyperparameter*],
-      table.cell(fill: luma(230))[*Value*],
+        // === Model Architecture ===
+        table.cell(fill: luma(220), colspan: 2)[*Model Architecture*],
 
-      // === Model Architecture ===
-      table.cell(fill: luma(220), colspan: 2)[*Model Architecture*],
+        [Cutoff radius ($r_max$)], [$8$],
 
-      [Cutoff radius ($r_max$)], [$5$],
-      [Channels], [$128$],
-      [Max $L$], [$1$],
-      [Max $ell$], [$3$],
-      [Interactions], [$2$],
-      [Correlation], [$3$],
-      [Radial basis functions], [$8$],
-      [Cutoff basis functions], [$5$],
+        // === Training ===
+        table.cell(fill: luma(220), colspan: 2)[*Training*],
 
-      // === Training ===
-      table.cell(fill: luma(220), colspan: 2)[*Training*],
-
-      [Batch size], [$4$],
-      [Max epochs], [$10$],
-      [Validation fraction], [$0.5$],
-      [Loss function], [`weighted`],
-      [$lambda_(text("forces"))$], [$1.0$],
-      [$lambda_(text("energy"))$], [$1.0$],
-    )),
-
-    // RIGHT — first part: Model Architecture, Training, Optimizer
-    align(center, table(
-      columns: (auto, auto),
-      stroke: 0.4pt,
-      inset: 3pt,
-
-      table.cell(fill: luma(230))[*Hyperparameter*],
-      table.cell(fill: luma(230))[*Value*],
-
-      // === Optimizer ===
-      table.cell(fill: luma(220), colspan: 2)[*Optimizer*],
-
-      [Optimizer], [`adam`],
-      [Learning rate], [$0.01$],
-      [AMSGrad], [`true`],
-      [Weight decay], [$5 times 10^(-7)$],
-      [Gradient clip], [$10.0$],
-
-      // === Scheduler ===
-      table.cell(fill: luma(220), colspan: 2)[*Scheduler*],
-
-      [Type], [`ReduceLROnPlateau`],
-      [LR factor], [$0.8$],
-      [Patience], [$50$],
-
-      // === Regularization ===
-      table.cell(fill: luma(220), colspan: 2)[*Regularization*],
-
-      [EMA], [`true`],
-      [EMA decay], [$0.99$],
-      [Early stopping patience], [$4$],
-
-      // === LoRA ===
-      table.cell(fill: luma(220), colspan: 2)[*LoRA*],
-
-      [LoRA enabled], [`true`],
-      [LoRA rank], [$8$],
-    )),
-  ),
+        [Max epochs], [$40$],
+        [Validation fraction], [$0.15$],
+      ),
+      caption: [Hyperparameter values],
+    )
+  )
+  Intended changes, channels 128 max 𝑙 1 max ℓ 3 interactions 2 correlation 3 radial basis functions 8 cutoff basis functions 5
 ]
-
 
 == Resources Employed - Second Training
 
