@@ -1,6 +1,5 @@
 """
 Molecular dynamics with a MACE potential.
-
 Reads a single initial configuration from the dataset (first frame),
 assigns Maxwell–Boltzmann velocities, and runs MD via ASE.
 """

@@ -338,38 +338,47 @@ Methods applicable to MLIPs after the initial training run:
   and the target DFT.
 - *Distillation* — compress a large, accurate model into a smaller, faster one.
 
-== Catastrophic Forgetting
-
-What is really happening on the first epochs a knowledge destillation strategy
+// == Catastrophic Forgetting What is really happening on the first epochs a knowledge destillation strategy
 
 == Using a freezing strategy
 
 #figure(
   image("images/frozen_title.png", width: 90%),
-  caption: "The different freezing strategies used in MACE fine-tuning",
+  caption: "Freeze used in MACE fine-tuning",
 )
 
 == Freezing Strategy
 
-#figure(
-  image("images/frozen.png", width: 60%),
-  caption: [Only the last layers are unfrozen],
+#grid(
+  columns: (auto, auto),
+  [
+    #figure(
+      image("images/frozen.png", width: 90%),
+      caption: [Only the last layers are unfrozen],
+    )
+  ],
+  [
+    1. Freeze early, train late — general descriptors from pre-tra-training are reusable; only later layers need to adapt.
+    2. f4 is optimal — freezing 4 layers hits the accuracy/cost sweet spot across both benchmark systems.
+    3. 90% less data — frozen transfer matches from-scratch accuracy with only 10–20% of data
+    4. "Small" is enough — larger foundation models don't improve results, just cost.
+    // 5. Distill to ACE for speed — fine-tuned MACE generates clean labels → fit a fast ACE surrogate (17× faster, better than DFT-trained ACE).
+  ],
 )
-
 // == Multi Head Fine Tuning What the heck is this
 
-== Strategies for Fine Tunning
+== Strategies for fine tunning diffusion
 
 #figure(
   image("images/strategies.png", width: 100%),
-  caption: "",
+  caption: [Over long trajectories],
 )
 
 == Fine-Tuning Performance Study
 
 #figure(
   image("images/performance.png", width: 100%),
-  caption: "Performance of fine-tuned MACE models on the ",
+  caption: [Discussion on varios techniques and elections for post training],
 )
 
 
@@ -392,31 +401,17 @@ What is really happening on the first epochs a knowledge destillation strategy
 
 == Challenges Part One
 
-
-== Challenges of Fine-Tuning MACE on a Specific Dataset
-
-- *Reference energy mismatch ($E_0$ problem)*
-  The foundation model and the target DFT dataset use different
-  atomic reference energies. A linear regression over the
-  training set is required to align them before fine-tuning.
-
-- *DFT functional mismatch*
-  MACE-MP was trained with very specific data, if different
-  functional (DFT), the model must _unlearn_ systematic
-  biases — which can hurt generalization.
-
-- *Out-of-domain chemistry*
-  LiBF#sub[4] contains ionic species and Li, which are outside
-  the MACE-OFF23 organic training domain. The model has no
-  prior knowledge of ionic interactions, charge transfer,
-  or metal coordination.
+// == Challenges of Fine-Tuning MACE on a Specific Dataset *Reference energy mismatch ($E_0$ problem)* The foundation model and the target DFT dataset use different atomic reference energies. A linear regression over the training set is required to align them before fine-tuning. *DFT functional mismatch* MACE-MP was trained with very specific data, if different functional (DFT), the model must _unlearn_ systematic biases — which can hurt generalization. *Out-of-domain chemistry* LiBF#sub[4] contains ionic species and Li, which are outside the MACE-OFF23 organic training domain. The model has no prior knowledge of ionic interactions, charge transfer, or metal coordination.
 
 = Training time
 
 == Goals - First Training
 
-+ Get used to the pipeline (set everything around)
++ Get used to the pipeline (set everything around).
 + Know how much RAM and compute time training takes for a small dataset.
++ Establish baseline metrics (energy & force RMSE) to compare against FitSNAP.
++ Confirm that LoRA fine-tuning on a frozen foundation model actually learns.
++ Identify bottlenecks in the workflow before scaling up.
 
 == Dataset - First Training
 
@@ -577,11 +572,15 @@ What is really happening on the first epochs a knowledge destillation strategy
 
 == Takeaways - First training
 
-The take aways
++ End-to-end pipeline works: QE output → extxyz → MACE + LoRA.
++ LoRA fine-tuning on a frozen MACE-MP-0 converges on this chemistry.
++ Training with 7,409 frames (stride 5) fits comfortably in GPU memory.
 
 == Goals - Second Training
 
-Experiment with Scaling Laws
++ Scale the dataset 3× (19,797 frames, 11 groups, stride 3).
++ Measure how RMSE scales with dataset size and diversity.
++ Use a proper validation set.
 
 == Dataset - Second Training
 

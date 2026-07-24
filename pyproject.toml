@@ -10,6 +10,7 @@ dependencies = [
     "torch>=2.2,<3",
     "mace-torch>=0.3.6",
     "huggingface-hub>=1.19.0",
+    "jupyter>=1.1.1",
 ]
 
 [[tool.uv.index]]

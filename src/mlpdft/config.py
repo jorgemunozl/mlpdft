@@ -147,6 +147,7 @@ class MaceConfig:
             self.download_model()
 
         self.solve_paths()
+        self.resolved_energy_offset_per_atom = self.energy_offset_per_atom or 0.0
 
     def download_model(self):
         if self.model.hf_id is not None:

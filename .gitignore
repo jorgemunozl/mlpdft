@@ -8,6 +8,12 @@ outputs/
 *.pdf
 *.typ
 
+uv.lock
+
+*.ipynb
+
+.ipynb_checkpoints
+
 *.pyc
 
 dataset/
