@@ -1,4 +1,9 @@
+import warnings
 from pathlib import Path
+
+# Suppress routine PyTorch/e3nn/cuequivariance warnings
+warnings.filterwarnings("ignore", message=".*TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD.*")
+warnings.filterwarnings("ignore", message=".*cuequivariance.*not available.*")
 
 from huggingface_hub import hf_hub_download
 from mace.cli.run_train import run
@@ -11,26 +16,27 @@ from mlpdft.config import (
 )
 from mlpdft.constants import (
     DATA_DIR,
-    DATASET_NAME_2,
+    DATASET_NAME_3,
     ENERGY_OFFSET,
-    MERGED_FILENAME_DS_2,
+    MERGED_FILENAME_DS_3,
     OUTPUTS_DIR,
     PREFIX_HF,
+    SRC_DIR,
     XYZ_DIR,
 )
 
 # Download dataset from Hugging Face
 dataset = hf_hub_download(
-    repo_id=PREFIX_HF + "/" + DATASET_NAME_2,
-    filename=MERGED_FILENAME_DS_2,
+    repo_id=PREFIX_HF + "/" + DATASET_NAME_3,
+    filename=MERGED_FILENAME_DS_3,
     repo_type="dataset",
     local_dir=str(DATA_DIR / XYZ_DIR),
 )
 
-path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME_DS_2)
+path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME_DS_3)
 
 # Test for check that trainig is working properly
-# path_data = str(DATA_DIR / XYZ_DIR / "test.extxyz")
+path_data = str(DATA_DIR / XYZ_DIR / "test.extxyz")
 
 # ---------------------------------------------------------------------------
 # Config — all hyperparameter values come from the dataclass defaults.
@@ -41,13 +47,20 @@ config = Mace_TrainerConfig(
     device="cuda",
     dtype="float64",  # it cant be 32 float
     hyperparams=MaceTrainingHyperparams(
-        r_max=8,
-        max_num_epochs=40,
-        batch_size=4,
-        patience=4,
-        eval_interval=5,
+        r_max=8.5,
+        max_num_epochs=400,
+        batch_size=8,
+        patience=10,
+        eval_interval=10,
         valid_frac=0.15,
         swa=False,
+        num_channels=128,
+        num_cutoff_basis=5,
+        max_L=1,
+        max_ell=3,
+        num_interactions=2,
+        correlation=3,
+        num_radial_basis=8,
     ),
     metadata=MaceTrainingMetadata(
         experiment_name="mace_omat_lora_v2",
@@ -56,8 +69,8 @@ config = Mace_TrainerConfig(
 config.write_config_train()
 
 # Load the config from the saved JSON file
-# path = Path(SRC_DIR) / "configs" / "mock_test.json"
-# config = Mace_TrainerConfig.load_config_train(path)
+path = Path(SRC_DIR) / "configs" / "mock_test.json"
+config = Mace_TrainerConfig.load_config_train(path)
 
 parser = build_default_arg_parser()
 args = parser.parse_args(["--name", config.metadata.experiment_name])

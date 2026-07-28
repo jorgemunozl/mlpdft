@@ -547,8 +547,13 @@ class Mace_TrainerConfig(MaceConfig):
     )
 
     def __post_init__(self):
-        # Resolve model spec and energy offset (same logic as MaceConfig)
+        # Resolve model spec and download if missing (same logic as MaceConfig)
         self.model = MODEL_REGISTRY[self.model_key]
+        if not self.model.path.exists():
+            print(f"Model path does not exist: {self.model.path}")
+            print(f"Downloading foundation model: {self.model.path}")
+            self.download_model()
+
         # Only resolve group paths if a group was explicitly set.
         if self.group:
             self.solve_paths()

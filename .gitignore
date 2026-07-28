@@ -8,6 +8,8 @@ outputs/
 *.pdf
 *.typ
 
+lack/
+
 uv.lock
 
 *.ipynb

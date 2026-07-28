@@ -1,0 +1,39 @@
+&control
+    calculation='scf',
+    restart_mode='from_scratch',
+    pseudo_dir = '.',
+    outdir='./out',
+    disk_io='low'
+ /
+ &system
+    ibrav= 0, nat= 1, ntyp= 1,
+    ecutwfc = 20.0,
+    nosym=.true.,
+
+    ! --- Same Sledgehammer Settings as Fluorine! ---
+    nspin = 2,
+    tot_magnetization = 1.0,           ! Boron has 1 unpaired electron
+    starting_magnetization(1) = 0.5,
+    occupations = 'smearing',
+    smearing = 'gaussian',
+    degauss = 0.05
+ /
+ &electrons
+    conv_thr =  1.0d-6,
+    mixing_beta = 0.1,
+    mixing_mode = 'local-TF',          ! Prevents the p-orbital sloshing
+    electron_maxstep = 1000
+ /
+ATOMIC_SPECIES
+ B 10.81 B.pbe-n-kjpaw_psl.1.0.0.UPF   ! <--- MATCH THIS TO YOUR DATASET
+
+CELL_PARAMETERS angstrom
+    14.9  0.0  0.0
+    0.0  15.1  0.0
+    0.0  0.0  15.2
+
+ATOMIC_POSITIONS angstrom
+    B  7.5  7.5  7.5
+
+K_POINTS {automatic}
+ 1 1 1 0 0 0
