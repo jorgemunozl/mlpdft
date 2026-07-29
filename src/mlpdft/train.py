@@ -1,6 +1,8 @@
 import warnings
 from pathlib import Path
 
+import torch
+
 # Suppress routine PyTorch/e3nn/cuequivariance warnings
 warnings.filterwarnings("ignore", message=".*TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD.*")
 warnings.filterwarnings("ignore", message=".*cuequivariance.*not available.*")
@@ -35,7 +37,7 @@ dataset = hf_hub_download(
 
 path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME_DS_3)
 
-# Test for check that trainig is working properly
+# Test for check that training is working properly
 path_data = str(DATA_DIR / XYZ_DIR / "test.extxyz")
 
 # ---------------------------------------------------------------------------
@@ -44,8 +46,8 @@ path_data = str(DATA_DIR / XYZ_DIR / "test.extxyz")
 # ---------------------------------------------------------------------------
 config = Mace_TrainerConfig(
     model_key="mace_omat_medium",
-    device="cuda",
-    dtype="float64",  # it cant be 32 float
+    device="cuda" if torch.cuda.is_available() else "cpu",
+    dtype="float32",  # saved fine-tuned model weights are float64
     hyperparams=MaceTrainingHyperparams(
         r_max=8.5,
         max_num_epochs=400,

@@ -41,7 +41,8 @@
   "metadata": {
     "experiment_name": "mock_test",
     "seed": 123,
-    "config_path": "/home/jorge/project/mlpdft/src/mlpdft/outputs/configs/mock_test.json",
+    "config_path": "/home/jorge/project/mlpdft/src/mlpdft/configs/mock_test.json",
     "model_dir": "models"
-  }
+  },
+  "dtype": "float64"
 }

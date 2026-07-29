@@ -43,5 +43,6 @@
     "seed": 123,
     "config_path": "/home/jorge/project/mlpdft/src/mlpdft/configs/mace_omat_lora_v2.json",
     "model_dir": "models"
-  }
+  },
+  "dtype": "float32"
 }

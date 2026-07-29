@@ -567,6 +567,7 @@ class Mace_TrainerConfig(MaceConfig):
         config_dict = {
             "hyperparams": asdict(self.hyperparams),
             "metadata": asdict(self.metadata),
+            "dtype": self.dtype,
         }
         with open(self.metadata.config_path, "w") as f:
             json.dump(config_dict, f, indent=2)
@@ -578,7 +579,8 @@ class Mace_TrainerConfig(MaceConfig):
             config_dict = json.load(f)
         hyperparams = MaceTrainingHyperparams(**config_dict["hyperparams"])
         metadata = MaceTrainingMetadata(**config_dict["metadata"])
-        return cls(hyperparams=hyperparams, metadata=metadata)
+        dtype = config_dict.get("dtype", "float64")
+        return cls(hyperparams=hyperparams, metadata=metadata, dtype=dtype)
 
     def send_model_train_to_hf(self):
         # Send model, logs, resumes, config, everything I have!
