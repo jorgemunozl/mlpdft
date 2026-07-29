@@ -38,7 +38,7 @@ dataset = hf_hub_download(
 path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME_DS_3)
 
 # Test for check that training is working properly
-path_data = str(DATA_DIR / XYZ_DIR / "test.extxyz")
+# path_data = str(DATA_DIR / XYZ_DIR / "test.extxyz")
 
 # ---------------------------------------------------------------------------
 # Config — all hyperparameter values come from the dataclass defaults.
@@ -47,10 +47,10 @@ path_data = str(DATA_DIR / XYZ_DIR / "test.extxyz")
 config = Mace_TrainerConfig(
     model_key="mace_omat_medium",
     device="cuda" if torch.cuda.is_available() else "cpu",
-    dtype="float32",  # saved fine-tuned model weights are float64
+    dtype="float64",  # must match foundation model dtype (mace_omat_medium is float64)
     hyperparams=MaceTrainingHyperparams(
         r_max=8.5,
-        max_num_epochs=400,
+        max_num_epochs=120,
         batch_size=8,
         patience=10,
         eval_interval=10,
@@ -71,8 +71,8 @@ config = Mace_TrainerConfig(
 config.write_config_train()
 
 # Load the config from the saved JSON file
-path = Path(SRC_DIR) / "configs" / "mock_test.json"
-config = Mace_TrainerConfig.load_config_train(path)
+# path = Path(SRC_DIR) / "configs" / "mock_test.json"
+# config = Mace_TrainerConfig.load_config_train(path)
 
 parser = build_default_arg_parser()
 args = parser.parse_args(["--name", config.metadata.experiment_name])

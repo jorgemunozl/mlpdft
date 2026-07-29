@@ -5,9 +5,11 @@
 | Requirement | Notes |
 |-------------|-------|
 | **Python ≥ 3.10** | `python3 --version` |
-| **`uv`** package manager | Install: `curl -LsSf https://astral.sh/uv/install.sh | sh` |
+| **`uv`** package manager | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | **~10 GB free disk** | Mostly for model weights + dataset |
 | **Internet** | Downloads the dataset (~100 MB) and foundation model (~20 MB) from HuggingFace |
+
+> `uv` can also be installed via pip: `pip install uv`
 
 ---
 
@@ -16,7 +18,7 @@
 ### 1. Clone & enter the repo
 
 ```bash
-git clone alias mlpdft='i3-msg "workspace --no-auto-back-and-forth 3:🌐" &&  firefox --no-remote "https://github.com/jorgemunozl/mlpdft.git "'
+git clone https://github.com/jorgemunozl/mlpdft.git
 cd mlpdft
 ```
 
@@ -26,32 +28,30 @@ cd mlpdft
 uv sync
 ```
 
-This installs everything: `torch` (CPU-only by default), `mace-torch`,
-`huggingface-hub`, etc.
+This installs everything: `torch`, `mace-torch`, `huggingface-hub`, etc.
 
 
 ### 3. Run training
 
-Use tmux to let the cluster running
+> Use tmux to let the cluster running
 
 ```bash
 uv run python src/mlpdft/train.py
 ```
 
-Let the train finish
-
+Let the train finish. It will appear a directory `src/mlpdft/outputs/mace_omat_lora_v2`
 
 ### 4. Package the output
 
 ```bash
-tar czf training_output_<your_name>.tar.gz -C src/mlpdft/outputs <experiment_name>
+tar czf training_output.tar.gz -C src/mlpdft/outputs mace_omat_lora_v2
 ```
 
-This produces a **~25 MB** tarball.
+This produces a **~25 MB** tarball on the `mlpdft` directory.
 
 ### 5. Send me the tarball
 
-Attach `training_output_<your_name>.tar.gz` via **WhatsApp** or any convenient
+Attach `training_output.tar.gz` via **WhatsApp** or any convenient
 channel.
 
 ---
