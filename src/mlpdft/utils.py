@@ -1,4 +1,4 @@
-"""Shared helpers for FitSNAP JSON, splits, and MACE evaluation."""
+"""Shared helpers for FitSNAP JSON, splits, dataset checks, and MACE evaluation."""
 
 from __future__ import annotations
 
@@ -9,6 +9,49 @@ from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
+
+from mlpdft.constants import DATA_DIR, GROUPS
+
+
+def group_out_path(group: str, data_dir: Path = DATA_DIR) -> Path:
+    """Path to the raw QE output file expected for a group."""
+    return data_dir / group / f"{group}.out"
+
+
+def verify_dataset_indexed(
+    groups: Optional[List[str]] = None,
+    data_dir: Optional[Path] = None,
+    *,
+    verbose: bool = True,
+) -> List[str]:
+    """
+    Verify the dataset is well indexed: every group's directory exists under
+    data_dir and contains the expected <group>.out raw QE output (the file
+    MaceConfig.solve_paths reads).
+
+    Returns the list of groups with problems; empty means the dataset is OK.
+    """
+    groups = GROUPS if groups is None else groups
+    data_dir = DATA_DIR if data_dir is None else data_dir
+
+    problems: List[str] = []
+    for group in groups:
+        group_dir = data_dir / group
+        if not group_dir.is_dir():
+            problems.append(group)
+            if verbose:
+                print(f"[MISSING DIR ] {group}: {group_dir}")
+            continue
+        out_path = group_out_path(group, data_dir)
+        if not out_path.is_file():
+            problems.append(group)
+            if verbose:
+                print(f"[MISSING .OUT] {group}: {out_path}")
+
+    if verbose:
+        status = "OK" if not problems else f"{len(problems)} problem(s)"
+        print(f"Dataset check: {len(groups)} groups -> {status}")
+    return problems
 
 
 def read_json_allowing_header(path: str) -> dict:

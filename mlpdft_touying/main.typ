@@ -641,14 +641,42 @@ Methods applicable to MLIPs after the initial training run:
 
 Goal: tweak each one and understand *why* it shifts performance for this dataset.
 
-== Resources Employed - Second Training
 
-== Mace auto generated results - Second Training
+== Adding a B Dataset
 
-== Group Results - Second Training
+#align(center)[
+  #figure(
+    table(
+      columns: (auto, 2fr, auto),
+      stroke: 0.5pt,
+      inset: 6pt,
+      align: (center, left, center),
+
+      table.cell(fill: luma(230))[*\#*],
+      table.cell(fill: luma(230))[*Group*],
+      table.cell(fill: luma(230))[*Frame count*],
+
+      [14], [`BLI_V2`], [666],
+      [15], [`BLI_NPT`], [666],
+      [16], [`BLI_INTERFACE_NPT`], [410],
+      [17], [`BLI_INTERFACE_NPT_FINAL`], [1016],
+      [18], [`BLI_INTERFACE_FINAL`], [958],
+      [19], [`BLI_ISOLATED`], [0],
+      [20], [`LIBF4_V4`], [1333],
+      [21], [`LIBF4_V2`], [0],
+      [22], [`LIBF4`], [0],
+      [23], [`LIBF4_FINAL`], [1333],
+      [24], [`LIBF4_NPT`], [1333],
+      [25], [`LIBF4_NPT_FINAL`], [1333],
+    ),
+    caption: [Total frames: 9,048],
+  )
+]
+
+== Measure compute power
 
 
-== Takeaways - Second Training
+
 
 
 

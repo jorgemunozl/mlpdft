@@ -90,6 +90,10 @@ args.results_dir = OUTPUTS_DIR / config.metadata.experiment_name / "results"
 args.model_dir = OUTPUTS_DIR / config.metadata.experiment_name / "models"
 args.log_dir = OUTPUTS_DIR / config.metadata.experiment_name / "logs"
 
+# Keep every checkpoint saved during training (one per eval_interval epoch)
+args.keep_checkpoints = True
+args.save_all_checkpoints = True
+
 # Precision & device
 args.default_dtype = config.dtype
 args.device = config.device
