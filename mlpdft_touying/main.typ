@@ -693,3 +693,67 @@ Goal: tweak each one and understand *why* it shifts performance for this dataset
   image("images/active_learning_commitee.png", width: 40%),
   caption: [Active learning example],
 )
+
+= Checkpoint-Based Uncertainty for Active Learning
+
+== The Problem: UQ is Expensive
+
+#align(center)[
+  #figure(
+    table(
+      columns: (auto, auto),
+      stroke: 0.5pt,
+      inset: 6pt,
+      align: (left, center),
+
+      table.cell(fill: luma(230))[*Method*],
+      table.cell(fill: luma(230))[*Cost per AL iteration*],
+
+      [Deep Ensembles (K models)], [$K times T$],
+      [Monte Carlo Dropout], [$1 times T$, poorly calibrated for forces],
+      [Committee of models], [$K times T$],
+    ),
+    caption: [Standard UQ methods multiply the cost of each active learning round],
+  )
+]
+
+*Key insight:* your training run already saves snapshots at each `eval_interval` — 12 checkpoints from a single LoRA fine-tuning. They form a *pseudo-ensemble* for free.
+
+== The Method: Snapshot Ensembles
+
+*Uncertainty from a single training run (Huang et al. 2017):*
+
+#align(center)[
+  #figure(
+    table(
+      columns: (auto, 3fr),
+      stroke: 0.5pt,
+      inset: 6pt,
+      align: (center, left),
+
+      table.cell(fill: luma(230))[*\#*],
+      table.cell(fill: luma(230))[*Action*],
+
+      [1], [Fine-tune MACE + LoRA — save checkpoints every `eval_interval` epochs],
+      [2], [Forward pass all K snapshots on candidate pool; compute $sigma_F = "std"(F_1, dots, F_K)$],
+      [3], [Query DFT on highest-$sigma_F$ structures → retrain],
+    ),
+    caption: [Cost: 1 training run + K cheap forward passes],
+  )
+]
+
+#v(0.5em)
+
+Snapshots agree on familiar structures, *disagree* where the model is uncertain. For LoRA, merging/unmerging per snapshot is $cal(O)("LoRA params")$, not $cal(O)("full model")$.
+
+== The Plan: What to Measure
+
+*Research questions:*
+
+1. Does $sigma_F$ correlate with real DFT error? → Calibration.
+2. How many snapshots? (K = 2, 4, 6, 12) → Ablation.
+3. How close to a 5-model deep ensemble at 1/5 the cost? → Head-to-head.
+
+*Baselines:* random selection, committee of 3 models, max-force-norm heuristic.
+
+*Expected:* ~80–90% of ensemble-quality improvement at ~20% of the training cost.

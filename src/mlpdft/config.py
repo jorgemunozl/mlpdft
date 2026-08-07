@@ -445,7 +445,7 @@ class MaceTrainingHyperparams:
     )
     clip_grad: float = field(
         default=10.0,
-        metadata={"description": "Gradient clipping threshold"},
+        metadata={"description": "Gradient clipping threshld"},
     )
 
     # Scheduler

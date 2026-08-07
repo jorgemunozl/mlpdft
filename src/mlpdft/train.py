@@ -50,10 +50,10 @@ config = Mace_TrainerConfig(
     dtype="float64",  # must match foundation model dtype (mace_omat_medium is float64)
     hyperparams=MaceTrainingHyperparams(
         r_max=8.5,
-        max_num_epochs=120,
+        max_num_epochs=200,
         batch_size=8,
-        patience=10,
-        eval_interval=10,
+        patience=20,
+        eval_interval=5,
         valid_frac=0.15,
         swa=False,
         num_channels=128,
@@ -63,6 +63,9 @@ config = Mace_TrainerConfig(
         num_interactions=2,
         correlation=3,
         num_radial_basis=8,
+        # For snapshot-ensemble diversity:
+        ema=False,   # raw weights = more diversity across snapshots
+        lr=0.005,    # gentler for LoRA fine-tuning (default 0.01 is aggressive)
     ),
     metadata=MaceTrainingMetadata(
         experiment_name="mace_omat_lora_v2",
@@ -132,10 +135,10 @@ args.amsgrad = config.hyperparams.amsgrad
 args.weight_decay = config.hyperparams.weight_decay
 args.clip_grad = config.hyperparams.clip_grad
 
-# Scheduler
-args.scheduler = config.hyperparams.scheduler
-args.lr_factor = config.hyperparams.lr_factor
-args.scheduler_patience = config.hyperparams.scheduler_patience
+# Scheduler — ExponentialLR gives smoothly decaying LR across 200 epochs,
+# producing snapshots at meaningfully different refinement stages.
+args.scheduler = "ExponentialLR"
+args.lr_scheduler_gamma = 0.98  # LR *= 0.98 each epoch → lr(200) ≈ 0.005 * 0.98^200 ≈ 8.9e-5
 
 # Stage two (SWA)
 args.swa = config.hyperparams.swa
