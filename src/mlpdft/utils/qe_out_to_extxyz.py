@@ -14,7 +14,13 @@ import numpy as np
 from ase.io import write
 
 from mlpdft.config import MaceConfig
-from mlpdft.constants import ENERGY_KEY, FORCE_KEY, GROUPS_LIF
+from mlpdft.constants import (
+    ENERGY_KEY,
+    FORCE_KEY,
+    TEST_GROUPS,
+    TEST_STRIDE,
+    TEST_MAX_FRAMES,
+)
 
 
 def load_frames_with_ase(cfg: MaceConfig) -> list[Atoms]:
@@ -112,14 +118,11 @@ def convert_qe_out_to_extxyz(cfg: MaceConfig) -> None:
 
 
 def main() -> None:
-    from mlpdft.constants import GROUPS_BLIF
-
-    groups = ["LIF64_KJPAW_NPT"]
-    for group in groups:
+    for group in TEST_GROUPS:
         config = MaceConfig(
             group=group,
-            frame_stride=3,
-            max_frames=12,
+            frame_stride=TEST_STRIDE,
+            max_frames=TEST_MAX_FRAMES,
         )
         convert_qe_out_to_extxyz(config)
 

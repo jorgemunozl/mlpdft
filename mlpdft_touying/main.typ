@@ -323,7 +323,7 @@ I
   caption: "MACE OMAT first metrics obtained",
 )
 
-= Leveraging foundational model
+= Leveraging foundational model and testing
 
 == Current state of post-training
 
@@ -403,7 +403,6 @@ Methods applicable to MLIPs after the initial training run:
 
 // == Challenges of Fine-Tuning MACE on a Specific Dataset *Reference energy mismatch ($E_0$ problem)* The foundation model and the target DFT dataset use different atomic reference energies. A linear regression over the training set is required to align them before fine-tuning. *DFT functional mismatch* MACE-MP was trained with very specific data, if different functional (DFT), the model must _unlearn_ systematic biases — which can hurt generalization. *Out-of-domain chemistry* LiBF#sub[4] contains ionic species and Li, which are outside the MACE-OFF23 organic training domain. The model has no prior knowledge of ionic interactions, charge transfer, or metal coordination.
 
-= Training time
 
 == Goals - First Training
 
@@ -642,7 +641,8 @@ Methods applicable to MLIPs after the initial training run:
 Goal: tweak each one and understand *why* it shifts performance for this dataset.
 
 
-== Adding a B Dataset
+== Adding a Borum Dataset
+
 
 #align(center)[
   #figure(
@@ -673,55 +673,138 @@ Goal: tweak each one and understand *why* it shifts performance for this dataset
   )
 ]
 
-== Measure compute power
 
+== You can obtain good metrics but
 
-
-
-
+ML models interpolate well, extrapolate poorly. Active learning fixes this by selectively labeling where the model is uncertain — but you need uncertainty estimates.
 
 == Iterative Learning
 
-#figure(
-  image("images/iterative_training.png", width: 40%),
-  caption: [Iterative training example],
+#grid(
+  columns: (1fr, 1fr),
+  [
+    #figure(
+      image("images/iterative_training.png", width: 40%),
+      caption: [Iterative training example],
+    )
+  ],
+  [
+    Train → label → retrain → repeat. Manual, slow, blind to uncertainty.
+  ],
 )
 
 == Active Learning
 
-#figure(
-  image("images/active_learning_commitee.png", width: 40%),
-  caption: [Active learning example],
+#grid(
+  columns: (1fr, 1fr),
+  [
+    #figure(
+      image("images/active_learning_commitee.png", width: 40%),
+      caption: [Active learning example],
+    )
+  ],
+  [
+    Train K models → disagree? → run DFT there. Smarter, but K× the training cost.
+  ],
 )
 
-= Checkpoint-Based Uncertainty for Active Learning
+== The Cost of Uncertainty
 
-== The Problem: UQ is Expensive
+*Two established approaches — both expensive:*
 
 #align(center)[
   #figure(
     table(
-      columns: (auto, auto),
+      columns: (2fr, auto, 2fr),
       stroke: 0.5pt,
       inset: 6pt,
-      align: (left, center),
+      align: (left, center, left),
 
-      table.cell(fill: luma(230))[*Method*],
-      table.cell(fill: luma(230))[*Cost per AL iteration*],
-
-      [Deep Ensembles (K models)], [$K times T$],
-      [Monte Carlo Dropout], [$1 times T$, poorly calibrated for forces],
-      [Committee of models], [$K times T$],
+      [`Deep Ensembles` (Lakshminarayanan 2017)], [$K times T$], [Train K models from scratch with different seeds. MACE committee = 3 seeds.],
+      [`Committee (MACE built-in)`], [$K times T$], [Same pattern. Variance across models stops MD when uncertain.],
     ),
-    caption: [Standard UQ methods multiply the cost of each active learning round],
+    caption: [Gold standard UQ — but K× training per active-learning round],
   )
 ]
 
-*Key insight:* your training run already saves snapshots at each `eval_interval` — 12 checkpoints from a single LoRA fine-tuning. They form a *pseudo-ensemble* for free.
+== Research on it
+
+*Snapshot Ensembles* (Huang et al. 2017, ICLR): train *one* model with cyclic LR. Save checkpoints at each cycle minimum. Ensemble them. M models for the price of 1.
+
+- Loshchilov & Hutter (2017): cosine annealing with warm restarts (SGDR)
+- *Never applied to MLIPs for uncertainty quantification.*
+
+== Learning Rate Scheduler
+
+#grid(
+  columns: (1fr, 1fr),
+  [
+    #figure(
+      image("images/cosine_anneal.png", width: 100%),
+      caption: [Cosine annealing regular],
+    )
+  ],
+  [
+    LR cycles push the optimizer into different basins. Each cycle-end checkpoint = a different model.
+    #figure(
+      image("images/cosine_god.webp", width: 100%),
+      caption: [Cosine annealing with warm restarts],
+    )
+  ],
+)
+
+== Snapshot Ensembles: Train 1, get M for free
+
+#grid(
+  columns: (1fr, 1fr),
+  [
+    #figure(
+      image("images/sgd.png", width: 100%),
+      caption: [Huang et al. 2017, ICLR],
+    )
+  ],
+  [
+    One training run, M checkpoints at cycle minima. Ensemble disagreement = uncertainty — for free.
+  ],
+)
+
+
+== Important
+
+*LoRA is too constrained.* 400k trainable parameters on a frozen 46M foundation gives a flat loss landscape — snapshots land in the same basin. *Full-model fine-tuning* (46M trainable) gives the weight-space volume needed for warm restarts to produce genuinely diverse checkpoints.
+
+== Proof of Concept: Three-Way Comparison
+
+*Train on a small LiF/BLi subset (9 groups, ~450 frames), evaluate on held-out BLi:*
+
+#align(center)[
+  #figure(
+    table(
+      columns: (auto, auto, auto, auto),
+      stroke: 0.5pt,
+      inset: 6pt,
+      align: (center, center, center, center),
+
+      table.cell(fill: luma(230))[*Approach*],
+      table.cell(fill: luma(230))[*Models*],
+      table.cell(fill: luma(230))[*Training cost*],
+      table.cell(fill: luma(230))[*UQ source*],
+
+      [*Baseline*], [1 (final epoch)], [$1 times T$], [None],
+      [*Committee*], [3 (seeds 123--125)], [$3 times T$], [$sigma_F$ across 3 models],
+      [*Snapshot (ours)*], [1 run → 5 ckpts], [$1 times T$], [$sigma_F$ across 5 ckpts],
+    ),
+    caption: [Same architecture, same dataset — only the training strategy changes],
+  )
+]
+
+#v(0.5em)
+
+*What we measure:* energy/force RMSE on held-out BLi, Spearman $rho$ between $sigma_F$ and real error, simulated active-learning efficiency (rank frames by uncertainty → label top-N → measure RMSE drop).
 
 == The Method: Snapshot Ensembles
 
-*Uncertainty from a single training run (Huang et al. 2017):*
+*Full-model fine-tuning with CosineAnnealingWarmRestarts (Huang et al. 2017):*
 
 #align(center)[
   #figure(
@@ -734,26 +817,69 @@ Goal: tweak each one and understand *why* it shifts performance for this dataset
       table.cell(fill: luma(230))[*\#*],
       table.cell(fill: luma(230))[*Action*],
 
-      [1], [Fine-tune MACE + LoRA — save checkpoints every `eval_interval` epochs],
-      [2], [Forward pass all K snapshots on candidate pool; compute $sigma_F = "std"(F_1, dots, F_K)$],
-      [3], [Query DFT on highest-$sigma_F$ structures → retrain],
+      [1], [Fine-tune full MACE with cosine warm restarts — LR cycles → one checkpoint per cycle at LR minimum],
+      [2], [Forward pass all K snapshots on held-out pool; compute $sigma_F = "std"(F_1, dots, F_K)$],
+      [3], [Compare $sigma_F$ vs. committee-3 $sigma_F$ — calibration, efficiency, cost],
     ),
     caption: [Cost: 1 training run + K cheap forward passes],
   )
 ]
 
-#v(0.5em)
-
-Snapshots agree on familiar structures, *disagree* where the model is uncertain. For LoRA, merging/unmerging per snapshot is $cal(O)("LoRA params")$, not $cal(O)("full model")$.
-
 == The Plan: What to Measure
 
 *Research questions:*
 
-1. Does $sigma_F$ correlate with real DFT error? → Calibration.
-2. How many snapshots? (K = 2, 4, 6, 12) → Ablation.
-3. How close to a 5-model deep ensemble at 1/5 the cost? → Head-to-head.
+1. Does $sigma_F$ from checkpoints correlate with real DFT error? → Calibration.
+2. How does it compare to committee-3 $sigma_F$? → Head-to-head.
+3. How many cycles? (5, 10, 20) → Ablation.
 
-*Baselines:* random selection, committee of 3 models, max-force-norm heuristic.
+*Baselines:* random selection, committee of 3 independent models, max-force-norm heuristic.
 
-*Expected:* ~80–90% of ensemble-quality improvement at ~20% of the training cost.
+*Expected:* snapshot ensembles recover ~80--90% of committee UQ quality at $1/3$ the training cost. If true → active learning becomes practical on single-GPU setups.
+
+== Timeline
+
+#align(center)[
+  #figure(
+    table(
+      columns: (auto, 3fr),
+      stroke: 0.5pt,
+      inset: 6pt,
+      align: (center, left),
+
+      table.cell(fill: luma(230))[*Step*],
+      table.cell(fill: luma(230))[*What*],
+
+      [1], [Run baseline (1 model, 100 epochs, full FT) → evaluate on BLi],
+      [2], [Run committee (3 seeds × 100 epochs) → evaluate on BLi],
+      [3], [Run snapshot (1 run, cosine warm restarts, 5 cycles) → extract 5 ckpts],
+      [4], [Comparison: RMSE, $sigma_F$ calibration, simulated AL efficiency],
+      [5], [If snapshot $rho > 0.7$ vs. committee → scale up to full dataset],
+    ),
+    caption: [Estimated: overnight on RTX 4000 ADA],
+  )
+]
+
+== Summary
+
+- LiF/BLi battery electrolyte system: 25 DFT groups, two chemistries.
+- MACE foundation model + LoRA fine-tuning already improves on FitSNAP baseline.
+- *Proposal:* full-model fine-tuning with cyclic LR → snapshot ensemble for uncertainty.
+- PoC compares baseline vs. committee vs. snapshot — same data, same architecture.
+- Goal: committee-quality UQ at 1/3 the training cost, enabling practical active learning.
+
+= References
+
+#text(size: 0.8em)[
+- Huang et al. *"Snapshot Ensembles: Train 1, get M for free."* ICLR 2017.
+- Loshchilov & Hutter. *"SGDR: Stochastic Gradient Descent with Warm Restarts."* ICLR 2017.
+- Lakshminarayanan et al. *"Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles."* NeurIPS 2017.
+- Batatia et al. *"MACE: Higher Order Equivariant Message Passing Neural Networks."* NeurIPS 2022.
+- Batatia et al. *"A foundation model for atomistic materials chemistry."* arXiv 2024.
+- Hu et al. *"LoRA: Low-Rank Adaptation of Large Language Models."* ICLR 2022.
+- Thompson et al. *"Spectral neighbor analysis method."* J. Comp. Phys. 2015.
+]
+
+#v(1em)
+
+#align(center)[#link("https://github.com/jorgemunozl/mlpdft")[#fa-github() github.com/jorgemunozl/mlpdft]]

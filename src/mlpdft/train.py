@@ -11,6 +11,40 @@ from huggingface_hub import hf_hub_download
 from mace.cli.run_train import run
 from mace.tools import build_default_arg_parser
 
+# ---------------------------------------------------------------------------
+# Inject CosineAnnealingWarmRestarts into MACE's LRScheduler (not natively supported)
+# ---------------------------------------------------------------------------
+from mace.tools.scripts_utils import LRScheduler as _LRScheduler
+
+_original_init = _LRScheduler.__init__
+_original_step = _LRScheduler.step
+
+
+def _patched_init(self, optimizer, args):
+    if args.scheduler == "CosineAnnealingWarmRestarts":
+        self.scheduler = args.scheduler
+        self._optimizer_type = args.optimizer
+        self.lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            optimizer=optimizer,
+            T_0=getattr(args, "cosine_T_0", 20),
+            T_mult=getattr(args, "cosine_T_mult", 1),
+            eta_min=getattr(args, "cosine_eta_min", 1e-6),
+        )
+    else:
+        _original_init(self, optimizer, args)
+
+
+def _patched_step(self, metrics=None, epoch=None):
+    if self.scheduler == "CosineAnnealingWarmRestarts":
+        self.lr_scheduler.step(epoch=epoch)
+    else:
+        _original_step(self, metrics=metrics, epoch=epoch)
+
+
+_LRScheduler.__init__ = _patched_init
+_LRScheduler.step = _patched_step
+# ---------------------------------------------------------------------------
+
 from mlpdft.config import (
     Mace_TrainerConfig,
     MaceTrainingHyperparams,
@@ -47,13 +81,13 @@ path_data = str(DATA_DIR / XYZ_DIR / MERGED_FILENAME_DS_3)
 config = Mace_TrainerConfig(
     model_key="mace_omat_medium",
     device="cuda" if torch.cuda.is_available() else "cpu",
-    dtype="float64",  # must match foundation model dtype (mace_omat_medium is float64)
+    dtype="float32",  # full-model training: float32 to fit GPU memory
     hyperparams=MaceTrainingHyperparams(
-        r_max=8.5,
-        max_num_epochs=200,
-        batch_size=8,
-        patience=20,
-        eval_interval=5,
+        r_max=6.0,                  # match foundation model cutoff
+        max_num_epochs=100,         # 5 cycles × 20 epochs
+        batch_size=4,               # smaller batch to fit full 46M params
+        patience=999,               # no early stopping — warm restarts spike val loss
+        eval_interval=20,           # one checkpoint per cycle (at LR minimum)
         valid_frac=0.15,
         swa=False,
         num_channels=128,
@@ -63,12 +97,13 @@ config = Mace_TrainerConfig(
         num_interactions=2,
         correlation=3,
         num_radial_basis=8,
-        # For snapshot-ensemble diversity:
-        ema=False,   # raw weights = more diversity across snapshots
-        lr=0.005,    # gentler for LoRA fine-tuning (default 0.01 is aggressive)
+        # Full-model snapshot ensemble:
+        lora=False,                 # train all 46M params (not LoRA)
+        ema=False,                  # raw weights = genuine snapshots
+        lr=5e-4,                    # full-model FT needs gentler LR than LoRA
     ),
     metadata=MaceTrainingMetadata(
-        experiment_name="mace_omat_lora_v2",
+        experiment_name="mace_snapshot_warm_restart",
     ),
 )
 config.write_config_train()
@@ -135,10 +170,12 @@ args.amsgrad = config.hyperparams.amsgrad
 args.weight_decay = config.hyperparams.weight_decay
 args.clip_grad = config.hyperparams.clip_grad
 
-# Scheduler — ExponentialLR gives smoothly decaying LR across 200 epochs,
-# producing snapshots at meaningfully different refinement stages.
-args.scheduler = "ExponentialLR"
-args.lr_scheduler_gamma = 0.98  # LR *= 0.98 each epoch → lr(200) ≈ 0.005 * 0.98^200 ≈ 8.9e-5
+# Scheduler — CosineAnnealingWarmRestarts: one checkpoint per cycle at LR minimum.
+# Each cycle pushes the model into a different basin → genuinely diverse snapshots.
+args.scheduler = "CosineAnnealingWarmRestarts"
+args.cosine_T_0 = 20       # first cycle: 20 epochs
+args.cosine_T_mult = 1     # all cycles same length (20 epochs each)
+args.cosine_eta_min = 1e-6 # minimum LR at cycle end
 
 # Stage two (SWA)
 args.swa = config.hyperparams.swa
@@ -153,10 +190,9 @@ args.ema_decay = config.hyperparams.ema_decay
 args.patience = config.hyperparams.patience
 args.eval_interval = config.hyperparams.eval_interval
 
-# LoRA fine-tuning
-args.foundation_model = config.model.path  # resolved from model_key in __post_init__
-args.lora = config.hyperparams.lora
-args.lora_rank = config.hyperparams.lora_rank
+# Full-model training (no LoRA) — all 46M params updated each step
+args.foundation_model = config.model.path  # load foundation weights as initialization
+args.lora = False
 
 # ---------------------------------------------------------------------------
 # Train

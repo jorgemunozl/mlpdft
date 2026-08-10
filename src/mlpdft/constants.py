@@ -67,6 +67,23 @@ GROUPS_BLIF = [
 
 GROUPS = GROUPS_LIF + GROUPS_BLIF
 
+# ── Small test subset for snapshot ensemble experiment ──
+TEST_GROUPS = [
+    "LIFINTERFACE_KJPAW_V1",   # interface
+    "LIWITHF_ISOLATED",          # Li-rich isolated
+    "LIF64_ISOLATED",            # bulk isolated
+    "LIWITHF_NPT_FINAL",         # Li-rich NPT
+    "BLI_V2",                    # B-Li
+    "BLI_NPT",                   # B-Li NPT
+    "LIBF4",                     # salt
+    "LIBF4_NPT",                 # salt NPT
+    "LIBF4_NPT_FINAL",           # salt NPT final
+]
+TEST_STRIDE = 3
+TEST_MAX_FRAMES = 150
+TEST_DATASET_NAME = "li_f_snapshot_test"
+
+
 DATA_DIR = PATH_REPO / "dataset"
 XYZ_DIR = "xyz_files"
 

@@ -11,16 +11,17 @@ from huggingface_hub import HfApi, create_repo
 
 from mlpdft.constants import (
     DATA_DIR,
-    DATASET_NAME_2,
-    FRAME_STRIDE,
-    GROUPS_LIF,
-    MERGED_FILENAME_DS_2,
     PREFIX_HF,
     TEMPLATE_PATH,
+    TEST_DATASET_NAME,
+    TEST_GROUPS,
+    TEST_MAX_FRAMES,
+    TEST_STRIDE,
     XYZ_DIR,
 )
 
-REPO_ID = f"{PREFIX_HF}/{DATASET_NAME_2}"
+MERGED_FILENAME_TEST = f"{TEST_DATASET_NAME}.extxyz"
+REPO_ID = f"{PREFIX_HF}/{TEST_DATASET_NAME}"
 
 
 # ---------------------------------------------------------------------------
@@ -29,33 +30,41 @@ REPO_ID = f"{PREFIX_HF}/{DATASET_NAME_2}"
 
 
 def find_latest_extxyz(group: str) -> Path | None:
-    """Return the newest stride‑3 extxyz file for *group*, or None."""
+    """Return the extxyz file for *group* matching TEST_STRIDE, or None.
+
+    Prefers a file whose max-frames suffix matches TEST_MAX_FRAMES exactly;
+    otherwise falls back to the one with the largest frame count.
+    """
     xyz_dir = DATA_DIR / group / XYZ_DIR
     if not xyz_dir.is_dir():
         print(f"[warn]     {group}: no xyz_files directory, skipping")
         return None
 
-    # Match files named  {group}_{stride}_{max}.extxyz  with stride == FRAME_STRIDE
     pattern = re.compile(rf"^{re.escape(group)}_(\d+)_(\d+)\.extxyz$")
     candidates: list[tuple[int, Path]] = []
     for p in xyz_dir.iterdir():
         m = pattern.match(p.name)
-        if m and int(m.group(1)) == FRAME_STRIDE:
+        if m and int(m.group(1)) == TEST_STRIDE:
             candidates.append((int(m.group(2)), p))
 
     if not candidates:
-        print(f"[warn]     {group}: no stride‑{FRAME_STRIDE} extxyz found, skipping")
+        print(f"[warn]     {group}: no stride‑{TEST_STRIDE} extxyz found, skipping")
         return None
 
-    # Pick the file with the largest frame count (most complete)
+    # Prefer exact match to TEST_MAX_FRAMES
+    exact = [(n, p) for n, p in candidates if n == TEST_MAX_FRAMES]
+    if exact:
+        return exact[0][1]
+
+    # Fall back to largest
     candidates.sort(key=lambda x: x[0], reverse=True)
     return candidates[0][1]
 
 
 def build_group_paths() -> dict[str, Path]:
-    """Map every GROUPS_LIF entry to its stride‑3 extxyz file."""
+    """Map every TEST_GROUPS entry to its stride‑3 extxyz file."""
     paths: dict[str, Path] = {}
-    for group in GROUPS_LIF:
+    for group in TEST_GROUPS:
         p = find_latest_extxyz(group)
         if p is not None:
             paths[group] = p
@@ -73,7 +82,7 @@ def merge_extxyz(group_paths: dict[str, Path]) -> Path:
     Returns the path to the merged file.
     """
     all_frames: list = []
-    for group in GROUPS_LIF:
+    for group in TEST_GROUPS:
         if group not in group_paths:
             continue
         path = group_paths[group]
@@ -84,7 +93,7 @@ def merge_extxyz(group_paths: dict[str, Path]) -> Path:
     total = len(all_frames)
     print(f"\nTotal frames across all groups: {total}")
 
-    merged_path = DATA_DIR / XYZ_DIR / MERGED_FILENAME_DS_2
+    merged_path = DATA_DIR / XYZ_DIR / MERGED_FILENAME_TEST
     merged_path.parent.mkdir(parents=True, exist_ok=True)
 
     for i, atoms in enumerate(all_frames):
@@ -99,7 +108,7 @@ def merge_extxyz(group_paths: dict[str, Path]) -> Path:
 
     # ── Build README ──
     group_rows = ""
-    for idx, group in enumerate(GROUPS_LIF, 1):
+    for idx, group in enumerate(TEST_GROUPS, 1):
         if group in group_paths:
             n = len(read(str(group_paths[group]), index=":"))
         else:
@@ -110,8 +119,8 @@ def merge_extxyz(group_paths: dict[str, Path]) -> Path:
     readme = (
         template.replace("{{GROUP_TABLE}}", group_rows.rstrip("\n"))
         .replace("{{TOTAL_FRAMES}}", str(total))
-        .replace("{{FRAME_STRIDE}}", str(FRAME_STRIDE))
-        .replace("{{MERGED_FILENAME}}", MERGED_FILENAME_DS_2)
+        .replace("{{FRAME_STRIDE}}", str(TEST_STRIDE))
+        .replace("{{MERGED_FILENAME}}", MERGED_FILENAME_TEST)
     )
 
     readme_path = DATA_DIR / XYZ_DIR / "README.md"
@@ -150,7 +159,7 @@ def upload_file(local_path: Path, path_in_repo: str) -> None:
 
 def upload_qe_output() -> None:
     """Upload the raw QE .out files to the dataset repo (optional)."""
-    for group in GROUPS_LIF:
+    for group in TEST_GROUPS:
         out_path = DATA_DIR / group / f"{group}.out"
         if out_path.exists():
             upload_file(out_path, f"qe_outputs/{out_path.name}")
@@ -178,7 +187,7 @@ def main() -> None:
     ensure_repo()
 
     # 4. Upload the merged dataset + README
-    upload_file(merged_path, MERGED_FILENAME_DS_2)
+    upload_file(merged_path, MERGED_FILENAME_TEST)
     upload_file(readme_path, "README.md")
 
     print("\nDone.")
