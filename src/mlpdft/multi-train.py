@@ -105,8 +105,8 @@ def ensure_dataset() -> str:
 # ── Shared config (architecture, training, optimizer) ─────────────────────
 SHARED_HYPERPARAMS = dict(
     r_max=6.0,
-    max_num_epochs=3,
-    batch_size=4,
+    max_num_epochs=100,
+    batch_size=16,
     patience=999,
     eval_interval=1,
     valid_frac=0.15,
@@ -236,13 +236,13 @@ def main() -> None:
 
     # ── Common cosine scheduler kwargs (no warm restarts) ──
     cosine_single = dict(
-        cosine_T_0=3,      # one full cosine decay across the 100 epochs
+        cosine_T_0=100,      # one full cosine decay across the 100 epochs
         cosine_T_mult=1,
         cosine_eta_min=1e-6,
     )
     # ── Snapshot: warm restarts every 33 epochs → 3 cycles ──
     cosine_cyclic = dict(
-        cosine_T_0=3,       # restart every 33 epochs
+        cosine_T_0=33,       # restart every 33 epochs
         cosine_T_mult=1,     # equal-length cycles
         cosine_eta_min=1e-6,
     )
