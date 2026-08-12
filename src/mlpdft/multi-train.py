@@ -1,15 +1,25 @@
 #!/usr/bin/env python3
 """Proof of concept: baseline vs. committee vs. snapshot ensemble.
-Runs 3 trainings sequentially on the test dataset:
-  1 × baseline (standard fine-tuning)
-  3 × committee (different seeds)
-  1 × snapshot (cosine warm restarts, 3 cycle-end checkpoints)
+
+All runs use CosineAnnealingWarmRestarts — the only difference is T_0:
+  - baseline / committee:  T_0 = 100  (single cosine decay, no restart)
+  - snapshot (ours):       T_0 = 25   (4 warm-restart cycles)
+
+Runs 5 trainings sequentially on the test dataset:
+  1 × baseline
+  3 × committee  (seeds 123, 124, 125)
+  1 × snapshot
 """
 
+import os
 import warnings
 from pathlib import Path
 
 import torch
+
+# wandb offline mode: metrics are written locally (never synced to the cloud).
+# Sync later with:  wandb sync <run_dir>
+os.environ["WANDB_MODE"] = "offline"
 
 warnings.filterwarnings("ignore", message=".*TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD.*")
 warnings.filterwarnings("ignore", message=".*cuequivariance.*not available.*")
@@ -75,7 +85,7 @@ SHARED_HYPERPARAMS = dict(
     max_num_epochs=100,
     batch_size=4,
     patience=999,
-    eval_interval=20,
+    eval_interval=33,
     valid_frac=0.15,
     swa=False,
     num_channels=128,
@@ -142,6 +152,14 @@ def _apply_common_args(args, config, seed: int) -> None:
     args.patience = hp.patience
     args.eval_interval = hp.eval_interval
 
+    # ── wandb (offline) ──
+    args.wandb = True
+    args.wandb_project = "mlpdft_poc"
+    args.wandb_name = config.metadata.experiment_name
+    args.wandb_dir = str(
+        OUTPUTS_DIR / config.metadata.experiment_name / "wandb"
+    )
+
 
 
 def train_one(
@@ -186,33 +204,39 @@ def train_one(
 def main() -> None:
     print(f"Training on: {TRAIN_FILE}")
 
-    # 1 ── Baseline (standard fine-tuning, final model only) ──
-    train_one(
-        "baseline_ft",
-        seed=123,
-        scheduler="ReduceLROnPlateau",
-        lr_factor=0.8,
-        scheduler_patience=25,
-    )
-
-    # 2 ── Committee (3 independent seeds) ──
-    for seed in (123, 124, 125):
-        train_one(
-            f"committee_s{seed}",
-            seed=seed,
-            scheduler="ReduceLROnPlateau",
-            lr_factor=0.8,
-            scheduler_patience=25,
-        )
-
-    # 3 ── Snapshot ensemble (cosine warm restarts, 5 cycles) ──
-    train_one(
-        "snapshot_warm",
-        seed=123,
-        scheduler="CosineAnnealingWarmRestarts",
-        cosine_T_0=20,
+    # ── Common cosine scheduler kwargs (no warm restarts) ──
+    cosine_single = dict(
+        cosine_T_0=100,      # one full cosine decay across the 100 epochs
         cosine_T_mult=1,
         cosine_eta_min=1e-6,
+    )
+    # ── Snapshot: warm restarts every 33 epochs → 3 cycles ──
+    cosine_cyclic = dict(
+        cosine_T_0=33,       # restart every 33 epochs
+        cosine_T_mult=1,     # equal-length cycles
+        cosine_eta_min=1e-6,
+    )
+
+    # 1 ── Baseline (cosine decay, single basin) ──
+    train_one(
+        "baseline_ft", seed=123,
+        scheduler="CosineAnnealingWarmRestarts",
+        **cosine_single,
+    )
+
+    # 2 ── Committee (3 seeds, each single cosine decay) ──
+    for seed in (123, 124, 125):
+        train_one(
+            f"committee_s{seed}", seed=seed,
+            scheduler="CosineAnnealingWarmRestarts",
+            **cosine_single,
+        )
+
+    # 3 ── Snapshot (warm restarts → 3 basins from 1 run) ──
+    train_one(
+        "snapshot_warm", seed=123,
+        scheduler="CosineAnnealingWarmRestarts",
+        **cosine_cyclic,
     )
 
     print("\nDone — 5 trainings complete.")

@@ -776,19 +776,29 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
 
 == Expected Results
 
-For error metrics on energy and forces, baseline and any of the three of the commite should be equal, 100 epochs each one.
+#align(center)[
+  #figure(
+    table(
+      columns: (2fr, auto, auto),
+      stroke: 0.5pt,
+      inset: 8pt,
+      align: (left, center, center),
 
-A single model from active snapshot should perform worse than the committee.
+      table.cell(fill: luma(230))[*Metric*],
+      table.cell(fill: luma(230))[*Accuracy* (E/F RMSE)],
+      table.cell(fill: luma(230))[*UQ quality* ($sigma_F$ vs. error)],
 
-In deviation the baseline model shoulld predict a low deviation. (Similar models)
+      [*Baseline* (1 model, final epoch)], [★ ★ ★], [— (none)],
+      [*Committee* (3 seeds)], [★ ★ ★ ★], [★ ★ ★ ★],
+      [*Snapshot (ours)* (3 ckpts, 1 run)], [★ ★ ★], [★ ★ ★],
+    ),
+    caption: [Accuracy: committee best, snapshot slightly behind. UQ: committee gold standard, snapshot intermediate — but at 1/3 the training cost.],
+  )
+]
 
-The committee should predict a good deviation.
+#v(0.5em)
 
-The active snapshot should a intermediate deviation.
-
-
-
-*Independent committee* should perform better because it doesn't suffer any bias.
+*Why:* baseline and any single committee model share the same training budget (100 epochs) → similar accuracy. Single snapshot checkpoint is an intermediate state → slightly worse. Committee has 3 independent models → best UQ; snapshot has 5 correlated checkpoints → intermediate deviation, no seed bias.
 
 == Seed meaning in our experiments
 
@@ -815,6 +825,12 @@ The active snapshot should a intermediate deviation.
   )
 ]
 )
+
+== The training setup
+
+$eta_(min)$ and $eta_(max)$
+
+
 
 == The Plan: What to Measure
 
