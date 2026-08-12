@@ -205,7 +205,7 @@ def train_one(
     config = Mace_TrainerConfig(
         model_key="mace_omat_medium",
         device="cuda" if torch.cuda.is_available() else "cpu",
-        dtype="float32",
+        dtype="float64",  # must match foundation model dtype (mace_omat_medium is float64)
         hyperparams=MaceTrainingHyperparams(**SHARED_HYPERPARAMS),
         metadata=MaceTrainingMetadata(
             experiment_name=experiment_name,

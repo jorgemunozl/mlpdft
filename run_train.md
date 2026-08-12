@@ -28,33 +28,33 @@ cd mlpdft
 uv sync
 ```
 
-This installs everything: `torch`, `mace-torch`, `huggingface-hub`, on a virtual environment created by `uv`.
+This installs everything: `torch`, `mace-torch`, `huggingface-hub`, `wandb`,
+and the `mlpdft` package itself (editable) in a virtual environment created by `uv`.
 
-### 3. Install the local dependencies
-
-```bash
-uv pip install -e .
-```
-
-### 4. Run training
+### 3. Run training
 
 > Use tmux to let the cluster running
 
 ```bash
-uv run python src/mlpdft/train.py
+uv run python src/mlpdft/multi-train.py
 ```
 
-Let the train finish. It will appear a directory `src/mlpdft/outputs/mace_omat_lora_v2`
+Let the train finish. Five experiment directories will appear under
+`src/mlpdft/outputs/`: `baseline_ft`, `committee_s123`, `committee_s124`,
+`committee_s125`, `snapshot_warm` — each containing `checkpoints/`, `models/`,
+`results/`, `logs/` and `wandb/` (offline metrics). The training config JSONs
+are written to `src/mlpdft/configs/`.
 
-### 5. Package the output
+### 4. Package the output
 
 ```bash
-tar czf training_output.tar.gz -C src/mlpdft/outputs mace_omat_lora_v2
+tar czf training_output.tar.gz -C src/mlpdft outputs configs
 ```
 
-This produces a **~25 MB** tarball on the `mlpdft` directory.
+This produces `training_output.tar.gz` in the repo root with everything I need
+(models, checkpoints, metrics, logs, wandb runs, configs).
 
-### 6. Send me the tarball
+### 5. Send me the tarball
 
 Attach `training_output.tar.gz` via **WhatsApp** or any convenient
 channel.
