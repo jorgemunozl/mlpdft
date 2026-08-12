@@ -131,15 +131,21 @@ def _apply_common_args(args, config, seed: int) -> None:
     args.train_file = str(TRAIN_FILE)
     args.seed = seed
     args.work_dir = str(OUTPUTS_DIR / config.metadata.experiment_name)
-    args.checkpoints_dir = (
+    args.checkpoints_dir = str(
         OUTPUTS_DIR / config.metadata.experiment_name / "checkpoints"
     )
-    args.results_dir = OUTPUTS_DIR / config.metadata.experiment_name / "results"
-    args.model_dir = OUTPUTS_DIR / config.metadata.experiment_name / "models"
-    args.log_dir = OUTPUTS_DIR / config.metadata.experiment_name / "logs"
+    args.results_dir = str(
+        OUTPUTS_DIR / config.metadata.experiment_name / "results"
+    )
+    args.model_dir = str(
+        OUTPUTS_DIR / config.metadata.experiment_name / "models"
+    )
+    args.log_dir = str(
+        OUTPUTS_DIR / config.metadata.experiment_name / "logs"
+    )
     args.keep_checkpoints = True
     args.save_all_checkpoints = True
-    args.foundation_model = config.model.path
+    args.foundation_model = str(config.model.path)
     args.default_dtype = config.dtype
     args.device = config.device
     args.model = "MACE"
