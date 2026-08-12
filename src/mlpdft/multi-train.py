@@ -61,6 +61,8 @@ _LRScheduler.__init__ = _patched_init
 _LRScheduler.step = _patched_step
 # ---------------------------------------------------------------------------
 
+from huggingface_hub import hf_hub_download
+
 from mlpdft.config import (
     Mace_TrainerConfig,
     MaceTrainingHyperparams,
@@ -70,14 +72,35 @@ from mlpdft.constants import (
     DATA_DIR,
     ENERGY_OFFSET,
     OUTPUTS_DIR,
+    PREFIX_HF,
     TEST_DATASET_NAME,
     XYZ_DIR,
 )
 
 # ── Paths ──────────────────────────────────────────────────────────────────
-TRAIN_FILE = str(DATA_DIR / XYZ_DIR / f"{TEST_DATASET_NAME}.extxyz")
-if not Path(TRAIN_FILE).exists():
-    raise SystemExit(f"Dataset not found: {TRAIN_FILE}. Run upload_ds_hf.py first.")
+TRAIN_FILE = DATA_DIR / XYZ_DIR / f"{TEST_DATASET_NAME}.extxyz"
+
+
+def ensure_dataset() -> str:
+    """Download the test dataset from Hugging Face if missing locally."""
+    if TRAIN_FILE.exists():
+        return str(TRAIN_FILE)
+
+    print(f"Dataset not found: {TRAIN_FILE}")
+    print(f"Downloading from HF: {PREFIX_HF}/{TEST_DATASET_NAME} ...")
+    try:
+        local = hf_hub_download(
+            repo_id=f"{PREFIX_HF}/{TEST_DATASET_NAME}",
+            filename=f"{TEST_DATASET_NAME}.extxyz",
+            repo_type="dataset",
+            local_dir=str(DATA_DIR / XYZ_DIR),
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise SystemExit(
+            f"Download failed: {exc}. Run upload_ds_hf.py first."
+        ) from exc
+    print(f"Dataset ready: {local}")
+    return local
 
 # ── Shared config (architecture, training, optimizer) ─────────────────────
 SHARED_HYPERPARAMS = dict(
@@ -105,7 +128,7 @@ def _apply_common_args(args, config, seed: int) -> None:
     """Map all shared hyperparams onto the argparse namespace."""
     hp = config.hyperparams
     args.E0s = str(ENERGY_OFFSET)
-    args.train_file = TRAIN_FILE
+    args.train_file = str(TRAIN_FILE)
     args.seed = seed
     args.work_dir = str(OUTPUTS_DIR / config.metadata.experiment_name)
     args.checkpoints_dir = (
@@ -202,7 +225,8 @@ def train_one(
 
 
 def main() -> None:
-    print(f"Training on: {TRAIN_FILE}")
+    dataset_path = ensure_dataset()
+    print(f"Training on: {dataset_path}")
 
     # ── Common cosine scheduler kwargs (no warm restarts) ──
     cosine_single = dict(
