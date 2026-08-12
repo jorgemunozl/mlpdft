@@ -674,17 +674,15 @@ Goal: tweak each one and understand *why* it shifts performance for this dataset
 ]
 
 
-== You can obtain good metrics but
+== Iterative Learning
 
 ML models interpolate well, extrapolate poorly. Active learning fixes this by selectively labeling where the model is uncertain — but you need uncertainty estimates.
-
-== Iterative Learning
 
 #grid(
   columns: (1fr, 1fr),
   [
     #figure(
-      image("images/iterative_training.png", width: 40%),
+      image("images/iterative_training.png", width: 60%),
       caption: [Iterative training example],
     )
   ],
@@ -699,83 +697,52 @@ ML models interpolate well, extrapolate poorly. Active learning fixes this by se
   columns: (1fr, 1fr),
   [
     #figure(
-      image("images/active_learning_commitee.png", width: 40%),
+      image("images/active_learning_commitee.png", width: 60%),
       caption: [Active learning example],
     )
   ],
   [
-    Train K models → disagree? → run DFT there. Smarter, but K× the training cost.
+    Train K models → disagree? → run DFT there.
+
+    *Smarter, but K× the training cost.*
   ],
 )
 
-== The Cost of Uncertainty
-
-*Two established approaches — both expensive:*
-
-#align(center)[
-  #figure(
-    table(
-      columns: (2fr, auto, 2fr),
-      stroke: 0.5pt,
-      inset: 6pt,
-      align: (left, center, left),
-
-      [`Deep Ensembles` (Lakshminarayanan 2017)], [$K times T$], [Train K models from scratch with different seeds. MACE committee = 3 seeds.],
-      [`Committee (MACE built-in)`], [$K times T$], [Same pattern. Variance across models stops MD when uncertain.],
-    ),
-    caption: [Gold standard UQ — but K× training per active-learning round],
-  )
-]
-
-== Research on it
+== The Snapshot Ensembles technique
 
 *Snapshot Ensembles* (Huang et al. 2017, ICLR): train *one* model with cyclic LR. Save checkpoints at each cycle minimum. Ensemble them. M models for the price of 1.
 
-- Loshchilov & Hutter (2017): cosine annealing with warm restarts (SGDR)
-- *Never applied to MLIPs for uncertainty quantification.*
+#figure(
+      image("images/sgd.png", width: 70%),
+      caption: [Huang et al. 2017, ICLR],
+)
 
-== Learning Rate Scheduler
+== Learning Rate Schedulers
 
 #grid(
   columns: (1fr, 1fr),
   [
     #figure(
-      image("images/cosine_anneal.png", width: 100%),
-      caption: [Cosine annealing regular],
+      image("images/cosine_anneal.png", width: 80%),
+      caption: [Regular cosine annealing],
     )
   ],
   [
-    LR cycles push the optimizer into different basins. Each cycle-end checkpoint = a different model.
     #figure(
-      image("images/cosine_god.webp", width: 100%),
+      image("images/cosine_god.webp", width: 70%),
       caption: [Cosine annealing with warm restarts],
     )
   ],
 )
 
-== Snapshot Ensembles: Train 1, get M for free
 
-#grid(
-  columns: (1fr, 1fr),
-  [
-    #figure(
-      image("images/sgd.png", width: 100%),
-      caption: [Huang et al. 2017, ICLR],
-    )
-  ],
-  [
-    One training run, M checkpoints at cycle minima. Ensemble disagreement = uncertainty — for free.
-  ],
-)
+#v(1cm)
 
-
-== Important
-
-*LoRA is too constrained.* 400k trainable parameters on a frozen 46M foundation gives a flat loss landscape — snapshots land in the same basin. *Full-model fine-tuning* (46M trainable) gives the weight-space volume needed for warm restarts to produce genuinely diverse checkpoints.
+LR cycles push the _optimizer into different local minima_. Each cycle-end checkpoint = a different model.
 
 == Proof of Concept: Three-Way Comparison
 
-*Train on a small LiF/BLi subset (9 groups, ~450 frames), evaluate on held-out BLi:*
+*Train on a small dataset of 1000 frames and test on 200 frames*
 
 #align(center)[
   #figure(
@@ -790,40 +757,64 @@ ML models interpolate well, extrapolate poorly. Active learning fixes this by se
       table.cell(fill: luma(230))[*Training cost*],
       table.cell(fill: luma(230))[*UQ source*],
 
-      [*Baseline*], [1 (final epoch)], [$1 times T$], [None],
-      [*Committee*], [3 (seeds 123--125)], [$3 times T$], [$sigma_F$ across 3 models],
-      [*Snapshot (ours)*], [1 run → 5 ckpts], [$1 times T$], [$sigma_F$ across 5 ckpts],
+      [*Baseline*], [3 (on the same run)], [$1 times T$], [$sigma_F$ across 3 ckpts],
+      [*Committee*], [3 (independent runs, 3 seeds)], [$3 times T$], [$sigma_F$ across 3 models],
+      [*Active Snapshot (ours)*], [1 run → 3 ckpts], [$1 times T$], [$sigma_F$ across 3 ckpts],
     ),
-    caption: [Same architecture, same dataset — only the training strategy changes],
+    caption: [Same architecture, same dataset, 100 epochs — only the training strategy changes],
   )
 ]
 
-#v(0.5em)
 
-*What we measure:* energy/force RMSE on held-out BLi, Spearman $rho$ between $sigma_F$ and real error, simulated active-learning efficiency (rank frames by uncertainty → label top-N → measure RMSE drop).
+#v(2em)
 
-== The Method: Snapshot Ensembles
+*LoRA is too constrained.* 400k trainable parameters on a frozen 46M foundation gives a flat loss landscape.
 
-*Full-model fine-tuning with CosineAnnealingWarmRestarts (Huang et al. 2017):*
 
-#align(center)[
-  #figure(
-    table(
-      columns: (auto, 3fr),
-      stroke: 0.5pt,
-      inset: 6pt,
-      align: (center, left),
+#v(2em)
 
-      table.cell(fill: luma(230))[*\#*],
-      table.cell(fill: luma(230))[*Action*],
 
-      [1], [Fine-tune full MACE with cosine warm restarts — LR cycles → one checkpoint per cycle at LR minimum],
-      [2], [Forward pass all K snapshots on held-out pool; compute $sigma_F = "std"(F_1, dots, F_K)$],
-      [3], [Compare $sigma_F$ vs. committee-3 $sigma_F$ — calibration, efficiency, cost],
-    ),
-    caption: [Cost: 1 training run + K cheap forward passes],
+== Expected Results
+
+For error metrics on energy and forces, baseline and any of the three of the commite should be equal, 100 epochs each one.
+
+A single model from active snapshot should perform worse than the committee.
+
+In deviation the baseline model shoulld predict a low deviation. (Similar models)
+
+The committee should predict a good deviation.
+
+The active snapshot should a intermediate deviation.
+
+
+
+*Independent committee* should perform better because it doesn't suffer any bias.
+
+== Seed meaning in our experiments
+
+
+#grid(
+  columns: (1fr, 0.8fr),
+  [
+    The seed influence _weigths initialization_ and _data shuffling_.
+    #v(0.5cm)
+    Deep Ensembles works because they are model trained *from scratch*.
+    This makes different models.
+    #v(0.5cm)
+    But if used on postraining, the weigths are fixed.
+    #v(0.5cm)
+    The seed just would affect _data shuffling_. Lacking diversity
+    #v(0.5cm)
+    Active snapshot that forces the model converges in different local minima, should increase the diversity of the committee.
+
+  ],
+  [
+    #figure(
+      image("images/deep_loss.png"),
+      caption: [1912.02757 Deep Ensembles: A Loss Landscape Perspective],
   )
 ]
+)
 
 == The Plan: What to Measure
 
@@ -859,6 +850,10 @@ ML models interpolate well, extrapolate poorly. Active learning fixes this by se
     caption: [Estimated: overnight on RTX 4000 ADA],
   )
 ]
+
+== Reviewers Claim
+
+
 
 == Summary
 

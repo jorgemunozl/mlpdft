@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+"""Proof of concept: baseline vs. committee vs. snapshot ensemble.
+Runs 3 trainings sequentially on the test dataset:
+  1 × baseline (standard fine-tuning)
+  3 × committee (different seeds)
+  1 × snapshot (cosine warm restarts, 3 cycle-end checkpoints)
+"""
+
+import warnings
+from pathlib import Path
+
+import torch
+
+warnings.filterwarnings("ignore", message=".*TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD.*")
+warnings.filterwarnings("ignore", message=".*cuequivariance.*not available.*")
+
+from mace.cli.run_train import run
+from mace.tools import build_default_arg_parser
+
+# ---------------------------------------------------------------------------
+# Inject CosineAnnealingWarmRestarts into MACE's LRScheduler
+# ---------------------------------------------------------------------------
+from mace.tools.scripts_utils import LRScheduler as _LRScheduler
+
+_original_init = _LRScheduler.__init__
+_original_step = _LRScheduler.step
+
+
+def _patched_init(self, optimizer, args):
+    if args.scheduler == "CosineAnnealingWarmRestarts":
+        self.scheduler = args.scheduler
+        self._optimizer_type = args.optimizer
+        self.lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            optimizer=optimizer,
+            T_0=getattr(args, "cosine_T_0", 20),
+            T_mult=getattr(args, "cosine_T_mult", 1),
+            eta_min=getattr(args, "cosine_eta_min", 1e-6),
+        )
+    else:
+        _original_init(self, optimizer, args)
+
+
+def _patched_step(self, metrics=None, epoch=None):
+    if self.scheduler == "CosineAnnealingWarmRestarts":
+        self.lr_scheduler.step(epoch=epoch)
+    else:
+        _original_step(self, metrics=metrics, epoch=epoch)
+
+
+_LRScheduler.__init__ = _patched_init
+_LRScheduler.step = _patched_step
+# ---------------------------------------------------------------------------
+
+from mlpdft.config import (
+    Mace_TrainerConfig,
+    MaceTrainingHyperparams,
+    MaceTrainingMetadata,
+)
+from mlpdft.constants import (
+    DATA_DIR,
+    ENERGY_OFFSET,
+    OUTPUTS_DIR,
+    TEST_DATASET_NAME,
+    XYZ_DIR,
+)
+
+# ── Paths ──────────────────────────────────────────────────────────────────
+TRAIN_FILE = str(DATA_DIR / XYZ_DIR / f"{TEST_DATASET_NAME}.extxyz")
+if not Path(TRAIN_FILE).exists():
+    raise SystemExit(f"Dataset not found: {TRAIN_FILE}. Run upload_ds_hf.py first.")
+
+# ── Shared config (architecture, training, optimizer) ─────────────────────
+SHARED_HYPERPARAMS = dict(
+    r_max=6.0,
+    max_num_epochs=100,
+    batch_size=4,
+    patience=999,
+    eval_interval=20,
+    valid_frac=0.15,
+    swa=False,
+    num_channels=128,
+    num_cutoff_basis=5,
+    max_L=1,
+    max_ell=3,
+    num_interactions=2,
+    correlation=3,
+    num_radial_basis=8,
+    lora=False,
+    ema=False,
+    lr=5e-4,
+)
+
+
+def _apply_common_args(args, config, seed: int) -> None:
+    """Map all shared hyperparams onto the argparse namespace."""
+    hp = config.hyperparams
+    args.E0s = str(ENERGY_OFFSET)
+    args.train_file = TRAIN_FILE
+    args.seed = seed
+    args.work_dir = str(OUTPUTS_DIR / config.metadata.experiment_name)
+    args.checkpoints_dir = (
+        OUTPUTS_DIR / config.metadata.experiment_name / "checkpoints"
+    )
+    args.results_dir = OUTPUTS_DIR / config.metadata.experiment_name / "results"
+    args.model_dir = OUTPUTS_DIR / config.metadata.experiment_name / "models"
+    args.log_dir = OUTPUTS_DIR / config.metadata.experiment_name / "logs"
+    args.keep_checkpoints = True
+    args.save_all_checkpoints = True
+    args.foundation_model = config.model.path
+    args.default_dtype = config.dtype
+    args.device = config.device
+    args.model = "MACE"
+    args.lora = hp.lora
+    args.r_max = hp.r_max
+    args.num_channels = hp.num_channels
+    args.max_L = hp.max_L
+    args.max_ell = hp.max_ell
+    args.num_interactions = hp.num_interactions
+    args.correlation = hp.correlation
+    args.num_radial_basis = hp.num_radial_basis
+    args.num_cutoff_basis = hp.num_cutoff_basis
+    args.energy_key = hp.energy_key
+    args.force_key = hp.force_key
+    args.pin_memory = hp.pin_memory
+    args.loss = hp.loss
+    args.forces_weight = hp.forces_weight
+    args.energy_weight = hp.energy_weight
+    args.valid_batch_size = hp.valid_batch_size
+    args.valid_frac = hp.valid_frac
+    args.batch_size = hp.batch_size
+    args.max_num_epochs = hp.max_num_epochs
+    args.optimizer = hp.optimizer
+    args.lr = hp.lr
+    args.amsgrad = hp.amsgrad
+    args.weight_decay = hp.weight_decay
+    args.clip_grad = hp.clip_grad
+    args.swa = hp.swa
+    args.start_swa = hp.start_swa
+    args.swa_lr = hp.swa_lr
+    args.ema = hp.ema
+    args.ema_decay = hp.ema_decay
+    args.patience = hp.patience
+    args.eval_interval = hp.eval_interval
+
+
+
+def train_one(
+    experiment_name: str,
+    seed: int,
+    scheduler: str,
+    **scheduler_kwargs,
+) -> None:
+    """Run a single MACE training with the shared config + given scheduler."""
+    print(f"\n{'=' * 60}")
+    print(f"  {experiment_name}  |  seed={seed}  |  scheduler={scheduler}")
+    print(f"{'=' * 60}")
+
+    config = Mace_TrainerConfig(
+        model_key="mace_omat_medium",
+        device="cuda" if torch.cuda.is_available() else "cpu",
+        dtype="float32",
+        hyperparams=MaceTrainingHyperparams(**SHARED_HYPERPARAMS),
+        metadata=MaceTrainingMetadata(
+            experiment_name=experiment_name,
+            seed=seed,
+        ),
+    )
+
+    parser = build_default_arg_parser()
+    args = parser.parse_args(["--name", experiment_name])
+
+    _apply_common_args(args, config, seed)
+
+    # ── Scheduler ──
+    args.scheduler = scheduler
+    for k, v in scheduler_kwargs.items():
+        setattr(args, k, v)
+
+    run(args)
+    config.write_config_train()
+
+
+# ── Main ────────────────────────────────────────────────────────────────────
+
+
+def main() -> None:
+    print(f"Training on: {TRAIN_FILE}")
+
+    # 1 ── Baseline (standard fine-tuning, final model only) ──
+    train_one(
+        "baseline_ft",
+        seed=123,
+        scheduler="ReduceLROnPlateau",
+        lr_factor=0.8,
+        scheduler_patience=25,
+    )
+
+    # 2 ── Committee (3 independent seeds) ──
+    for seed in (123, 124, 125):
+        train_one(
+            f"committee_s{seed}",
+            seed=seed,
+            scheduler="ReduceLROnPlateau",
+            lr_factor=0.8,
+            scheduler_patience=25,
+        )
+
+    # 3 ── Snapshot ensemble (cosine warm restarts, 5 cycles) ──
+    train_one(
+        "snapshot_warm",
+        seed=123,
+        scheduler="CosineAnnealingWarmRestarts",
+        cosine_T_0=20,
+        cosine_T_mult=1,
+        cosine_eta_min=1e-6,
+    )
+
+    print("\nDone — 5 trainings complete.")
+
+
+if __name__ == "__main__":
+    main()
