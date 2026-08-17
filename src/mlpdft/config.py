@@ -248,7 +248,7 @@ class ActiveLearningConfig(MaceConfig):
 
     # ── active-learning control ──────────────────────────────────
     error_threshold: float = field(
-        default=0.1,
+        default=0.3,
         metadata={
             "description": (
                 "Maximum relative force standard deviation across the committee "

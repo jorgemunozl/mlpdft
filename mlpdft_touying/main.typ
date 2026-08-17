@@ -717,6 +717,28 @@ ML models interpolate well, extrapolate poorly. Active learning fixes this by se
       caption: [Huang et al. 2017, ICLR],
 )
 
+== Key paper
+
+#grid(
+  columns: (1fr, 1fr),
+  [
+    #figure(
+      image("images/comparative.png", width: 100%),
+      caption: [],
+    )
+  ],
+  [
+    Study *Snapshot Ensembles* for MLIPs
+  ],
+)
+
+== The idea of use active snapshots is not new
+
+There are some doing it.
+
+
+== Where introduce novelty
+
 == Learning Rate Schedulers
 
 #grid(
@@ -788,20 +810,29 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
       table.cell(fill: luma(230))[*Accuracy* (E/F RMSE)],
       table.cell(fill: luma(230))[*UQ quality* ($sigma_F$ vs. error)],
 
-      [*Baseline* (1 model, final epoch)], [★ ★ ★], [— (none)],
-      [*Committee* (3 seeds)], [★ ★ ★ ★], [★ ★ ★ ★],
-      [*Snapshot (ours)* (3 ckpts, 1 run)], [★ ★ ★], [★ ★ ★],
+      [*Baseline* (1 model, final epoch)], [★ ★ ★], [★ ],
+      [*1 - Committee* (3 seeds)], [★ ★ ★ ], [★ ★ ★ ],
+      [*1 - Snapshot (ours)* (3 ckpts, 1 run)], [★ ★ ], [★ ★ ],
     ),
-    caption: [Accuracy: committee best, snapshot slightly behind. UQ: committee gold standard, snapshot intermediate — but at 1/3 the training cost.],
+    caption: [Accuracy and Uncertainty Quantification predictions],
   )
 ]
 
 #v(0.5em)
 
-*Why:* baseline and any single committee model share the same training budget (100 epochs) → similar accuracy. Single snapshot checkpoint is an intermediate state → slightly worse. Committee has 3 independent models → best UQ; snapshot has 5 correlated checkpoints → intermediate deviation, no seed bias.
+- baseline and any single committee model (100 epochs) → similar accuracy.
+
+#v(0.5em)
+- Single snapshot checkpoint is an intermediate state → slightly worse.
+
+#v(0.5em)
+
+- Committee has 3 independent models → best UQ; snapshot has 3 correlated checkpoints → intermediate deviation, no seed bias.
+
+
+// == The Li-F-B dataset nature Li-F-B systems are primarily used in high-voltage solid-state batteries The Problem: These systems are a mixture of localized covalent bonds (inside the borate anions), highly ionic interactions (Li⁺ and F⁻), and dynamic charge transfers. The MACE Advantage: Standard MLIPs fail here because they struggle with mixed covalent/ionic landscapes. MACE excels due to its higher-order equivariant features. Showing how snapshots preserve these features across cycles is highly publishable
 
 == Seed meaning in our experiments
-
 
 #grid(
   columns: (1fr, 0.8fr),
@@ -828,9 +859,125 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
 
 == The training setup
 
-$eta_(min)$ and $eta_(max)$
 
 
+== Results Baseline
+
+    #figure(
+      image("images/baseline_ft.png", width: 70%),
+      caption: [$eta_(min)=1e-6$ and $eta_(max)=5e-4$],
+    )
+== Results Committee MACE
+
+#grid(
+  columns: (1fr, 1fr),
+  [
+    #figure(
+      image("images/committee_s124.png", width: 100%),
+      caption: [Seed 124 model],
+    )
+  ],
+  [
+    #figure(
+      image("images/committee_s125.png", width: 100%),
+      caption: [Seed 125 model],
+    )
+  ],
+)
+
+== Results Committee MACE — seed 123
+
+#figure(
+  image("images/committee.png", width: 70%),
+  caption: [Seed 123 model],
+)
+
+
+== Warm Snapshots Results
+
+#figure(
+      image("images/snapshot_warm.png", width: 70%),
+      caption: [Warm snapshot model],
+)
+
+
+== Results Committee Tables
+
+#text(size: 17pt)[
+  #figure(
+    table(
+      columns: (auto, auto, auto, auto, auto),
+      stroke: 0.4pt,
+      inset: 3pt,
+      align: (left, left, center, center, center),
+
+      table.cell(fill: luma(230))[*config_type*],
+      table.cell(fill: luma(230))[*model*],
+      table.cell(fill: luma(230))[*RMSE E / meV / atom*],
+      table.cell(fill: luma(230))[*RMSE F / meV / A*],
+      table.cell(fill: luma(230))[*relative F RMSE %*],
+
+      [`train_Default`], [baseline], [2.8], [155.5], [32.49],
+      [`valid_Default`], [baseline], [2.8], [164.2], [33.31],
+      [`train_Default`], [committee — seed 123], [2.8], [155.5], [32.49],
+      [`valid_Default`], [committee — seed 123], [2.8], [164.2], [33.31],
+      [`train_Default`], [committee — seed 124], [2.8], [155.1], [32.61],
+      [`valid_Default`], [committee — seed 124], [3.0], [165.0], [31.77],
+      [`train_Default`], [committee — seed 125], [2.7], [155.3], [32.04],
+      [`valid_Default`], [committee — seed 125], [2.6], [150.0], [35.37],
+      [`train_Default`], [warm snapshot], [34.7], [175.7], [36.71],
+      [`valid_Default`], [warm snapshot], [34.0], [184.2], [37.36],
+    ),
+    caption: [Results for all five fine-tuned models],
+  )
+]
+
+== Comparing models parameters
+
+#text(size: 14pt)[
+  #figure(
+    table(
+      columns: (auto, auto, auto, auto),
+      stroke: 0.4pt,
+      inset: 4pt,
+      align: (left, center, center, center),
+
+      table.cell(fill: luma(230))[*comparison*],
+      table.cell(fill: luma(230))[*MSE*],
+      table.cell(fill: luma(230))[*$log_10$ MSE*],
+      table.cell(fill: luma(230))[*RMSE*],
+
+      [baseline vs committee — same seed], [$1.31 times 10^(-17)$], [-16.88], [$3.62 times 10^(-9)$],
+      [committee 123 vs 124 — diff. seed], [$3.74 times 10^(-5)$], [-4.43], [$6.11 times 10^(-3)$],
+      [committee 124 vs 125 — diff. seed], [$5.04 times 10^(-5)$], [-4.30], [$7.10 times 10^(-3)$],
+    ),
+    caption: [Seed dependence of the model weights],
+  )
+
+  #figure(
+    table(
+      columns: (auto, auto, auto, auto),
+      stroke: 0.4pt,
+      inset: 4pt,
+      align: (left, center, center, center),
+
+      table.cell(fill: luma(230))[*comparison*],
+      table.cell(fill: luma(230))[*MSE*],
+      table.cell(fill: luma(230))[*$log_10$ MSE*],
+      table.cell(fill: luma(230))[*RMSE*],
+
+      [baseline vs snapshot (epoch 33)], [$1.15 times 10^(-4)$], [-3.94], [$1.07 times 10^(-2)$],
+      [baseline vs snapshot (epoch 66)], [$2.68 times 10^(-5)$], [-4.57], [$5.18 times 10^(-3)$],
+      [baseline vs snapshot (epoch 99)], [$8.02 times 10^(-6)$], [-5.10], [$2.83 times 10^(-3)$],
+    ),
+    caption: [Snapshot drift toward the final model],
+  )
+]
+
+*What this tells us:*
+
+- *Same seed → identical weights.* Baseline vs committee-123 differ only at the $10^(-17)$ level — pure floating-point noise, so training is deterministic.
+- *Different seeds → small, real diversity.* The $10^(-5)$ gap ($log_10$ MSE $approx -4.4$) is the genuine weight spread the committee relies on.
 
 == The Plan: What to Measure
 

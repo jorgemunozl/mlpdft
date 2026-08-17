@@ -7,6 +7,8 @@ Description-Content-Type: text/markdown
 Requires-Dist: torch<3,>=2.2
 Requires-Dist: mace-torch>=0.3.6
 Requires-Dist: huggingface-hub>=1.19.0
+Requires-Dist: jupyter>=1.1.1
+Requires-Dist: wandb>=0.16
 
 <div align="center">
 

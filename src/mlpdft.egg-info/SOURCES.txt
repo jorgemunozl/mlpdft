@@ -6,8 +6,9 @@ src/mlpdft/constants.py
 src/mlpdft/evaluate.py
 src/mlpdft/evaluate_mace_metrics.py
 src/mlpdft/mace_scrap.py
+src/mlpdft/main.py
 src/mlpdft/md.py
-src/mlpdft/migrate_metrics_to_json.py
+src/mlpdft/multi-train.py
 src/mlpdft/plot_metrics.py
 src/mlpdft/train.py
 src/mlpdft/utils.py
@@ -21,8 +22,10 @@ src/mlpdft/fitsnap/evaluate_fitsnap.py
 src/mlpdft/fitsnap/evaluate_wrapper.py
 src/mlpdft/fitsnap/test.py
 src/mlpdft/outputs/evaluate.py
+src/mlpdft/outputs/migrate_metrics_to_json.py
 src/mlpdft/utils/calculate_energy_offset.py
 src/mlpdft/utils/calculate_offset.py
+src/mlpdft/utils/compare_models.py
 src/mlpdft/utils/qe_out_to_extxyz.py
 src/mlpdft/utils/upload_ds_hf.py
 src/mlpdft/utils/visualize_model.py
