@@ -53,21 +53,13 @@ DEFAULT_MODELS = [
 ]
 
 
-def compute_deviation(
-    config: str,
-    models: list[str],
-    config_index: int = -1,
-    device: str = "cpu",
-    dtype: str = "float64",
-) -> dict:
-    """Run inference and return committee-deviation summary statistics."""
-    atoms = read(config, index=config_index)
+def load_calculator(models: list[str], device: str, dtype: str) -> MACECalculator:
+    """Build the committee calculator (load models once)."""
+    return MACECalculator(model_paths=models, device=device, default_dtype=dtype)
 
-    calc = MACECalculator(
-        model_paths=models,
-        device=device,
-        default_dtype=dtype,
-    )
+
+def evaluate_deviation(atoms, calc: MACECalculator, num_models: int) -> dict:
+    """Run inference for one frame and return committee-deviation statistics."""
     atoms.calc = calc
 
     energy = atoms.get_potential_energy()
@@ -81,8 +73,7 @@ def compute_deviation(
     ferr_rel = per_atom_force_std / (np.linalg.norm(forces, axis=1) + REG)
 
     return {
-        "atoms": atoms,
-        "num_models": len(models),
+        "num_models": num_models,
         "energy": energy,
         "energy_std": float(np.sqrt(energy_var)),
         "mean_force_std": float(np.mean(per_atom_force_std)),
@@ -91,6 +82,21 @@ def compute_deviation(
         "per_atom_force_std": per_atom_force_std,
         "ferr_rel": ferr_rel,
     }
+
+
+def compute_deviation(
+    config: str,
+    models: list[str],
+    config_index: int = -1,
+    device: str = "cpu",
+    dtype: str = "float64",
+) -> dict:
+    """Run inference on a single frame and return the deviation summary."""
+    atoms = read(config, index=config_index)
+    calc = load_calculator(models, device, dtype)
+    stats = evaluate_deviation(atoms, calc, len(models))
+    stats["atoms"] = atoms
+    return stats
 
 
 def main() -> None:
@@ -130,6 +136,11 @@ def main() -> None:
         default=None,
         help="Optional extxyz path to write the frame with per-atom deviation",
     )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Compute deviation for every frame in the file (batch mode)",
+    )
     args = parser.parse_args()
 
     if not args.config.exists():
@@ -137,6 +148,41 @@ def main() -> None:
     for model_path in args.models:
         if not Path(model_path).exists():
             parser.error(f"model not found: {model_path}")
+
+    if args.all:
+        frames = read(str(args.config), index=":")
+        if not isinstance(frames, list):
+            frames = [frames]
+        calc = load_calculator(args.models, args.device, args.dtype)
+        print(
+            f"{'#':>3} {'group':<24} {'atoms':>5} "
+            f"{'E std (eV)':>12} {'F std mean':>12} {'F std max':>12} {'ferr_rel':>9}"
+        )
+        print("-" * 83)
+        rows = []
+        for i, atoms in enumerate(frames):
+            stats = evaluate_deviation(atoms, calc, len(args.models))
+            group = atoms.info.get("group", "?")
+            rows.append((i, group, len(atoms), stats))
+            print(
+                f"{i:>3} {group:<24} {len(atoms):>5} "
+                f"{stats['energy_std']:>12.3e} {stats['mean_force_std']:>12.3e} "
+                f"{stats['max_force_std']:>12.3e} {stats['max_ferr_rel']:>9.4f}"
+            )
+        print("-" * 83)
+        if args.output:
+            out_frames = []
+            for i, group, _n, stats in rows:
+                atoms = frames[i].copy()
+                atoms.arrays["mlff_forces_std"] = stats["per_atom_force_std"]
+                atoms.info["mlff_energy_var"] = stats["energy_std"] ** 2
+                atoms.info["mlff_max_ferr_rel"] = stats["max_ferr_rel"]
+                out_frames.append(atoms)
+            write(args.output, out_frames)
+            print(
+                f"Wrote per-atom deviation for {len(out_frames)} frames to: {args.output}"
+            )
+        return
 
     stats = compute_deviation(
         str(args.config),

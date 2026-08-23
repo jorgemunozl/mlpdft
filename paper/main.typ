@@ -5,7 +5,7 @@
 
 #align(center)[
   #text(size: 17pt)[
-    Foundation Models for MACE Machine Learning Interatomic Potentials
+    Acellerating the for F-B-Li systems
   ] \
   #text(size: 12pt)[{working title}]
 
