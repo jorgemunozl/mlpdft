@@ -29,8 +29,6 @@
 
 = What we actually have and why we are here
 
-== A battery - ish dataset
-I
 === Examples of configuration-group names (catalog)
 
 #grid(
@@ -643,7 +641,6 @@ Goal: tweak each one and understand *why* it shifts performance for this dataset
 
 == Adding a Borum Dataset
 
-
 #align(center)[
   #figure(
     table(
@@ -661,10 +658,7 @@ Goal: tweak each one and understand *why* it shifts performance for this dataset
       [16], [`BLI_INTERFACE_NPT`], [410],
       [17], [`BLI_INTERFACE_NPT_FINAL`], [1016],
       [18], [`BLI_INTERFACE_FINAL`], [958],
-      [19], [`BLI_ISOLATED`], [0],
       [20], [`LIBF4_V4`], [1333],
-      [21], [`LIBF4_V2`], [0],
-      [22], [`LIBF4`], [0],
       [23], [`LIBF4_FINAL`], [1333],
       [24], [`LIBF4_NPT`], [1333],
       [25], [`LIBF4_NPT_FINAL`], [1333],
@@ -978,6 +972,227 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
 
 - *Same seed → identical weights.* Baseline vs committee-123 differ only at the $10^(-17)$ level — pure floating-point noise, so training is deterministic.
 - *Different seeds → small, real diversity.* The $10^(-5)$ gap ($log_10$ MSE $approx -4.4$) is the genuine weight spread the committee relies on.
+
+== Mini dataset the model was trained on
+#align(center)[
+  #figure(
+    table(
+      columns: (auto, 2fr, auto),
+      stroke: 0.5pt,
+      inset: 6pt,
+      align: (center, left, center),
+
+      table.cell(fill: luma(230))[*\#*],
+      table.cell(fill: luma(230))[*Group*],
+      table.cell(fill: luma(230))[*Frame count*],
+
+      [1], [`LIFINTERFACE_KJPAW_V1`], [150],
+      [2], [`LIWITHF_ISOLATED`], [64],
+      [3], [`LIF64_ISOLATED`], [95],
+      [4], [`LIWITHF_NPT_FINAL`], [150],
+      [5], [`BLI_V2`], [150],
+      [6], [`BLI_NPT`], [150],
+      [7], [`LIBF4_NPT_FINAL`], [150],
+      [8], [`LIBF4_NPT`], [150],
+    ),
+    caption: [Total frames: 1059],
+  )
+]
+
+== Computing inference with the model
+
+#text(size: 19pt)[
+  #figure(
+    table(
+      columns: (auto, auto, auto, auto, auto, auto),
+      stroke: 0.4pt,
+      inset: 3pt,
+      align: (left, center, center, center, center, center),
+
+      table.cell(fill: luma(230))[*group*],
+      table.cell(fill: luma(230))[*atoms*],
+      table.cell(fill: luma(230))[*$E_"std"$ (eV)*],
+      table.cell(fill: luma(230))[*$F_"std"$ mean (eV/Å)*],
+      table.cell(fill: luma(230))[*$F_"std"$ max (eV/Å)*],
+      table.cell(fill: luma(230))[*$epsilon^"rel"$*],
+
+      [`LIFINTERFACE_KJPAW_V1`], [122], [$5.55 times 10^(-3)$], [$4.99 times 10^(-2)$], [$1.37 times 10^(-1)$], [0.236],
+      [*`LIFINTERFACE_KJPAW_NPT`*], [122], [$7.05 times 10^(2)$], [$3.19 times 10^(1)$], [$1.02 times 10^(2)$], [0.866],
+      [`LIWITHF_ISOLATED`], [54], [$4.41 times 10^(-3)$], [$5.23 times 10^(-3)$], [$9.81 times 10^(-3)$], [0.028],
+      [`LIWITHF_NPT_FINAL`], [54], [$3.57 times 10^(-2)$], [$1.24 times 10^(-2)$], [$4.25 times 10^(-2)$], [0.055],
+      [`LIF64_ISOLATED`], [64], [$1.18 times 10^(-2)$], [$1.42 times 10^(-2)$], [$2.85 times 10^(-2)$], [0.067],
+      [*`LIF64_KJPAW_V2`*], [64], [$1.41 times 10^(1)$], [$2.64 times 10^(-1)$], [$4.89 times 10^(-1)$], [1.446],
+      [*`LIF64_KJPAW_NPT`*], [64], [$1.28 times 10^(1)$], [$5.31 times 10^(-1)$], [$9.38 times 10^(-1)$], [1.167],
+      [`BLI_V2`], [32], [$4.14 times 10^(-3)$], [$2.00 times 10^(-3)$], [$3.85 times 10^(-3)$], [0.009],
+      [`BLI_NPT`], [32], [$5.33 times 10^(-3)$], [$2.92 times 10^(-3)$], [$4.66 times 10^(-3)$], [0.014],
+      [*`BLI_INTERFACE_FINAL`*], [68], [$3.87 times 10^(0)$], [$4.76 times 10^(-1)$], [$1.49 times 10^(0)$], [0.471],
+      [*`BLI_INTERFACE_NPT_FINAL`*], [68], [$2.88 times 10^(0)$], [$7.06 times 10^(-1)$], [$4.47 times 10^(0)$], [0.434],
+      [`LIBF4_NPT`], [18], [$4.40 times 10^(-3)$], [$2.13 times 10^(-2)$], [$4.63 times 10^(-2)$], [0.043],
+      [`LIBF4_NPT_FINAL`], [18], [$9.27 times 10^(-3)$], [$2.44 times 10^(-2)$], [$4.38 times 10^(-2)$], [0.070],
+      [`LIBF4_V4`], [18], [$6.02 times 10^(-3)$], [$1.15 times 10^(-2)$], [$1.84 times 10^(-2)$], [0.029],
+    ),
+    caption: [Committee deviation across the mini dataset over the last index],
+  )
+]
+
+== Snapshot ensemble deviation
+
+#text(size: 19pt)[
+  #figure(
+    table(
+      columns: (auto, auto, auto, auto, auto, auto),
+      stroke: 0.4pt,
+      inset: 3pt,
+      align: (left, center, center, center, center, center),
+
+      table.cell(fill: luma(230))[*group*],
+      table.cell(fill: luma(230))[*atoms*],
+      table.cell(fill: luma(230))[*$E_"std"$ (eV)*],
+      table.cell(fill: luma(230))[*$F_"std"$ mean (eV/Å)*],
+      table.cell(fill: luma(230))[*$F_"std"$ max (eV/Å)*],
+      table.cell(fill: luma(230))[*$epsilon^"rel"$*],
+
+      [`LIFINTERFACE_KJPAW_V1`], [122], [$9.74 times 10^(-1)$], [$2.05 times 10^(-1)$], [$5.53 times 10^(-1)$], [1.025],
+      [`LIFINTERFACE_KJPAW_NPT`], [122], [$3.47 times 10^(3)$], [$6.28 times 10^(1)$], [$2.59 times 10^(2)$], [1.862],
+      [`LIWITHF_ISOLATED`], [54], [$3.48 times 10^(-2)$], [$2.61 times 10^(-2)$], [$5.35 times 10^(-2)$], [0.148],
+      [`LIWITHF_NPT_FINAL`], [54], [$1.65 times 10^(-1)$], [$3.44 times 10^(-2)$], [$7.46 times 10^(-2)$], [0.175],
+      [`LIF64_ISOLATED`], [64], [$4.88 times 10^(-1)$], [$4.11 times 10^(-2)$], [$8.09 times 10^(-2)$], [0.174],
+      [`BLI_V2`], [32], [$1.39 times 10^(-1)$], [$7.94 times 10^(-3)$], [$1.26 times 10^(-2)$], [0.042],
+      [`BLI_NPT`], [32], [$1.37 times 10^(-1)$], [$8.08 times 10^(-3)$], [$1.31 times 10^(-2)$], [0.023],
+      [`LIBF4_NPT`], [18], [$4.75 times 10^(-1)$], [$6.76 times 10^(-2)$], [$1.21 times 10^(-1)$], [0.171],
+      [`LIBF4_NPT_FINAL`], [18], [$5.17 times 10^(-1)$], [$5.72 times 10^(-2)$], [$8.70 times 10^(-2)$], [0.239],
+      [`LIBF4_V4`], [18], [$5.68 times 10^(-1)$], [$5.61 times 10^(-2)$], [$8.87 times 10^(-2)$], [0.157],
+      [`LIF64_KJPAW_V2`], [64], [$6.83 times 10^(0)$], [$6.74 times 10^(-2)$], [$1.06 times 10^(-1)$], [0.181],
+      [`LIF64_KJPAW_NPT`], [64], [$6.59 times 10^(0)$], [$1.16 times 10^(-1)$], [$2.45 times 10^(-1)$], [0.193],
+      [`BLI_INTERFACE_FINAL`], [68], [$2.88 times 10^(0)$], [$5.42 times 10^(-1)$], [$1.67 times 10^(0)$], [0.807],
+      [`BLI_INTERFACE_NPT_FINAL`], [68], [$3.55 times 10^(0)$], [$7.55 times 10^(-1)$], [$8.69 times 10^(0)$], [0.533],
+    ),
+    caption: [Snapshot ensemble deviation across the mini dataset],
+  )
+]
+
+== Baseline checkpoint ensemble deviation
+
+#text(size: 19pt)[
+  #figure(
+    table(
+      columns: (auto, auto, auto, auto, auto, auto),
+      stroke: 0.4pt,
+      inset: 3pt,
+      align: (left, center, center, center, center, center),
+
+      table.cell(fill: luma(230))[*group*],
+      table.cell(fill: luma(230))[*atoms*],
+      table.cell(fill: luma(230))[*$E_"std"$ (eV)*],
+      table.cell(fill: luma(230))[*$F_"std"$ mean (eV/Å)*],
+      table.cell(fill: luma(230))[*$F_"std"$ max (eV/Å)*],
+      table.cell(fill: luma(230))[*$epsilon^"rel"$*],
+
+      [`LIFINTERFACE_KJPAW_V1`], [122], [$4.88 times 10^(-1)$], [$1.38 times 10^(-1)$], [$5.44 times 10^(-1)$], [0.551],
+      [`LIFINTERFACE_KJPAW_NPT`], [122], [$1.49 times 10^(3)$], [$4.08 times 10^(1)$], [$1.97 times 10^(2)$], [1.410],
+      [`LIWITHF_ISOLATED`], [54], [$2.00 times 10^(-1)$], [$1.38 times 10^(-2)$], [$3.75 times 10^(-2)$], [0.093],
+      [`LIWITHF_NPT_FINAL`], [54], [$1.69 times 10^(-1)$], [$2.12 times 10^(-2)$], [$6.12 times 10^(-2)$], [0.110],
+      [`LIF64_ISOLATED`], [64], [$3.53 times 10^(-1)$], [$1.81 times 10^(-2)$], [$4.35 times 10^(-2)$], [0.091],
+      [`BLI_V2`], [32], [$2.85 times 10^(-2)$], [$5.38 times 10^(-3)$], [$1.02 times 10^(-2)$], [0.024],
+      [`BLI_NPT`], [32], [$2.11 times 10^(-2)$], [$5.45 times 10^(-3)$], [$1.17 times 10^(-2)$], [0.014],
+      [`LIBF4_NPT`], [18], [$5.47 times 10^(-2)$], [$1.66 times 10^(-2)$], [$3.15 times 10^(-2)$], [0.044],
+      [`LIBF4_NPT_FINAL`], [18], [$7.51 times 10^(-2)$], [$1.02 times 10^(-2)$], [$1.73 times 10^(-2)$], [0.042],
+      [`LIBF4_V4`], [18], [$9.29 times 10^(-2)$], [$1.23 times 10^(-2)$], [$1.78 times 10^(-2)$], [0.030],
+      [`LIF64_KJPAW_V2`], [64], [$4.31 times 10^(0)$], [$3.30 times 10^(-2)$], [$6.87 times 10^(-2)$], [0.094],
+      [`LIF64_KJPAW_NPT`], [64], [$4.04 times 10^(0)$], [$6.10 times 10^(-2)$], [$1.01 times 10^(-1)$], [0.188],
+      [`BLI_INTERFACE_FINAL`], [68], [$1.50 times 10^(0)$], [$3.92 times 10^(-1)$], [$1.68 times 10^(0)$], [0.356],
+      [`BLI_INTERFACE_NPT_FINAL`], [68], [$1.04 times 10^(0)$], [$5.40 times 10^(-1)$], [$3.24 times 10^(0)$], [0.374],
+    ),
+    caption: [Baseline ensemble deviation across the mini dataset],
+  )
+]
+
+== Relative force error comparison
+
+#text(size: 18pt)[
+  #figure(
+    table(
+      columns: (auto, auto, auto, auto, auto, auto),
+      stroke: 0.4pt,
+      inset: 3pt,
+      align: (left, center, center, center, center, center),
+
+      table.cell(fill: luma(230))[*group*],
+      table.cell(fill: luma(230))[*committee*],
+      table.cell(fill: luma(230))[*snapshot*],
+      table.cell(fill: luma(230))[*baseline*],
+      table.cell(fill: luma(230))[*F RMSE (eV/Å)*],
+      table.cell(fill: luma(230))[*E err (eV)*],
+
+      [`LIFINTERFACE_KJPAW_V1`], [0.236], table.cell(fill: luma(200))[*1.025*], [0.551], [$6.57 times 10^(-1)$], [$6.22 times 10^(-2)$],
+      [`LIWITHF_ISOLATED`], [0.028], table.cell(fill: luma(200))[*0.148*], [0.093], [$5.64 times 10^(-2)$], [$2.23 times 10^(-2)$],
+      [`LIWITHF_NPT_FINAL`], [0.055], table.cell(fill: luma(200))[*0.175*], [0.110], [$9.00 times 10^(-2)$], [$2.55 times 10^(-2)$],
+      [`LIF64_ISOLATED`], [0.067], table.cell(fill: luma(200))[*0.174*], [0.091], [$5.75 times 10^(-2)$], [$8.33 times 10^(-2)$],
+      [`BLI_V2`], [0.009], table.cell(fill: luma(200))[*0.042*], [0.024], [$2.01 times 10^(-2)$], [$3.84 times 10^(-2)$],
+      [`BLI_NPT`], [0.014], table.cell(fill: luma(200))[*0.023*], [0.014], [$2.35 times 10^(-2)$], [$4.96 times 10^(-2)$],
+      [`LIBF4_NPT`], [0.043], table.cell(fill: luma(200))[*0.171*], [0.044], [$9.69 times 10^(-2)$], [$4.15 times 10^(-2)$],
+      [`LIBF4_NPT_FINAL`], [0.070], table.cell(fill: luma(200))[*0.239*], [0.042], [$1.04 times 10^(-1)$], [$2.31 times 10^(-1)$],
+      [`LIBF4_V4`], [0.029], table.cell(fill: luma(200))[*0.157*], [0.030], [$3.92 times 10^(-2)$], [$1.43 times 10^(-1)$],
+      [*`LIFINTERFACE_KJPAW_NPT`*], [0.866], table.cell(fill: luma(200))[*1.862*], [1.410], [$2.67 times 10^(2)$], [$2.32 times 10^(3)$],
+      [*`LIF64_KJPAW_V2`*], table.cell(fill: luma(200))[*1.446*], [0.181], [0.094], [$6.80 times 10^(-1)$], [$2.52 times 10^(1)$],
+      [*`LIF64_KJPAW_NPT`*], table.cell(fill: luma(200))[*1.167*], [0.193], [0.188], [$1.04 times 10^(0)$], [$1.58 times 10^(0)$],
+      [*`BLI_INTERFACE_FINAL`*], [0.471], table.cell(fill: luma(200))[*0.807*], [0.356], [$3.27 times 10^(0)$], [$4.83 times 10^(1)$],
+      [*`BLI_INTERFACE_NPT_FINAL`*], [0.434], table.cell(fill: luma(200))[*0.533*], [0.374], [$4.72 times 10^(0)$], [$5.34 times 10^(1)$],
+    ),
+    caption: [Uncertainty $epsilon^"rel"$ (committee / snapshot / baseline) vs ground-truth error],
+  )
+]
+
+== The Li--F--B system
+
+#grid(
+  columns: (1.2fr, 0.8fr),
+  gutter: 1em,
+  [
+    *Why this chemistry:* the Li--F--B phase space is the chemistry of the
+    *solid-electrolyte interphase (SEI)* on a Li-metal anode — a LiF-rich
+    backbone modified by boron from LiBF₄ / borate additives.
+
+    #v(0.4cm)
+
+    *Why it is hard:* one phase space, three incompatible bonding regimes. A
+    single MLIP must interpolate across ionic, covalent, and metallic bonding —
+    and uncertainty concentrates exactly where these meet (interfaces).
+  ],
+  [
+    #figure(
+      table(
+        columns: (auto, auto, auto),
+        stroke: 0.4pt,
+        inset: 3pt,
+        align: (left, left, left),
+
+        table.cell(fill: luma(230))[*regime*],
+        table.cell(fill: luma(230))[*species*],
+        table.cell(fill: luma(230))[*groups*],
+
+        [ionic], [LiF], [`LIF64_*`, `LIWITHF_*`],
+        [covalent / molecular], [B--F (BF₄⁻)], [`LIBF4_*`],
+        [metallic / interfacial], [Li--B, Li|LiF], [`BLI_*`, `LIFINTERFACE_*`],
+      ),
+      caption: [Three bonding regimes in one phase space],
+    )
+  ],
+)
+
+== Framing the paper: two open questions
+
+*1. Which battery question is yours?*
+
+- Li-metal SEI (LiF-rich interphase) formation / stability?
+- LiBF₄ electrolyte salt decomposition / reactivity?
+- Li–B alloying / boron-doping of the anode?
+
+*2. Target physical quantity / application endpoint?*
+
+- SEI reaction energetics ($Delta E$, reaction paths)?
+- Interface adhesion / mechanical stability?
+- Li⁺ transport / ionic conductivity?
 
 == The Plan: What to Measure
 

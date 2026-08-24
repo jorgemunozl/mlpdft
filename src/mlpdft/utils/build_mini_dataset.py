@@ -33,6 +33,10 @@ MINI_GROUPS = [
     "LIBF4_NPT",
     "LIBF4_NPT_FINAL",
     "LIBF4_V4",
+    "LIF64_KJPAW_V2",
+    "LIF64_KJPAW_NPT",
+    "BLI_INTERFACE_FINAL",
+    "BLI_INTERFACE_NPT_FINAL",
 ]
 
 
@@ -82,7 +86,7 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=OUTPUTS_DIR / "mini_dataset" / "mini_dataset.extxyz",
+        default=OUTPUTS_DIR / "mini_dataset" / "mini_dataset_v2.extxyz",
         help="Output extxyz path",
     )
     args = parser.parse_args()

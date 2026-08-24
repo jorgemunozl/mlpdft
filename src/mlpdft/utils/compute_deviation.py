@@ -46,16 +46,78 @@ from mlpdft.constants import OUTPUTS_DIR  # noqa: E402
 # Matches the regularisation in mace/cli/active_learning_md.py:stop_error.
 REG = 0.2
 
-DEFAULT_MODELS = [
+DEFAULT_MODELS_V1 = [
     str(OUTPUTS_DIR / "committee_s123" / "models" / "committee_s123.model"),
     str(OUTPUTS_DIR / "committee_s124" / "models" / "committee_s124.model"),
     str(OUTPUTS_DIR / "committee_s125" / "models" / "committee_s125.model"),
 ]
 
+DEFAULT_MODELS_V2 = [
+    str(
+        OUTPUTS_DIR
+        / "snapshot_warm"
+        / "checkpoints"
+        / "snapshot_warm_run-123_epoch-32.pt"
+    ),
+    str(
+        OUTPUTS_DIR
+        / "snapshot_warm"
+        / "checkpoints"
+        / "snapshot_warm_run-123_epoch-64.pt"
+    ),
+    str(OUTPUTS_DIR / "snapshot_warm" / "models" / "snapshot_warm.model"),
+]
 
-def load_calculator(models: list[str], device: str, dtype: str) -> MACECalculator:
-    """Build the committee calculator (load models once)."""
-    return MACECalculator(model_paths=models, device=device, default_dtype=dtype)
+DEFAULT_MODELS_V3 = [
+    str(OUTPUTS_DIR / "baseline_ft" / "models" / "baseline_ft.model"),
+    str(OUTPUTS_DIR / "baseline_ft" / "checkpoints" / "baseline_ft_run-123_epoch-32.pt"),
+    str(OUTPUTS_DIR / "baseline_ft" / "checkpoints" / "baseline_ft_run-123_epoch-64.pt"),
+]
+
+# Architecture template used to reconstruct models from checkpoint state dicts.
+DEFAULT_TEMPLATE = str(OUTPUTS_DIR / "baseline_ft" / "models" / "baseline_ft.model")
+
+
+def load_model_object(path: str, template_path: str | None) -> _torch.nn.Module:
+    """Load a full ``.model``, or reconstruct a module from a checkpoint dict.
+
+    MACE epoch checkpoints (``*_epoch-*.pt``) store ``{"model": state_dict,
+    ...}`` rather than a full module. Reconstructing one needs an architecture,
+    which we take from a full ``.model`` file that shares the same architecture.
+    """
+    obj = _torch.load(path, map_location="cpu", weights_only=False)
+    if isinstance(obj, _torch.nn.Module):
+        return obj
+    if isinstance(obj, dict) and "model" in obj:
+        if template_path is None:
+            raise ValueError(
+                f"{path} is a checkpoint (dict), not a full model; "
+                "provide --template pointing to a .model with the same architecture."
+            )
+        model = _torch.load(template_path, map_location="cpu", weights_only=False)
+        missing, unexpected = model.load_state_dict(obj["model"], strict=False)
+        if missing or unexpected:
+            print(f"  [warn] {path}: missing={missing} unexpected={unexpected}")
+        return model
+    raise ValueError(f"Unrecognized model/checkpoint file: {path}")
+
+
+def load_models(
+    model_paths: list[str], template_path: str | None
+) -> list[_torch.nn.Module]:
+    """Load a list of full models and/or checkpoints into modules."""
+    return [load_model_object(p, template_path) for p in model_paths]
+
+
+def load_calculator(
+    model_paths: list[str],
+    device: str,
+    dtype: str,
+    template_path: str | None = None,
+) -> MACECalculator:
+    """Build the committee calculator from model paths and/or checkpoints."""
+    models = load_models(model_paths, template_path)
+    return MACECalculator(models=models, device=device, default_dtype=dtype)
 
 
 def evaluate_deviation(atoms, calc: MACECalculator, num_models: int) -> dict:
@@ -72,6 +134,19 @@ def evaluate_deviation(atoms, calc: MACECalculator, num_models: int) -> dict:
     per_atom_force_std = np.sqrt(np.sum(force_var, axis=1))  # (n_atoms,)
     ferr_rel = per_atom_force_std / (np.linalg.norm(forces, axis=1) + REG)
 
+    # Ground-truth error: model mean prediction vs DFT reference.
+    energy_err = None
+    force_rmse = None
+    force_mae = None
+    ref_forces = atoms.arrays.get("REF_forces") if hasattr(atoms, "arrays") else None
+    ref_energy = atoms.info.get("REF_energy") if hasattr(atoms, "info") else None
+    if ref_forces is not None:
+        force_err_per_atom = np.linalg.norm(forces - np.asarray(ref_forces), axis=1)
+        force_rmse = float(np.sqrt(np.mean(force_err_per_atom**2)))
+        force_mae = float(np.mean(force_err_per_atom))
+    if ref_energy is not None:
+        energy_err = abs(float(energy) - float(ref_energy))
+
     return {
         "num_models": num_models,
         "energy": energy,
@@ -81,6 +156,9 @@ def evaluate_deviation(atoms, calc: MACECalculator, num_models: int) -> dict:
         "max_ferr_rel": float(np.max(ferr_rel)),
         "per_atom_force_std": per_atom_force_std,
         "ferr_rel": ferr_rel,
+        "energy_err": energy_err,
+        "force_rmse": force_rmse,
+        "force_mae": force_mae,
     }
 
 
@@ -90,20 +168,32 @@ def compute_deviation(
     config_index: int = -1,
     device: str = "cpu",
     dtype: str = "float64",
+    template_path: str | None = None,
 ) -> dict:
     """Run inference on a single frame and return the deviation summary."""
     atoms = read(config, index=config_index)
-    calc = load_calculator(models, device, dtype)
+    calc = load_calculator(models, device, dtype, template_path)
     stats = evaluate_deviation(atoms, calc, len(models))
     stats["atoms"] = atoms
     return stats
+
+
+def _fmt(v, spec=".3e") -> str:
+    """Format an optional scalar, showing 'n/a' when missing."""
+    return f"{v:{spec}}" if v is not None else "n/a"
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Compute committee deviation for a single configuration."
     )
-    parser.add_argument("config", type=Path, help="Path to an XYZ configuration file")
+    DEFAULT_CONFIG = OUTPUTS_DIR / "mini_dataset" / "mini_dataset_v2.extxyz"
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=DEFAULT_CONFIG,
+        help="Path to an XYZ configuration file",
+    )
     parser.add_argument(
         "--config_index",
         type=int,
@@ -113,8 +203,8 @@ def main() -> None:
     parser.add_argument(
         "--models",
         nargs="+",
-        default=DEFAULT_MODELS,
-        help="Model paths (default: the three committee seeds)",
+        default=DEFAULT_MODELS_V3,
+        help="Model paths (default: baseline checkpoints + final)",
     )
     parser.add_argument(
         "--device",
@@ -137,6 +227,12 @@ def main() -> None:
         help="Optional extxyz path to write the frame with per-atom deviation",
     )
     parser.add_argument(
+        "--template",
+        type=str,
+        default=DEFAULT_TEMPLATE,
+        help="Full .model used to reconstruct checkpoint (*_epoch-*.pt) files",
+    )
+    parser.add_argument(
         "--all",
         action="store_true",
         help="Compute deviation for every frame in the file (batch mode)",
@@ -153,12 +249,13 @@ def main() -> None:
         frames = read(str(args.config), index=":")
         if not isinstance(frames, list):
             frames = [frames]
-        calc = load_calculator(args.models, args.device, args.dtype)
+        calc = load_calculator(args.models, args.device, args.dtype, args.template)
         print(
             f"{'#':>3} {'group':<24} {'atoms':>5} "
-            f"{'E std (eV)':>12} {'F std mean':>12} {'F std max':>12} {'ferr_rel':>9}"
+            f"{'E std (eV)':>12} {'F std mean':>12} {'F std max':>12} "
+            f"{'ferr_rel':>9} {'F RMSE':>11} {'E err':>11}"
         )
-        print("-" * 83)
+        print("-" * 106)
         rows = []
         for i, atoms in enumerate(frames):
             stats = evaluate_deviation(atoms, calc, len(args.models))
@@ -167,9 +264,10 @@ def main() -> None:
             print(
                 f"{i:>3} {group:<24} {len(atoms):>5} "
                 f"{stats['energy_std']:>12.3e} {stats['mean_force_std']:>12.3e} "
-                f"{stats['max_force_std']:>12.3e} {stats['max_ferr_rel']:>9.4f}"
+                f"{stats['max_force_std']:>12.3e} {stats['max_ferr_rel']:>9.4f} "
+                f"{_fmt(stats['force_rmse']):>11} {_fmt(stats['energy_err']):>11}"
             )
-        print("-" * 83)
+        print("-" * 106)
         if args.output:
             out_frames = []
             for i, group, _n, stats in rows:
@@ -190,6 +288,7 @@ def main() -> None:
         config_index=args.config_index,
         device=args.device,
         dtype=args.dtype,
+        template_path=args.template,
     )
 
     print("=" * 70)
@@ -201,6 +300,8 @@ def main() -> None:
     print(f"  Force std     : mean = {stats['mean_force_std']:.6e} eV/A")
     print(f"                 max  = {stats['max_force_std']:.6e} eV/A")
     print(f"  Max rel. force error (ferr_rel) : {stats['max_ferr_rel']:.4f}")
+    print(f"  Force RMSE vs DFT               : {_fmt(stats['force_rmse'])} eV/A")
+    print(f"  |Energy error| vs DFT           : {_fmt(stats['energy_err'])} eV")
     print("=" * 70)
 
     if args.output:
