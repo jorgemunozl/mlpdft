@@ -7,6 +7,9 @@
 		{
 			"name": "mace",
 			"path": "../mace"
+		},
+		{
+			"path": "../mlpdft-paper"
 		}
 	],
 	"settings": {}

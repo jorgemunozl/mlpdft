@@ -9,6 +9,34 @@
 #let cetz-canvas = touying-reducer.with(reduce: cetz.canvas, cover: cetz.draw.hide.with(bounds: true))
 #let fletcher-diagram = touying-reducer.with(reduce: fletcher.diagram, cover: fletcher.hide)
 
+// Fallback image helper: renders the image if present on this PC,
+// otherwise displays a black square with the name of the image.
+#let available-images = json("available_images.json")
+#let native-image = image
+#let img(path, ..args) = {
+  let clean-path = path.trim("./")
+  if path in available-images or clean-path in available-images {
+    native-image(path, ..args)
+  } else {
+    let w = args.named().at("width", default: 80%)
+    let h = args.named().at("height", default: 130pt)
+    rect(
+      width: w,
+      height: h,
+      fill: black,
+      stroke: 1pt + rgb("444444"),
+      radius: 4pt,
+      [
+        #set align(center + horizon)
+        #text(fill: white, size: 11pt, weight: "bold")[#path]
+        #v(4pt)
+        #text(fill: rgb("888888"), size: 8pt)[(Image not found on this machine)]
+      ],
+    )
+  }
+}
+#let image = img
+
 #show: ecnu-theme.with(
   // Lang and font configuration
   lang: "en",
@@ -89,7 +117,7 @@
 === Metrics for the FitSNAP model
 
 #figure(
-  image("images/Metrics MLPDFT.png", width: 80%),
+  img("images/Metrics MLPDFT.png", width: 80%),
   caption: [Metrics obtained by two models],
 )
 
@@ -99,14 +127,14 @@
 
 #slide(
   figure(
-    image("images/image.png", width: 80%),
+    img("images/image.png", width: 80%),
     caption: [I. Batatia et al. 2022],
   ),
 )
 
 #slide(
   figure(
-    image("images/mpnn.png", width: 80%),
+    img("images/mpnn.png", width: 80%),
     caption: [Message Passing Neural Network Concept],
   ),
 )
@@ -310,14 +338,14 @@
 == FitSnap First Metrics Obtained
 
 #figure(
-  image("images/fitsnap_metrics_table.pdf", width: 100%),
+  img("images/fitsnap_metrics_table.pdf", width: 100%),
   caption: "FitSnap first metrics obtained",
 )
 
 == MACE OMAT First Metrics Obtained
 
 #figure(
-  image("images/mace_metrics_table.pdf", width: 80%),
+  img("images/mace_metrics_table.pdf", width: 80%),
   caption: "MACE OMAT first metrics obtained",
 )
 
@@ -341,7 +369,7 @@ Methods applicable to MLIPs after the initial training run:
 == Using a freezing strategy
 
 #figure(
-  image("images/frozen_title.png", width: 90%),
+  img("images/frozen_title.png", width: 90%),
   caption: "Freeze used in MACE fine-tuning",
 )
 
@@ -351,7 +379,7 @@ Methods applicable to MLIPs after the initial training run:
   columns: (auto, auto),
   [
     #figure(
-      image("images/frozen.png", width: 90%),
+      img("images/frozen.png", width: 90%),
       caption: [Only the last layers are unfrozen],
     )
   ],
@@ -368,14 +396,14 @@ Methods applicable to MLIPs after the initial training run:
 == Strategies for fine tunning diffusion
 
 #figure(
-  image("images/strategies.png", width: 100%),
+  img("images/strategies.png", width: 100%),
   caption: [Over long trajectories],
 )
 
 == Fine-Tuning Performance Study
 
 #figure(
-  image("images/performance.png", width: 100%),
+  img("images/performance.png", width: 100%),
   caption: [Discussion on varios techniques and elections for post training],
 )
 
@@ -543,27 +571,27 @@ Methods applicable to MLIPs after the initial training run:
     ]
 
   ],
-  [#figure(image("images/ada.webp", width: 70%), caption: "RTX 4000 ADA"),],
+  [#figure(img("images/ada.webp", width: 70%), caption: "RTX 4000 ADA"),],
 )
 
 == MACE auto generated results - First Training
 
 #figure(
-  image("images/mace_results.png", width: 70%),
+  img("images/mace_results.png", width: 70%),
   caption: "Mace Training Supervision",
 )
 
 == Group Results - First Training
 
 #figure(
-  image("images/energy_rmse_per_group.pdf", width: 70%),
+  img("images/energy_rmse_per_group.pdf", width: 70%),
   caption: [Energy RMSE per atom (meV/atom) — MACE mock\_2\_test],
 )
 
 #v(0.5em)
 
 #figure(
-  image("images/force_rmse_per_group.pdf", width: 70%),
+  img("images/force_rmse_per_group.pdf", width: 70%),
   caption: [Force RMSE (meV/Å) — MACE vs FitSNAP per group],
 )
 
@@ -676,7 +704,7 @@ ML models interpolate well, extrapolate poorly. Active learning fixes this by se
   columns: (1fr, 1fr),
   [
     #figure(
-      image("images/iterative_training.png", width: 60%),
+      img("images/iterative_training.png", width: 60%),
       caption: [Iterative training example],
     )
   ],
@@ -691,7 +719,7 @@ ML models interpolate well, extrapolate poorly. Active learning fixes this by se
   columns: (1fr, 1fr),
   [
     #figure(
-      image("images/active_learning_commitee.png", width: 60%),
+      img("images/active_learning_commitee.png", width: 60%),
       caption: [Active learning example],
     )
   ],
@@ -707,8 +735,8 @@ ML models interpolate well, extrapolate poorly. Active learning fixes this by se
 *Snapshot Ensembles* (Huang et al. 2017, ICLR): train *one* model with cyclic LR. Save checkpoints at each cycle minimum. Ensemble them. M models for the price of 1.
 
 #figure(
-      image("images/sgd.png", width: 70%),
-      caption: [Huang et al. 2017, ICLR],
+  img("images/sgd.png", width: 70%),
+  caption: [Huang et al. 2017, ICLR],
 )
 
 == Key paper
@@ -717,7 +745,7 @@ ML models interpolate well, extrapolate poorly. Active learning fixes this by se
   columns: (1fr, 1fr),
   [
     #figure(
-      image("images/comparative.png", width: 100%),
+      img("images/comparative.png", width: 100%),
       caption: [],
     )
   ],
@@ -739,13 +767,13 @@ There are some doing it.
   columns: (1fr, 1fr),
   [
     #figure(
-      image("images/cosine_anneal.png", width: 80%),
+      img("images/cosine_anneal.png", width: 80%),
       caption: [Regular cosine annealing],
     )
   ],
   [
     #figure(
-      image("images/cosine_god.webp", width: 70%),
+      img("images/cosine_god.webp", width: 70%),
       caption: [Cosine annealing with warm restarts],
     )
   ],
@@ -845,10 +873,10 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
   ],
   [
     #figure(
-      image("images/deep_loss.png"),
+      img("images/deep_loss.png"),
       caption: [1912.02757 Deep Ensembles: A Loss Landscape Perspective],
-  )
-]
+    )
+  ],
 )
 
 == The training setup
@@ -857,23 +885,23 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
 
 == Results Baseline
 
-    #figure(
-      image("images/baseline_ft.png", width: 70%),
-      caption: [$eta_(min)=1e-6$ and $eta_(max)=5e-4$],
-    )
+#figure(
+  img("images/baseline_ft.png", width: 70%),
+  caption: [$eta_(min)=1e-6$ and $eta_(max)=5e-4$],
+)
 == Results Committee MACE
 
 #grid(
   columns: (1fr, 1fr),
   [
     #figure(
-      image("images/committee_s124.png", width: 100%),
+      img("images/committee_s124.png", width: 100%),
       caption: [Seed 124 model],
     )
   ],
   [
     #figure(
-      image("images/committee_s125.png", width: 100%),
+      img("images/committee_s125.png", width: 100%),
       caption: [Seed 125 model],
     )
   ],
@@ -882,7 +910,7 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
 == Results Committee MACE — seed 123
 
 #figure(
-  image("images/committee.png", width: 70%),
+  img("images/committee.png", width: 70%),
   caption: [Seed 123 model],
 )
 
@@ -890,8 +918,8 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
 == Warm Snapshots Results
 
 #figure(
-      image("images/snapshot_warm.png", width: 70%),
-      caption: [Warm snapshot model],
+  img("images/snapshot_warm.png", width: 70%),
+  caption: [Warm snapshot model],
 )
 
 
@@ -1026,7 +1054,12 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
       [`BLI_V2`], [32], [$4.14 times 10^(-3)$], [$2.00 times 10^(-3)$], [$3.85 times 10^(-3)$], [0.009],
       [`BLI_NPT`], [32], [$5.33 times 10^(-3)$], [$2.92 times 10^(-3)$], [$4.66 times 10^(-3)$], [0.014],
       [*`BLI_INTERFACE_FINAL`*], [68], [$3.87 times 10^(0)$], [$4.76 times 10^(-1)$], [$1.49 times 10^(0)$], [0.471],
-      [*`BLI_INTERFACE_NPT_FINAL`*], [68], [$2.88 times 10^(0)$], [$7.06 times 10^(-1)$], [$4.47 times 10^(0)$], [0.434],
+      [*`BLI_INTERFACE_NPT_FINAL`*],
+      [68],
+      [$2.88 times 10^(0)$],
+      [$7.06 times 10^(-1)$],
+      [$4.47 times 10^(0)$],
+      [0.434],
       [`LIBF4_NPT`], [18], [$4.40 times 10^(-3)$], [$2.13 times 10^(-2)$], [$4.63 times 10^(-2)$], [0.043],
       [`LIBF4_NPT_FINAL`], [18], [$9.27 times 10^(-3)$], [$2.44 times 10^(-2)$], [$4.38 times 10^(-2)$], [0.070],
       [`LIBF4_V4`], [18], [$6.02 times 10^(-3)$], [$1.15 times 10^(-2)$], [$1.84 times 10^(-2)$], [0.029],
@@ -1124,20 +1157,90 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
       table.cell(fill: luma(230))[*F RMSE (eV/Å)*],
       table.cell(fill: luma(230))[*E err (eV)*],
 
-      [`LIFINTERFACE_KJPAW_V1`], [0.236], table.cell(fill: luma(200))[*1.025*], [0.551], [$6.57 times 10^(-1)$], [$6.22 times 10^(-2)$],
-      [`LIWITHF_ISOLATED`], [0.028], table.cell(fill: luma(200))[*0.148*], [0.093], [$5.64 times 10^(-2)$], [$2.23 times 10^(-2)$],
-      [`LIWITHF_NPT_FINAL`], [0.055], table.cell(fill: luma(200))[*0.175*], [0.110], [$9.00 times 10^(-2)$], [$2.55 times 10^(-2)$],
-      [`LIF64_ISOLATED`], [0.067], table.cell(fill: luma(200))[*0.174*], [0.091], [$5.75 times 10^(-2)$], [$8.33 times 10^(-2)$],
-      [`BLI_V2`], [0.009], table.cell(fill: luma(200))[*0.042*], [0.024], [$2.01 times 10^(-2)$], [$3.84 times 10^(-2)$],
-      [`BLI_NPT`], [0.014], table.cell(fill: luma(200))[*0.023*], [0.014], [$2.35 times 10^(-2)$], [$4.96 times 10^(-2)$],
-      [`LIBF4_NPT`], [0.043], table.cell(fill: luma(200))[*0.171*], [0.044], [$9.69 times 10^(-2)$], [$4.15 times 10^(-2)$],
-      [`LIBF4_NPT_FINAL`], [0.070], table.cell(fill: luma(200))[*0.239*], [0.042], [$1.04 times 10^(-1)$], [$2.31 times 10^(-1)$],
-      [`LIBF4_V4`], [0.029], table.cell(fill: luma(200))[*0.157*], [0.030], [$3.92 times 10^(-2)$], [$1.43 times 10^(-1)$],
-      [*`LIFINTERFACE_KJPAW_NPT`*], [0.866], table.cell(fill: luma(200))[*1.862*], [1.410], [$2.67 times 10^(2)$], [$2.32 times 10^(3)$],
-      [*`LIF64_KJPAW_V2`*], table.cell(fill: luma(200))[*1.446*], [0.181], [0.094], [$6.80 times 10^(-1)$], [$2.52 times 10^(1)$],
-      [*`LIF64_KJPAW_NPT`*], table.cell(fill: luma(200))[*1.167*], [0.193], [0.188], [$1.04 times 10^(0)$], [$1.58 times 10^(0)$],
-      [*`BLI_INTERFACE_FINAL`*], [0.471], table.cell(fill: luma(200))[*0.807*], [0.356], [$3.27 times 10^(0)$], [$4.83 times 10^(1)$],
-      [*`BLI_INTERFACE_NPT_FINAL`*], [0.434], table.cell(fill: luma(200))[*0.533*], [0.374], [$4.72 times 10^(0)$], [$5.34 times 10^(1)$],
+      [`LIFINTERFACE_KJPAW_V1`],
+      [0.236],
+      table.cell(fill: luma(200))[*1.025*],
+      [0.551],
+      [$6.57 times 10^(-1)$],
+      [$6.22 times 10^(-2)$],
+      [`LIWITHF_ISOLATED`],
+      [0.028],
+      table.cell(fill: luma(200))[*0.148*],
+      [0.093],
+      [$5.64 times 10^(-2)$],
+      [$2.23 times 10^(-2)$],
+      [`LIWITHF_NPT_FINAL`],
+      [0.055],
+      table.cell(fill: luma(200))[*0.175*],
+      [0.110],
+      [$9.00 times 10^(-2)$],
+      [$2.55 times 10^(-2)$],
+      [`LIF64_ISOLATED`],
+      [0.067],
+      table.cell(fill: luma(200))[*0.174*],
+      [0.091],
+      [$5.75 times 10^(-2)$],
+      [$8.33 times 10^(-2)$],
+      [`BLI_V2`],
+      [0.009],
+      table.cell(fill: luma(200))[*0.042*],
+      [0.024],
+      [$2.01 times 10^(-2)$],
+      [$3.84 times 10^(-2)$],
+      [`BLI_NPT`],
+      [0.014],
+      table.cell(fill: luma(200))[*0.023*],
+      [0.014],
+      [$2.35 times 10^(-2)$],
+      [$4.96 times 10^(-2)$],
+      [`LIBF4_NPT`],
+      [0.043],
+      table.cell(fill: luma(200))[*0.171*],
+      [0.044],
+      [$9.69 times 10^(-2)$],
+      [$4.15 times 10^(-2)$],
+      [`LIBF4_NPT_FINAL`],
+      [0.070],
+      table.cell(fill: luma(200))[*0.239*],
+      [0.042],
+      [$1.04 times 10^(-1)$],
+      [$2.31 times 10^(-1)$],
+      [`LIBF4_V4`],
+      [0.029],
+      table.cell(fill: luma(200))[*0.157*],
+      [0.030],
+      [$3.92 times 10^(-2)$],
+      [$1.43 times 10^(-1)$],
+      [*`LIFINTERFACE_KJPAW_NPT`*],
+      [0.866],
+      table.cell(fill: luma(200))[*1.862*],
+      [1.410],
+      [$2.67 times 10^(2)$],
+      [$2.32 times 10^(3)$],
+      [*`LIF64_KJPAW_V2`*],
+      table.cell(fill: luma(200))[*1.446*],
+      [0.181],
+      [0.094],
+      [$6.80 times 10^(-1)$],
+      [$2.52 times 10^(1)$],
+      [*`LIF64_KJPAW_NPT`*],
+      table.cell(fill: luma(200))[*1.167*],
+      [0.193],
+      [0.188],
+      [$1.04 times 10^(0)$],
+      [$1.58 times 10^(0)$],
+      [*`BLI_INTERFACE_FINAL`*],
+      [0.471],
+      table.cell(fill: luma(200))[*0.807*],
+      [0.356],
+      [$3.27 times 10^(0)$],
+      [$4.83 times 10^(1)$],
+      [*`BLI_INTERFACE_NPT_FINAL`*],
+      [0.434],
+      table.cell(fill: luma(200))[*0.533*],
+      [0.374],
+      [$4.72 times 10^(0)$],
+      [$5.34 times 10^(1)$],
     ),
     caption: [Uncertainty $epsilon^"rel"$ (committee / snapshot / baseline) vs ground-truth error],
   )
@@ -1229,9 +1332,75 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
   )
 ]
 
-== Reviewers Claim
+
+== Bias
+
+I had a plan. Then I changed my mind. Then I changed it again.
+
+The path went:
+
+1. Train *FitSnap* → get better energy and force error.
+2. FitSnap is not a good architecture → use *MACE*, post-train.
+3. Post-training alone is not a paper → add *active learning*.
+4. A committee is expensive → *snapshots* from one run.
+5. Snapshots are not new → learn the *SEI physics*.
+
+== Bias
+
+Every step kept the previous ones. My final idea was
+*FitSnap + MACE + active learning + snapshots + SEI physics*
+reusing everything I had done, not because it fit together,
+but because I didn't want to throw away the work.
 
 
+
+== "FitSnap vs MACE" was tricky
+
+A head-to-head sounds natural. It is not.
+
+- *FitSnap* is cheap and fast to train, but it hits an accuracy ceiling.
+- *MACE* is accurate, but it costs more to run.
+- They are built for different jobs, so comparing the raw numbers
+  is not a fair fight.
+
+And my plan made it worse:
+
+- FitSnap had to do the _most_ work: normal training + a committee
+  + active learning.
+- MACE did the _least_: one run, a few checkpoints.
+
+== The comparison was rigged
+
+away by forcing it through an active-learning loop.
+- Then I graded it on accuracy — MACE's home turf.
+- Result: FitSnap loses its only strength and gets judged on its
+  weakness. Nothing interesting can come out of that.
+
+== They don't even measure the same thing
+
+When I ran MACE zero-shot, *forces were good but energies were way off*.
+
+- MACE has its _own_ reference energy for an isolated atom of each
+  element. Our DFT uses different ones.
+- That shifts every energy by a constant $sum_i n_i Delta E_0^i$ —
+  per element, per atom.
+- Forces are derivatives → they never see the shift. That is why they
+  stayed good.
+- Fix: run DFT on isolated Li, F, B, then shift the energies to match.
+
+== Forces vs energies
+
+The shift does not hurt every property the same way.
+
+- *Diffusion and activation energy* come from forces and energy
+  differences → the shift cancels → they transfer fine zero-shot.
+- *Interface adhesion, defect formation, doping energies* need the
+  absolute energy → the shift breaks them.
+
+The LiF diffusion paper got "zero-shot is great" because it only
+measured diffusion and $E_a$ — the force-derived half. Our dataset is
+about interfaces and defects — the energy-derived half, where zero-shot
+silently fails.
 
 == Summary
 
@@ -1244,13 +1413,13 @@ LR cycles push the _optimizer into different local minima_. Each cycle-end check
 = References
 
 #text(size: 0.8em)[
-- Huang et al. *"Snapshot Ensembles: Train 1, get M for free."* ICLR 2017.
-- Loshchilov & Hutter. *"SGDR: Stochastic Gradient Descent with Warm Restarts."* ICLR 2017.
-- Lakshminarayanan et al. *"Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles."* NeurIPS 2017.
-- Batatia et al. *"MACE: Higher Order Equivariant Message Passing Neural Networks."* NeurIPS 2022.
-- Batatia et al. *"A foundation model for atomistic materials chemistry."* arXiv 2024.
-- Hu et al. *"LoRA: Low-Rank Adaptation of Large Language Models."* ICLR 2022.
-- Thompson et al. *"Spectral neighbor analysis method."* J. Comp. Phys. 2015.
+  - Huang et al. *"Snapshot Ensembles: Train 1, get M for free."* ICLR 2017.
+  - Loshchilov & Hutter. *"SGDR: Stochastic Gradient Descent with Warm Restarts."* ICLR 2017.
+  - Lakshminarayanan et al. *"Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles."* NeurIPS 2017.
+  - Batatia et al. *"MACE: Higher Order Equivariant Message Passing Neural Networks."* NeurIPS 2022.
+  - Batatia et al. *"A foundation model for atomistic materials chemistry."* arXiv 2024.
+  - Hu et al. *"LoRA: Low-Rank Adaptation of Large Language Models."* ICLR 2022.
+  - Thompson et al. *"Spectral neighbor analysis method."* J. Comp. Phys. 2015.
 ]
 
 #v(1em)

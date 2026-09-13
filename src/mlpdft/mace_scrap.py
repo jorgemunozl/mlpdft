@@ -5,7 +5,6 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 from mace.calculators import mace_mp
-from mace.tools import utils
 
 from mlpdft.config import MaceConfig
 
