@@ -35,11 +35,11 @@ def _jit_load_cpu(*args, **kwargs):
 _torch.jit.load = _jit_load_cpu  # type: ignore[assignment]
 # ──────────────────────────────────────────────────────────────────
 
-from ase import units  # noqa: E402
-from ase.io import read  # noqa: E402
-from ase.md.langevin import Langevin  # noqa: E402
-from ase.md.velocitydistribution import MaxwellBoltzmannDistribution  # noqa: E402
-from mace.calculators.mace import MACECalculator  # noqa: E402
+from ase import units
+from ase.io import read
+from ase.md.langevin import Langevin
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
+from mace.calculators.mace import MACECalculator
 
 from mlpdft.constants import DATA_DIR, OUTPUTS_DIR  # noqa: E402
 
