@@ -1318,7 +1318,9 @@ In 3D (d=3): *D=slope(MSD) / 6*
   ]
 )
 
+== Obtaining observables from MACE Foundational model
 
+MACE OMAT will be able to obtain such observables from the foundational model?
 
 
 
