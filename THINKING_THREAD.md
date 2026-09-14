@@ -36,10 +36,6 @@ trained FitSnap, and wrote a paper (currently **in revision**). The original fra
   between a genuine synthesis and a bias-driven Frankenstein is the **direction of reasoning**:
   - Genuine: "my question is X; ideas 1 and 2 are necessary to answer X."
   - Biased: "I have ideas 1 and 2; let me find a question that uses them."
-- **Anchoring on the professor's work.** I treated Li-F-B-SEI as "the project" because I
-  started there — and initially assumed I was *obligated* to extend it. I'm not: it's not an
-  assignment, I have free will. The dataset and FitSnap model are *resources I happen to
-  have*, not commitments.
 
 ## 4. Facts that set the constraints
 
