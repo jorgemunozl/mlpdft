@@ -98,6 +98,7 @@ TEMPLATE_PATH = UTILS_DIR / "dataset_readme_template.md"
 ENERGY_KEY = "REF_energy"
 FORCE_KEY = "REF_forces"
 
+K_B = 8.617333262e-5  # eV / K
 
 RY_TO_EV = 13.6056980659
 

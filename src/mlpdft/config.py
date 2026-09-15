@@ -281,6 +281,11 @@ class MolecularDynamicsConfig(MaceConfig):
         metadata={"description": "MD log path; auto if None"},
     )
 
+    fit_range: tuple[float, float] | None = field(
+        default=[0.2, 0.8],
+        metadata={"description": "Range of frames to fit diffusion coefficient from"},
+    )
+
 
 @dataclass
 class ActiveLearningConfig(MolecularDynamicsConfig):

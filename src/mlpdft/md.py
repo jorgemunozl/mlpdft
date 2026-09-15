@@ -25,8 +25,35 @@ from ase.md.velocitydistribution import (
 from ase.md.verlet import VelocityVerlet
 
 from mlpdft.config import MolecularDynamicsConfig
-from mlpdft.constants import DATA_DIR
+from mlpdft.constants import DATA_DIR, K_B
 from mlpdft.mace_scrap import MaceScrap
+
+
+def unwrap_positions(positions: np.ndarray, cell: np.ndarray) -> np.ndarray:
+    """Unwrap periodic positions so the MSD grows linearly at long times.
+
+    ``positions`` has shape (n_frames, n_atoms, 3); ``cell`` is the 3x3 box.
+    """
+    inv = np.linalg.inv(cell)
+    frac = positions @ inv  # fractional coordinates
+    dfrac = np.diff(frac, axis=0)
+    dfrac -= np.round(dfrac)  # minimum-image displacement
+    unwrapped_frac = np.concatenate(
+        [frac[:1], frac[:1] + np.cumsum(dfrac, axis=0)], axis=0
+    )
+    return unwrapped_frac @ cell
+
+
+def msd_multi_origin(unwrapped: np.ndarray, species_mask: np.ndarray) -> np.ndarray:
+    """Mean-squared displacement averaged over atoms and time origins."""
+    r = unwrapped[:, species_mask, :]  # (n_frames, n_species, 3)
+    n_frames = len(r)
+    max_lag = int(0.5 * n_frames)
+    msd = np.zeros(max_lag)
+    for lag in range(1, max_lag):
+        d = r[lag:] - r[:-lag]  # (n_frames - lag, n_species, 3)
+        msd[lag] = float(np.mean(np.sum(d**2, axis=2)))
+    return msd
 
 
 class MolecularDynamics:
@@ -34,8 +61,8 @@ class MolecularDynamics:
 
     def __init__(self, config: MolecularDynamicsConfig):
         self.config: MolecularDynamicsConfig = config
+        self.atoms: Atoms
 
-    # ── internal helpers ──────────────────────────────────────────
     def _resolve_paths(self) -> tuple[Path, Path]:
         """Return (trajectory_path, log_path), deriving sensible defaults."""
         cfg = self.config
@@ -78,10 +105,8 @@ class MolecularDynamics:
             return VelocityVerlet(atoms, timestep=timestep_ase)
         raise ValueError(f"Unknown thermostat: {thermostat!r}")
 
-    # ── main entry ────────────────────────────────────────────────
     def run(self) -> None:
         cfg = self.config
-
         calc = MaceScrap(config=cfg).build_calculator()
         atoms = cast(Atoms, ase.io.read(cfg.initial_config, index=0))
         atoms.calc = calc
@@ -123,6 +148,45 @@ class MolecularDynamics:
         ase.io.write(str(final_path), atoms, format="extxyz")
         print(f"Final frame -> {final_path}")
 
+    def diffusion_coefficient(self) -> float:
+        pos = np.asarray(positions)
+        times_fs = np.arange(len(pos)) * save_interval * timestep
+        unwrapped = unwrap_positions(pos, np.asarray(atoms.cell))
+        msd = msd_multi_origin(unwrapped, species_mask)
+
+        i0 = max(1, int(self.config.fit_range[0] * len(msd)))
+        i1 = min(len(msd), int(self.config.fit_range[1] * len(msd)))
+
+        if i1 - i0 < 2:
+            raise ValueError("linear-fit window too small")
+        slope, _ = np.polyfit(times_fs[i0:i1], msd[i0:i1], 1)
+        D = slope / 6.0 * 0.1  # Å^2/fs -> cm^2/s
+        return D
+
+
+    def activation_energy(self, Ds: list[float], Ts: list[float]) -> tuple[float, float]:
+        """From a set of tuples (D,T), fit a linear model to estimate activation energy."""
+        Ts = np.asarray(Ts)
+        invT = 1.0 / (K_B * Ts)  # 1/eV
+        lnD = np.log(np.asarray(Ds))
+        slope, intercept = np.polyfit(invT, lnD, 1)
+        Ea = -slope  # eV
+        D0 = float(np.exp(intercept))
+        return Ea, D0
+
+class ActiveLearning(MolecularDynamics):
+    """
+    Wrapper from MACE active learning
+    """
+    def __init__(self, config: ActiveLearningConfig):
+        super().__init__(config)
+        self.config = ActiveLearningConfig
+
+    def run(self) -> None:
+        """
+        I guess that is possible run Quantum Expresso on the fly.
+        """
+        super().run()
 
 def run_md_from_config() -> None:
     """Example entry point (uses the bulk-LiF dataset frame)."""
