@@ -1,18 +1,19 @@
 """
 Molecular dynamics with a MACE potential.
-Reads a single initial configuration from the dataset (first frame),
-assigns Maxwell–Boltzmann velocities, and runs MD via ASE.
+
+Reads an initial configuration, assigns Maxwell-Boltzmann velocities, and runs
+constant-temperature MD via ASE (Langevin / Nose-Hoover) or NVE (Velocity-Verlet).
+Used for active learning and transport-property (activation-energy) studies.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal, Optional
+from typing import cast
 
 import ase.io
 import numpy as np
-from ase import units
-from ase.io.trajectory import Trajectory
+from ase import Atoms, units
 from ase.md import MDLogger
 from ase.md.langevin import Langevin
 from ase.md.nose_hoover_chain import NoseHooverChainNVT
@@ -22,155 +23,125 @@ from ase.md.velocitydistribution import (
     ZeroRotation,
 )
 from ase.md.verlet import VelocityVerlet
-from config import MaceConfig
-from constants import LIF_KJPAW_GROUP
-from mace_scrap import MACE_SCRAP
+
+from mlpdft.config import MolecularDynamicsConfig
+from mlpdft.constants import DATA_DIR
+from mlpdft.mace_scrap import MaceScrap
 
 
-def run_md(
-    config: MaceConfig,
-    *,
-    temperature_K: float = 300.0,
-    timestep_fs: float = 1.0,
-    n_steps: int = 10_000,
-    trajectory_interval: int = 100,
-    log_interval: int = 100,
-    thermostat: Literal["langevin", "nose-hoover", "velocity-verlet"] = "langevin",
-    friction: float = 0.01,  # (1/fs) for Langevin
-    trajectory_path: Optional[Path] = None,
-    log_path: Optional[Path] = None,
-    remove_translation: bool = True,
-    remove_rotation: bool = True,
-    rng_seed: Optional[int] = None,
-) -> None:
-    """
-    Run molecular dynamics from the first frame of the dataset.
+class MolecularDynamics:
+    """Run an MD trajectory with a MACE calculator."""
 
-    Parameters
-    ----------
-    config:
-        MaceConfig pointing to the model and dataset to use.
-    temperature_K:
-        Target temperature (Kelvin).
-    timestep_fs:
-        Integration timestep in femtoseconds.
-    n_steps:
-        Total number of MD steps to run.
-    trajectory_interval:
-        Save a frame every N steps.
-    log_interval:
-        Print log message every N steps.
-    thermostat:
-        Which thermostat to use.
-    friction:
-        Langevin friction coefficient (1/fs). Only used for ``langevin``.
-    trajectory_path:
-        Output path for the trajectory extxyz file.
-        Default: auto-generated next to ``config.model_output``.
-    log_path:
-        Output path for the MD log. Default: auto-generated.
-    remove_translation:
-        Whether to shift velocities so total momentum is zero.
-    remove_rotation:
-        Whether to remove overall angular momentum.
-    rng_seed:
-        Random seed for velocity initialisation (repeatable runs).
-    """
-    # ---------- build calculator ----------
-    scrap = MACE_SCRAP(config=config)
-    calc = scrap.build_calculator()
+    def __init__(self, config: MolecularDynamicsConfig):
+        self.config: MolecularDynamicsConfig = config
 
-    # ---------- initial structure (first frame) ----------
-    atoms = ase.io.read(config.data_out_path, index=0)
-    atoms.calc = calc
+    # ── internal helpers ──────────────────────────────────────────
+    def _resolve_paths(self) -> tuple[Path, Path]:
+        """Return (trajectory_path, log_path), deriving sensible defaults."""
+        cfg = self.config
+        if cfg.trajectory_path is not None:
+            traj = Path(cfg.trajectory_path)
+        else:
+            stem = (
+                f"md_{cfg.model_key}_{cfg.group or 'cfg'}"
+                f"_T{cfg.temperature_K:.0f}K"
+                f"_dt{cfg.timestep}fs"
+                f"_N{cfg.nsteps}"
+            )
+            traj = (cfg.model_output.parent / stem).with_suffix(".extxyz")
 
-    # ---------- initial velocities ----------
-    rng = np.random.RandomState(rng_seed)
-    MaxwellBoltzmannDistribution(atoms, temperature_K=temperature_K, rng=rng)
-    if remove_translation:
-        Stationary(atoms)  # zero total momentum
-    if remove_rotation:
-        ZeroRotation(atoms)  # zero angular momentum
-
-    # ---------- output paths ----------
-    if trajectory_path is None:
-        stem = (
-            f"md_{config.model_key}_{config.group}"
-            f"_T{temperature_K:.0f}K"
-            f"_dt{timestep_fs}fs"
-            f"_N{n_steps}"
+        log = (
+            Path(cfg.log_path) if cfg.log_path is not None else traj.with_suffix(".log")
         )
-        trajectory_path = config.model_output.parent / f"{stem}.extxyz"
-    if log_path is None:
-        log_path = trajectory_path.with_suffix(".log")
+        return traj, log
 
-    trajectory_path.parent.mkdir(parents=True, exist_ok=True)
+    def _build_integrator(self, atoms: Atoms, timestep_ase: float):
+        """Instantiate the requested ASE dynamics object."""
+        cfg = self.config
+        thermostat = cfg.thermostat
+        if thermostat == "langevin":
+            # ASE wants friction in inverse ASE-time units; config gives 1/fs.
+            return Langevin(
+                atoms,
+                timestep=timestep_ase,
+                temperature_K=cfg.temperature_K,
+                friction=cfg.friction / units.fs,
+            )
+        if thermostat == "nose-hoover":
+            return NoseHooverChainNVT(
+                atoms,
+                timestep=timestep_ase,
+                temperature_K=cfg.temperature_K,
+                tdamp=cfg.tdamp * units.fs,
+            )
+        if thermostat == "velocity-verlet":
+            return VelocityVerlet(atoms, timestep=timestep_ase)
+        raise ValueError(f"Unknown thermostat: {thermostat!r}")
 
-    # ---------- MD integrator ----------
-    timestep_ase = timestep_fs * units.fs  # ASE internal time unit
+    # ── main entry ────────────────────────────────────────────────
+    def run(self) -> None:
+        cfg = self.config
 
-    if thermostat == "langevin":
-        dyn = Langevin(
-            atoms,
-            timestep=timestep_ase,
-            temperature_K=temperature_K,
-            friction=friction / units.fs,
+        calc = MaceScrap(config=cfg).build_calculator()
+        atoms = cast(Atoms, ase.io.read(cfg.initial_config, index=0))
+        atoms.calc = calc
+
+        # Initial velocities + remove rigid-body motion.
+        rng = np.random.RandomState(cfg.rng_seed)
+        MaxwellBoltzmannDistribution(atoms, temperature_K=cfg.temperature_K, rng=rng)
+        if cfg.remove_translation:
+            Stationary(atoms)
+        if cfg.remove_rotation:
+            ZeroRotation(atoms)
+
+        traj_path, log_path = self._resolve_paths()
+        traj_path.parent.mkdir(parents=True, exist_ok=True)
+        # Start fresh each run (append would silently mix old+new frames).
+        traj_path.unlink(missing_ok=True)
+
+        timestep_ase = cfg.timestep * units.fs
+        dyn = self._build_integrator(atoms, timestep_ase)
+
+        def _write_frame() -> None:
+            ase.io.write(str(traj_path), atoms, append=True)
+
+        dyn.attach(_write_frame, interval=cfg.trajectory_interval)
+        dyn.attach(
+            MDLogger(dyn, atoms, str(log_path), header=True),
+            interval=cfg.log_interval,
         )
-    elif thermostat == "nose-hoover":
-        dyn = NoseHooverChainNVT(
-            atoms,
-            timestep=timestep_ase,
-            temperature_K=temperature_K,
+
+        print(
+            f"Running MD: {cfg.thermostat} | T = {cfg.temperature_K} K | dt = {cfg.timestep} fs | {cfg.nsteps} steps"
         )
-    elif thermostat == "velocity-verlet":
-        dyn = VelocityVerlet(atoms, timestep=timestep_ase)
-    else:
-        raise ValueError(f"Unknown thermostat: {thermostat}")
+        print(f"Trajectory  -> {traj_path}")
+        print(f"Log         -> {log_path}")
+        _ = dyn.run(cfg.nsteps)
 
-    # ---------- attach observers ----------
-    traj = Trajectory(str(trajectory_path), mode="w", atoms=atoms)
-    dyn.attach(traj.write, interval=trajectory_interval)
-
-    dyn.attach(
-        MDLogger(dyn, atoms, str(log_path), header=True),
-        interval=log_interval,
-    )
-
-    # ---------- run ----------
-    print(
-        f"Running MD:  {thermostat}  |  "
-        f"T = {temperature_K} K  |  dt = {timestep_fs} fs  |  "
-        f"{n_steps} steps"
-    )
-    print(f"Trajectory  -> {trajectory_path}")
-    print(f"Log         -> {log_path}")
-    dyn.run(n_steps)
-
-    # Write final snapshot as well
-    final_path = trajectory_path.with_suffix(".final.extxyz")
-    ase.io.write(str(final_path), atoms, format="extxyz")
-    print(f"Final frame -> {final_path}")
+        # Final snapshot.
+        final_path = traj_path.with_name(traj_path.stem + ".final" + traj_path.suffix)
+        ase.io.write(str(final_path), atoms, format="extxyz")
+        print(f"Final frame -> {final_path}")
 
 
-def main() -> None:
-    config = MaceConfig(
-        model_key="0-omat-medium",
-        group=LIF_KJPAW_GROUP,
-        frame_stride=10,
-        max_frames=20,
-    )
-    run_md(
-        config,
+def run_md_from_config() -> None:
+    """Example entry point (uses the bulk-LiF dataset frame)."""
+    config = MolecularDynamicsConfig(
+        model_key="mace_omat_medium",
+        initial_config=str(
+            DATA_DIR / "LIF64_ISOLATED" / "xyz_files" / "LIF64_ISOLATED_3_150.extxyz"
+        ),
         temperature_K=300.0,
-        timestep_fs=1.0,
-        n_steps=10_000,
-        trajectory_interval=100,
-        log_interval=100,
+        timestep=1.0,
+        nsteps=10_000,
         thermostat="langevin",
         friction=0.01,
         rng_seed=42,
+        trajectory_interval=100,
+        log_interval=100,
     )
+    MolecularDynamics(config).run()
 
 
 if __name__ == "__main__":
-    main()
+    run_md_from_config()

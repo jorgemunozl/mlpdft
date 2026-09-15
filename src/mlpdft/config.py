@@ -105,9 +105,9 @@ class MaceConfig:
         metadata={"description": "Whether to include stress tensor from QE output"},
     )
 
-    _raw_frames: list | None = field(default=None, init=False, repr=False)
+    _raw_frames: list[Atoms] | None = field(default=None, init=False, repr=False)
 
-    def read_raw_frames(self) -> list:
+    def read_raw_frames(self) -> list[Atoms]:
         """Parse the QE .out file once and cache the raw frame list."""
         if self._raw_frames is not None:
             return self._raw_frames
@@ -153,7 +153,7 @@ class MaceConfig:
         if self.model.hf_id is not None:
             dir = OUTPUTS_DIR / self.model_key
             os.makedirs(dir, exist_ok=True)
-            model = snapshot_download(
+            _ = snapshot_download(
                 repo_id=self.model.hf_id,
                 repo_type="model",
                 local_dir=str(dir),
@@ -205,48 +205,92 @@ class MaceConfig:
 
 
 @dataclass
-class ActiveLearningConfig(MaceConfig):
-    # ── committee ────────────────────────────────────────────────
-    model_paths: list[str] = field(
-        default_factory=list,
-        metadata={
-            "description": (
-                "Paths to 2+ MACE .model files.  May also include registry "
-                "keys (e.g. 'mace_omat_medium') which are resolved to paths. "
-                "A committee is formed when 2+ models are provided."
-            )
-        },
-    )
-
-    # ── input / output ───────────────────────────────────────────
-    config: str = field(
+class MolecularDynamicsConfig(MaceConfig):
+    initial_config: str = field(
         default="",
         metadata={"description": "Initial XYZ configuration file"},
     )
+
     output: str = field(
         default="",
         metadata={"description": "Output trajectory (.extxyz). Appends if it exists."},
     )
 
-    # ── MD parameters ────────────────────────────────────────────
     temperature_K: float = field(
         default=300.0,
         metadata={"description": "Temperature (Kelvin)"},
     )
+
     timestep: float = field(
         default=1.0,
         metadata={"description": "Integration timestep (fs)"},
     )
+
     friction: float = field(
         default=0.01,
         metadata={"description": "Langevin friction coefficient (1/fs)"},
     )
+
+    tdamp: float = field(
+        default=100.0,
+        metadata={"description": "Nose-Hoover thermostat damping time (fs)"},
+    )
+
     nsteps: int = field(
         default=1_000,
         metadata={"description": "Maximum number of MD steps"},
     )
 
-    # ── active-learning control ──────────────────────────────────
+    thermostat: Literal["langevin", "nose-hoover", "velocity-verlet"] = field(
+        default="langevin",
+        metadata={"description": "Integrator / thermostat"},
+    )
+
+    rng_seed: int = field(
+        default=42,
+        metadata={"description": "RNG seed for velocity initialisation"},
+    )
+
+    remove_translation: bool = field(
+        default=True,
+        metadata={"description": "Zero total linear momentum before MD"},
+    )
+
+    remove_rotation: bool = field(
+        default=False,
+        metadata={"description": "Zero total angular momentum before MD"},
+    )
+
+    trajectory_interval: int = field(
+        default=10,
+        metadata={"description": "Write a trajectory frame every N steps"},
+    )
+
+    log_interval: int = field(
+        default=10,
+        metadata={"description": "Write an MD log line every N steps"},
+    )
+
+    trajectory_path: Path | None = field(
+        default=None,
+        metadata={"description": "Output trajectory path (.extxyz); auto if None"},
+    )
+
+    log_path: Path | None = field(
+        default=None,
+        metadata={"description": "MD log path; auto if None"},
+    )
+
+
+@dataclass
+class ActiveLearningConfig(MolecularDynamicsConfig):
+    model_paths: list[str] = field(
+        default_factory=list,
+        metadata={
+            "description": "keys (e.g. 'mace_omat_medium') which are resolved to paths. "
+        },
+    )
+
     error_threshold: float = field(
         default=0.3,
         metadata={
@@ -256,12 +300,12 @@ class ActiveLearningConfig(MaceConfig):
             )
         },
     )
+
     config_index: int = field(
         default=-1,
         metadata={"description": "Frame index in the XYZ file (-1 = last frame)"},
     )
 
-    # ── I/O control ──────────────────────────────────────────────
     nsave: int = field(
         default=10,
         metadata={"description": "Save trajectory frame every N steps"},
@@ -283,16 +327,12 @@ class ActiveLearningConfig(MaceConfig):
         metadata={"description": "Prefix for energy, forces and stress keys"},
     )
 
-    # ── misc ─────────────────────────────────────────────────────
     seed: int = field(
         default=123,
         metadata={"description": "RNG seed for velocity initialisation"},
     )
 
-    # ── post-init ────────────────────────────────────────────────
     def __post_init__(self):
-        # Skip MaceConfig.__post_init__ — we don't need QE paths.
-        # Resolve model paths through MODEL_REGISTRY if keys are used.
         self._resolve_model()
 
     def _resolve_model(self) -> None:
@@ -306,7 +346,6 @@ class ActiveLearningConfig(MaceConfig):
                 resolved.append(item)
         self.model_paths = resolved
 
-    # ── conversion ───────────────────────────────────────────────
     def to_namespace(self):
         """Produce an ``argparse.Namespace`` consumable by
         ``mace.cli.active_learning_md.run()``."""
@@ -314,7 +353,7 @@ class ActiveLearningConfig(MaceConfig):
 
         ns = _argparse.Namespace()
         ns.model = self.model_paths
-        ns.config = self.config
+        ns.config = self.initial_config
         ns.output = self.output
         ns.device = self.device
         ns.default_dtype = self.dtype
@@ -559,7 +598,7 @@ class Mace_TrainerConfig(MaceConfig):
             self.solve_paths()
 
         self.metadata.config_path = str(
-            (SRC_DIR / "configs" / f"{self.metadata.experiment_name}.json")
+            SRC_DIR / "configs" / f"{self.metadata.experiment_name}.json"
         )
 
     def write_config_train(self):
@@ -596,7 +635,7 @@ class Mace_TrainerConfig(MaceConfig):
 
         training_files = list(Path().glob(f"{self.metadata.experiment_name}*"))
         for file in training_files:
-            api.upload_file(
+            _ = api.upload_file(
                 path_or_fileobj=str(file),
                 path_in_repo=file.name,
                 repo_id=HF_MODEL_REPO_ID,

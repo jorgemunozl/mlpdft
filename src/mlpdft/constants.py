@@ -5,10 +5,11 @@ from pathlib import Path
 @dataclass
 class ModelSpec:
     def __init__(self, key: str):
-        self.key = key
-        self.path = Path(OUTPUTS_DIR / self.key / f"{self.key}.model")
-        self.hf_id = PREFIX_HF + "/" + self.key
-        self.compiled_path = Path(OUTPUTS_DIR / self.key / f"{self.key}_compiled.model")
+        self.key: str = key
+        prefix = Path(OUTPUTS_DIR / self.key)
+        self.path: Path = prefix / f"{self.key}.model"
+        self.hf_id: str | None = PREFIX_HF + "/" + self.key
+        self.compiled_path: Path = prefix / f"{self.key}_compiled.model"
 
 
 # ---------- dataset settings ----------
@@ -69,15 +70,15 @@ GROUPS = GROUPS_LIF + GROUPS_BLIF
 
 # ── Small test subset for snapshot ensemble experiment ──
 TEST_GROUPS = [
-    "LIFINTERFACE_KJPAW_V1",   # interface
-    "LIWITHF_ISOLATED",          # Li-rich isolated
-    "LIF64_ISOLATED",            # bulk isolated
-    "LIWITHF_NPT_FINAL",         # Li-rich NPT
-    "BLI_V2",                    # B-Li
-    "BLI_NPT",                   # B-Li NPT
-    "LIBF4",                     # salt
-    "LIBF4_NPT",                 # salt NPT
-    "LIBF4_NPT_FINAL",           # salt NPT final
+    "LIFINTERFACE_KJPAW_V1",  # interface
+    "LIWITHF_ISOLATED",  # Li-rich isolated
+    "LIF64_ISOLATED",  # bulk isolated
+    "LIWITHF_NPT_FINAL",  # Li-rich NPT
+    "BLI_V2",  # B-Li
+    "BLI_NPT",  # B-Li NPT
+    "LIBF4",  # salt
+    "LIBF4_NPT",  # salt NPT
+    "LIBF4_NPT_FINAL",  # salt NPT final
 ]
 TEST_STRIDE = 3
 TEST_MAX_FRAMES = 150

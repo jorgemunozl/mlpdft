@@ -9,7 +9,7 @@ from mace.calculators import mace_mp
 from mlpdft.config import MaceConfig
 
 
-class MACE_SCRAP(nn.Module):
+class MaceScrap(nn.Module):
     def __init__(self, config: MaceConfig):
         super().__init__()
         self.config = config
