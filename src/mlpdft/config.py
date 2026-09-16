@@ -208,7 +208,7 @@ class MaceConfig:
 class MolecularDynamicsConfig(MaceConfig):
     initial_config: str = field(
         default="",
-        metadata={"description": "Initial XYZ configuration file"},
+        metadata={"description": "Path to initial XYZ configuration file"},
     )
 
     output: str = field(
@@ -281,8 +281,8 @@ class MolecularDynamicsConfig(MaceConfig):
         metadata={"description": "MD log path; auto if None"},
     )
 
-    fit_range: tuple[float, float] | None = field(
-        default=[0.2, 0.8],
+    fit_range: tuple[float, float] = field(
+        default=(0.2, 0.8),
         metadata={"description": "Range of frames to fit diffusion coefficient from"},
     )
 

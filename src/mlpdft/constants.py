@@ -130,3 +130,11 @@ MODEL_REGISTRY = {
 }
 
 ACTIVE_LEARNING_DIR = OUTPUTS_DIR / "active_learning"
+
+# Small toy cell for testing and sanity checks (8-atom LiF, PBC)
+TOY_CELL = {
+    "symbols": ["Li", "Li", "Li", "Li", "F", "F", "F", "F"],
+    "a": 4.02,
+}
+
+TOY_CELL_PATH = OUTPUTS_DIR / "toy_lif.extxyz"

@@ -8,6 +8,8 @@ Used for active learning and transport-property (activation-energy) studies.
 
 from __future__ import annotations
 
+import dataclasses
+import hashlib
 from pathlib import Path
 from typing import cast
 
@@ -25,7 +27,7 @@ from ase.md.velocitydistribution import (
 from ase.md.verlet import VelocityVerlet
 
 from mlpdft.config import MolecularDynamicsConfig
-from mlpdft.constants import DATA_DIR, K_B
+from mlpdft.constants import DATA_DIR, TOY_CELL_PATH
 from mlpdft.mace_scrap import MaceScrap
 
 
@@ -57,11 +59,10 @@ def msd_multi_origin(unwrapped: np.ndarray, species_mask: np.ndarray) -> np.ndar
 
 
 class MolecularDynamics:
-    """Run an MD trajectory with a MACE calculator."""
+    """Run one MD trajectory with a MACE calculator."""
 
     def __init__(self, config: MolecularDynamicsConfig):
         self.config: MolecularDynamicsConfig = config
-        self.atoms: Atoms
 
     def _resolve_paths(self) -> tuple[Path, Path]:
         """Return (trajectory_path, log_path), deriving sensible defaults."""
@@ -69,11 +70,15 @@ class MolecularDynamics:
         if cfg.trajectory_path is not None:
             traj = Path(cfg.trajectory_path)
         else:
+            # Include a config-fingerprint so different initial_configs that
+            # share the same group do not overwrite each other when run in
+            # parallel.
+            tag = hashlib.sha1(str(cfg.initial_config).encode()).hexdigest()[:8]
             stem = (
                 f"md_{cfg.model_key}_{cfg.group or 'cfg'}"
                 f"_T{cfg.temperature_K:.0f}K"
-                f"_dt{cfg.timestep}fs"
-                f"_N{cfg.nsteps}"
+                f"_dt{cfg.timestep:g}fs"
+                f"_N{cfg.nsteps}_{tag}"
             )
             traj = (cfg.model_output.parent / stem).with_suffix(".extxyz")
 
@@ -105,7 +110,8 @@ class MolecularDynamics:
             return VelocityVerlet(atoms, timestep=timestep_ase)
         raise ValueError(f"Unknown thermostat: {thermostat!r}")
 
-    def run(self) -> None:
+    def run_md(self) -> None:
+        """Run a single trajectory from ``config.initial_config``."""
         cfg = self.config
         calc = MaceScrap(config=cfg).build_calculator()
         atoms = cast(Atoms, ase.io.read(cfg.initial_config, index=0))
@@ -148,48 +154,63 @@ class MolecularDynamics:
         ase.io.write(str(final_path), atoms, format="extxyz")
         print(f"Final frame -> {final_path}")
 
-    def diffusion_coefficient(self) -> float:
-        pos = np.asarray(positions)
-        times_fs = np.arange(len(pos)) * save_interval * timestep
-        unwrapped = unwrap_positions(pos, np.asarray(atoms.cell))
-        msd = msd_multi_origin(unwrapped, species_mask)
+    def run_md_many(
+        self,
+        initial_configs: list[str],
+        workers: int = 1,
+    ) -> None:
+        """Run one trajectory per initial configuration, optionally in parallel.
 
-        i0 = max(1, int(self.config.fit_range[0] * len(msd)))
-        i1 = min(len(msd), int(self.config.fit_range[1] * len(msd)))
+        Each entry in ``initial_configs`` reuses this object's ``config`` as a
+        template and gets a distinct ``rng_seed``, so trajectories are
+        independent and their output filenames do not collide.
 
-        if i1 - i0 < 2:
-            raise ValueError("linear-fit window too small")
-        slope, _ = np.polyfit(times_fs[i0:i1], msd[i0:i1], 1)
-        D = slope / 6.0 * 0.1  # Å^2/fs -> cm^2/s
-        return D
+        With ``workers > 1`` the trajectories run in separate processes (one
+        per config) -- each trajectory itself is sequential, but independent
+        runs are launched concurrently. On a single GPU, set ``workers`` to the
+        number of runs that fit in memory; otherwise distribute across devices.
+        """
+        base = self.config
+        configs: list[MolecularDynamicsConfig] = []
+        for i, initial in enumerate(initial_configs):
+            cfg = dataclasses.replace(base, initial_config=initial)
+            cfg.rng_seed = base.rng_seed + i
+            configs.append(cfg)
 
+        def _run_one(cfg: MolecularDynamicsConfig) -> None:
+            MolecularDynamics(cfg).run_md()
 
-    def activation_energy(self, Ds: list[float], Ts: list[float]) -> tuple[float, float]:
-        """From a set of tuples (D,T), fit a linear model to estimate activation energy."""
-        Ts = np.asarray(Ts)
-        invT = 1.0 / (K_B * Ts)  # 1/eV
-        lnD = np.log(np.asarray(Ds))
-        slope, intercept = np.polyfit(invT, lnD, 1)
-        Ea = -slope  # eV
-        D0 = float(np.exp(intercept))
-        return Ea, D0
+        if workers <= 1:
+            for cfg in configs:
+                _run_one(cfg)
+            return
+
+        from multiprocessing import get_context
+
+        ctx = get_context("spawn")
+        with ctx.Pool(processes=workers) as pool:
+            pool.map(_run_one, configs)
+
 
 class ActiveLearning(MolecularDynamics):
     """
     Wrapper from MACE active learning
     """
-    def __init__(self, config: ActiveLearningConfig):
+
+    def __init__(self, config: MolecularDynamicsConfig):
         super().__init__(config)
-        self.config = ActiveLearningConfig
+        self.config: MolecularDynamicsConfig = config
 
     def run(self) -> None:
         """
         I guess that is possible run Quantum Expresso on the fly.
         """
-        super().run()
+        super().run_md()
+
 
 def run_md_from_config() -> None:
-    """Example entry point (uses the bulk-LiF dataset frame)."""
+    """Example entry point (single bulk-LiF frame)."""
+
     config = MolecularDynamicsConfig(
         model_key="mace_omat_medium",
         initial_config=str(
@@ -197,14 +218,14 @@ def run_md_from_config() -> None:
         ),
         temperature_K=300.0,
         timestep=1.0,
-        nsteps=10_000,
+        nsteps=10,
         thermostat="langevin",
         friction=0.01,
         rng_seed=42,
-        trajectory_interval=100,
-        log_interval=100,
+        trajectory_interval=1,
+        log_interval=1,
     )
-    MolecularDynamics(config).run()
+    MolecularDynamics(config).run_md()
 
 
 if __name__ == "__main__":
