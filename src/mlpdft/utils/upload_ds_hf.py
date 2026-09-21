@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Merge per-group .extxyz files into one dataset and upload to Hugging Face."""
 
 from __future__ import annotations

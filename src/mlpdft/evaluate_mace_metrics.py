@@ -235,9 +235,7 @@ def main() -> None:
     torch_tools.set_default_dtype(DTYPE)
 
     device = torch.device(DEVICE)
-    config = MaceConfig(
-        model_key="mace_omat_lora_v1", frame_stride=FRAME_STRIDE, max_frames=MAX_FRAMES
-    )
+    config = MaceConfig(model_key="mace_omat_lora_v1")
 
     print(f"Loading model: {config.model_key:}")
     print(f"  Path: {config.model.compiled_path}")
@@ -275,8 +273,8 @@ def main() -> None:
         all_results,
         json_path,
         model_key=config.model_key,
-        frame_stride=config.frame_stride,
-        max_frames=config.max_frames,
+        frame_stride=FRAME_STRIDE,
+        max_frames=MAX_FRAMES,
     )
     print(f"\nSaved: {json_path}")
 

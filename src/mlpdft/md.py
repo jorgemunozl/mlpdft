@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import dataclasses
 import hashlib
+import os
 from pathlib import Path
 from typing import cast
 
@@ -27,7 +28,7 @@ from ase.md.velocitydistribution import (
 from ase.md.verlet import VelocityVerlet
 
 from mlpdft.config import MolecularDynamicsConfig
-from mlpdft.constants import DATA_DIR, TOY_CELL_PATH
+from mlpdft.constants import K_B, MOLECULAR_DYNAMICS_DIR, OUTPUTS_DIR, TOY_CELL_PATH
 from mlpdft.mace_scrap import MaceScrap
 
 
@@ -67,6 +68,8 @@ class MolecularDynamics:
     def _resolve_paths(self) -> tuple[Path, Path]:
         """Return (trajectory_path, log_path), deriving sensible defaults."""
         cfg = self.config
+        parent_dir = OUTPUTS_DIR / MOLECULAR_DYNAMICS_DIR
+        os.makedirs(parent_dir, exist_ok=True)
         if cfg.trajectory_path is not None:
             traj = Path(cfg.trajectory_path)
         else:
@@ -80,7 +83,7 @@ class MolecularDynamics:
                 f"_dt{cfg.timestep:g}fs"
                 f"_N{cfg.nsteps}_{tag}"
             )
-            traj = (cfg.model_output.parent / stem).with_suffix(".extxyz")
+            traj = (parent_dir / stem).with_suffix(".extxyz")
 
         log = (
             Path(cfg.log_path) if cfg.log_path is not None else traj.with_suffix(".log")
@@ -134,6 +137,7 @@ class MolecularDynamics:
         dyn = self._build_integrator(atoms, timestep_ase)
 
         def _write_frame() -> None:
+            atoms.info["time"] = float(dyn.get_time() / units.fs)  # fs
             ase.io.write(str(traj_path), atoms, append=True)
 
         dyn.attach(_write_frame, interval=cfg.trajectory_interval)
@@ -191,6 +195,63 @@ class MolecularDynamics:
         with ctx.Pool(processes=workers) as pool:
             pool.map(_run_one, configs)
 
+    def diffusion_coefficient(self, species: str = "Li") -> float:
+        """Compute the self-diffusion coefficient from the saved trajectory.
+
+        Reuses ``cfg.trajectory_path`` written by :meth:`run_md`: reads the
+        frames, unwraps the periodic positions of ``species``, computes the
+        mean-squared displacement, and fits the Einstein relation
+        (D = slope / 6 in 3D). Returns D in cm^2/s.
+        """
+        cfg = self.config
+        traj_path, _ = self._resolve_paths()
+
+        frames = ase.io.read(str(traj_path), index=":")
+        if isinstance(frames, Atoms):
+            frames = [frames]
+        if len(frames) < 10:
+            raise ValueError(
+                f"only {len(frames)} frames in {traj_path}; run longer MD or decrease trajectory_interval"
+            )
+
+        positions = np.asarray([f.positions for f in frames])
+        cell = np.asarray(frames[0].cell)
+
+        species_mask = np.asarray(frames[0].get_chemical_symbols()) == species
+        if not species_mask.any():
+            raise ValueError(f"species '{species}' not found in trajectory")
+
+        # Time axis: prefer stored per-frame time, else reconstruct from config.
+        if "time" in frames[0].info:
+            times_fs = np.asarray([f.info["time"] for f in frames])
+        else:
+            times_fs = np.arange(len(frames)) * cfg.trajectory_interval * cfg.timestep
+
+        unwrapped = unwrap_positions(positions, cell)
+        msd = msd_multi_origin(unwrapped, species_mask)
+
+        i0 = max(1, int(cfg.fit_range[0] * len(msd)))
+        i1 = min(len(msd), int(cfg.fit_range[1] * len(msd)))
+        if i1 - i0 < 2:
+            raise ValueError("linear-fit window too small; widen fit_range")
+
+        slope, _ = np.polyfit(times_fs[i0:i1], msd[i0:i1], 1)
+        return slope / 6.0 * 0.1  # Å²/fs -> cm²/s
+
+    @staticmethod
+    def activation_energy(Ds: list[float], Ts: list[float]) -> tuple[float, float]:
+        """Fit ln(D) vs 1/(k_B T) to obtain the activation energy.
+
+        Returns (E_a in eV, D_0 in cm^2/s).
+        """
+        Ts_arr = np.asarray(Ts)
+        invT = 1.0 / (K_B * Ts_arr)  # 1/eV
+        lnD = np.log(np.asarray(Ds))
+        slope, intercept = np.polyfit(invT, lnD, 1)
+        Ea = -slope  # eV
+        D0 = float(np.exp(intercept))
+        return Ea, D0
+
 
 class ActiveLearning(MolecularDynamics):
     """
@@ -209,13 +270,11 @@ class ActiveLearning(MolecularDynamics):
 
 
 def run_md_from_config() -> None:
-    """Example entry point (single bulk-LiF frame)."""
+    """Example entry point (toy 8-atom LiF cell)."""
 
     config = MolecularDynamicsConfig(
         model_key="mace_omat_medium",
-        initial_config=str(
-            DATA_DIR / "LIF64_ISOLATED" / "xyz_files" / "LIF64_ISOLATED_3_150.extxyz"
-        ),
+        initial_config=str(TOY_CELL_PATH),
         temperature_K=300.0,
         timestep=1.0,
         nsteps=10,

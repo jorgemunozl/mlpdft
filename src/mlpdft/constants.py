@@ -130,6 +130,7 @@ MODEL_REGISTRY = {
 }
 
 ACTIVE_LEARNING_DIR = OUTPUTS_DIR / "active_learning"
+MOLECULAR_DYNAMICS_DIR = OUTPUTS_DIR / "molecular_dynamics"
 
 # Small toy cell for testing and sanity checks (8-atom LiF, PBC)
 TOY_CELL = {

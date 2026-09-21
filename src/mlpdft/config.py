@@ -3,24 +3,68 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import asdict, dataclass, field, fields
-from io import StringIO
 from pathlib import Path
 from typing import Literal
 
-from ase import Atoms
-from ase.io import read
 from huggingface_hub import HfApi, create_repo, snapshot_download
 
 from mlpdft.constants import (
-    DATA_DIR,
     MODEL_REGISTRY,
     OUTPUTS_DIR,
     PREDICTION_DIR,
     PREFIX_HF,
     SRC_DIR,
-    XYZ_DIR,
     ModelSpec,
 )
+
+
+@dataclass
+class DataSetConfig:
+    """Dataset-only settings (QE parsing, frame selection, labeling)."""
+
+    group: str = field(
+        default="",
+        metadata={"description": "Group name, e.g. LIF64_ISOLATED"},
+    )
+
+    data_in_path: Path | None = field(
+        default=Path("input.out"),
+        metadata={"description": "Path to Quantum ESPRESSO pw.x .out file"},
+    )
+
+    data_out_path: Path = field(
+        default=Path("out.extxyz"),
+        metadata={"description": "Output multi-frame extxyz path"},
+    )
+
+    frame_stride: int | None = field(
+        default=None,
+        metadata={"description": "Keep one frame every N parsed frames (>=1)"},
+    )
+
+    max_frames: int | None = field(
+        default=None,
+        metadata={
+            "description": "Optional cap on written frames after striding (0/None = all)"
+        },
+    )
+
+    config_type: str = field(
+        default="",
+        metadata={
+            "description": "Config type label written into each frame (defaults to group)"
+        },
+    )
+
+    include_stress: bool = field(
+        default=False,
+        metadata={"description": "Whether to include the stress tensor from QE output"},
+    )
+
+    equilibration_cutoff: int | None = field(
+        default=None,
+        metadata={"description": "Optional number of initial frames to discard (equilibration)"},
+    )
 
 
 @dataclass
@@ -56,29 +100,9 @@ class MaceConfig:
         metadata={"description": "Final energy shift applied at inference (eV/atom)"},
     )
 
-    data_in_path: Path = field(
-        default=Path("LiF64_kjpaw.out"),
-        metadata={"description": "Path to Quantum ESPRESSO .out file"},
-    )
-
-    data_out_path: Path = field(
-        default=Path("out.extxyz"),
-        metadata={"description": "Output multi-frame extxyz path"},
-    )
-
     model_output: Path = field(
-        default=Path(PREDICTION_DIR / "pred_LIF64_10_20.extxyz"),
-        metadata={"description": "Output path"},
-    )
-
-    frame_stride: int | None = field(
-        default=10,
-        metadata={"description": "Keep one frame every N parsed frames (>=1)"},
-    )
-
-    max_frames: int | None = field(
-        default=0,
-        metadata={"description": "Optional cap on written frames after striding"},
+        default=Path(PREDICTION_DIR / "pred.extxyz"),
+        metadata={"description": "Prediction output path"},
     )
 
     node_energy: bool = field(
@@ -92,49 +116,6 @@ class MaceConfig:
     )
 
     dtype: Literal["float32", "float64"] = "float32"
-
-    config_type: str = field(
-        default="",
-        metadata={
-            "description": "Config type label written into each frame (defaults to group name)"
-        },
-    )
-
-    include_stress: bool = field(
-        default=False,
-        metadata={"description": "Whether to include stress tensor from QE output"},
-    )
-
-    _raw_frames: list[Atoms] | None = field(default=None, init=False, repr=False)
-
-    def read_raw_frames(self) -> list[Atoms]:
-        """Parse the QE .out file once and cache the raw frame list."""
-        if self._raw_frames is not None:
-            return self._raw_frames
-        print(f"[read_raw_frames] {self.data_in_path}")
-        if not self.data_in_path.exists():
-            self._raw_frames = []
-            return []
-        text = self.data_in_path.read_text(encoding="latin-1")
-        raw = read(StringIO(text), format="espresso-out", index=":")
-        self._raw_frames = [raw] if isinstance(raw, Atoms) else list(raw)
-        return self._raw_frames
-
-    @staticmethod
-    def obtain_max_frames(data_in_path: Path) -> int | None:
-        """
-        Count the number of valid frames in a Quantum ESPRESSO pw.x output file
-        by parsing it with ASE's espresso-out reader.
-
-        Returns the total frame count, or None if the file does not exist.
-        """
-        print(f"[obtain_max_frames] {data_in_path}")
-        if not data_in_path.exists():
-            return None
-        text = data_in_path.read_text(encoding="latin-1")
-        raw = read(StringIO(text), format="espresso-out", index=":")
-        frames = [raw] if isinstance(raw, Atoms) else list(raw)
-        return len(frames)
 
     def __post_init__(self):
         # Valid that model exist
@@ -160,43 +141,10 @@ class MaceConfig:
             )
 
     def solve_paths(self):
-        if not self.config_type:
-            self.config_type = self.group
-        self.data_in_path = DATA_DIR / self.group / Path(str(self.group) + ".out")
-        if self.frame_stride is None:
-            self.frame_stride = 1
-        if self.max_frames is None:
-            raw = self.read_raw_frames()
-            if raw:
-                self.max_frames = int(len(raw) / self.frame_stride)
-        data_out_path = (
-            DATA_DIR
-            / Path(self.group)
-            / XYZ_DIR
-            / f"{self.group}_{self.frame_stride}_{self.max_frames}.extxyz"
-        )
-        self.data_out_path = data_out_path
-
-        # MACE MODEL PREDICTIONS
-        model_output_path = (
-            PREDICTION_DIR
-            / self.group
-            / Path(
-                str(
-                    self.model_key
-                    + "_"
-                    + self.group
-                    + f"_{self.frame_stride}_{self.max_frames}"
-                )
-                + ".extxyz"
-            )
-        )
-        os.makedirs(model_output_path.parent, exist_ok=True)
-        self.model_output = model_output_path
-
-    def validate(self) -> None:
-        if self.frame_stride is not None and self.frame_stride <= 0:
-            raise ValueError("frame_stride must be >= 1")
+        """Resolve the prediction output path from model_key + group."""
+        group = self.group or "default"
+        self.model_output = PREDICTION_DIR / group / f"{self.model_key}_{group}.extxyz"
+        os.makedirs(self.model_output.parent, exist_ok=True)
 
     @classmethod
     def describe_fields(cls) -> dict[str, str]:
@@ -206,7 +154,7 @@ class MaceConfig:
 
 @dataclass
 class MolecularDynamicsConfig(MaceConfig):
-    initial_config: str = field(
+    initial_config: str | Path = field(
         default="",
         metadata={"description": "Path to initial XYZ configuration file"},
     )

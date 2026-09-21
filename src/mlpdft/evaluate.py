@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Dict
 
 import ase.io
@@ -6,9 +7,14 @@ import torch
 from mace import data
 from mace.tools import torch_geometric, torch_tools, utils
 
-from mlpdft.config import MaceConfig
-from mlpdft.constants import LIF_KJPAW_GROUP
-from mlpdft.mace_scrap import MACE_SCRAP
+from mlpdft.config import DataSetConfig, MaceConfig
+from mlpdft.constants import GROUPS_LIF
+from mlpdft.dataset import DataSet
+from mlpdft.mace_scrap import MaceScrap
+
+# Prefix used when writing model predictions to distinguish them from the
+# reference labels (REF_energy / REF_forces) already stored on the atoms.
+PREDICTION_PREFIX = "MACE_"
 
 
 def get_model_output(
@@ -37,9 +43,9 @@ def _cast_batch_to_dtype(
     return out
 
 
-def eval(config: MaceConfig) -> None:
+def eval(config: MaceConfig, data_out_path: Path) -> None:
     torch_tools.set_default_dtype(config.dtype)
-    scrap = MACE_SCRAP(config=config)
+    scrap = MaceScrap(config=config)
     model = scrap.build_model()
 
     device = config.device
@@ -48,7 +54,7 @@ def eval(config: MaceConfig) -> None:
     model_dtype = _get_model_float_dtype(model)
 
     # Load data and prepare input
-    atoms_list = ase.io.read(config.data_out_path, index=":")
+    atoms_list = ase.io.read(str(data_out_path), index=":")
 
     head_name = "Default"
     configs = [
@@ -66,7 +72,7 @@ def eval(config: MaceConfig) -> None:
             )
             for config in configs
         ],
-        batch_size=config.batch_size,
+        batch_size=1,
         shuffle=False,
         drop_last=False,
     )
@@ -113,24 +119,24 @@ def eval(config: MaceConfig) -> None:
     for i, (atoms, energy, forces) in enumerate(zip(atoms_list, energies, forces_list)):
         atoms.calc = None  # crucial
         total_energy_shift = config.resolved_energy_offset_per_atom * len(atoms)
-        atoms.info[config.info_prefix + "energy"] = energy + total_energy_shift
-        atoms.arrays[config.info_prefix + "forces"] = forces
+        atoms.info[PREDICTION_PREFIX + "energy"] = energy + total_energy_shift
+        atoms.arrays[PREDICTION_PREFIX + "forces"] = forces
 
         if config.node_energy:
-            atoms.arrays[config.info_prefix + "node_energy"] = node_energies[i]
+            atoms.arrays[PREDICTION_PREFIX + "node_energy"] = node_energies[i]
 
     # Write atoms to output path
     ase.io.write(str(config.model_output), images=atoms_list, format="extxyz")
 
 
 def main() -> None:
-    config = MaceConfig(
-        model_key="0-omat-medium",
-        group=LIF_KJPAW_GROUP,
-        frame_stride=10,
-        max_frames=20,
+    dataset = DataSet(
+        DataSetConfig(group=GROUPS_LIF[0], frame_stride=10, max_frames=20)
     )
-    eval(config)
+    dataset.resolve_paths()
+
+    config = MaceConfig(model_key="mace_omat_medium")
+    eval(config, dataset.config.data_out_path)
 
 
 if __name__ == "__main__":

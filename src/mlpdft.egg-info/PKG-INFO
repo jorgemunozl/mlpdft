@@ -9,6 +9,7 @@ Requires-Dist: mace-torch>=0.3.6
 Requires-Dist: huggingface-hub>=1.19.0
 Requires-Dist: jupyter>=1.1.1
 Requires-Dist: wandb>=0.16
+Requires-Dist: pymbar>=4.0.3
 
 <div align="center">
 
