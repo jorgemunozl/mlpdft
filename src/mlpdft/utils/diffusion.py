@@ -44,8 +44,11 @@ from mace.calculators.mace import MACECalculator
 from mlpdft.constants import DATA_DIR, OUTPUTS_DIR  # noqa: E402
 
 DEFAULT_MODEL = str(OUTPUTS_DIR / "mace_omat_medium" / "mace_omat_medium.model")
+# Dense, periodic bulk LiF (cell ~8.16 A, ~8.5 A^3/atom). Do NOT point this at
+# the LIF64_ISOLATED config: that one is a 64-atom cluster sitting in a 28 A
+# vacuum box, so it measures rigid-body cluster motion, not bulk Li diffusion.
 DEFAULT_CONFIG = str(
-    DATA_DIR / "LIF64_ISOLATED" / "xyz_files" / "LIF64_ISOLATED_3_150.extxyz"
+    DATA_DIR / "LIF64_KJPAW_V2" / "xyz_files" / "LIF64_KJPAW_V2_10_200.extxyz"
 )
 
 
@@ -64,8 +67,36 @@ def unwrap_positions(positions: np.ndarray, cell: np.ndarray) -> np.ndarray:
     return unwrapped_frac @ cell
 
 
-def msd_multi_origin(unwrapped: np.ndarray, species_mask: np.ndarray) -> np.ndarray:
-    """Mean-squared displacement averaged over atoms and time origins."""
+def remove_com_drift(
+    positions: np.ndarray, masses: np.ndarray | None = None
+) -> np.ndarray:
+    """Subtract the (mass-weighted) centre of mass from every frame.
+
+    A Langevin thermostat injects net centre-of-mass motion; if it is not
+    removed it adds a spurious linear term to the MSD (dominant for clusters /
+    nanoparticles).  ``positions`` has shape (n_frames, n_atoms, 3).
+    """
+    if masses is None:
+        com = positions.mean(axis=1, keepdims=True)
+    else:
+        weights = masses / masses.sum()
+        com = np.einsum("fad,a->fd", positions, weights)[:, None, :]
+    return positions - com
+
+
+def msd_multi_origin(
+    unwrapped: np.ndarray,
+    species_mask: np.ndarray,
+    masses: np.ndarray | None = None,
+    remove_com: bool = True,
+) -> np.ndarray:
+    """Mean-squared displacement averaged over atoms and time origins.
+
+    ``remove_com=True`` (default) subtracts the system centre of mass first, so
+    rigid-body translation does not contaminate the MSD.
+    """
+    if remove_com:
+        unwrapped = remove_com_drift(unwrapped, masses)
     r = unwrapped[:, species_mask, :]  # (n_frames, n_species, 3)
     n_frames = len(r)
     max_lag = int(0.5 * n_frames)
@@ -74,6 +105,49 @@ def msd_multi_origin(unwrapped: np.ndarray, species_mask: np.ndarray) -> np.ndar
         d = r[lag:] - r[:-lag]  # (n_frames - lag, n_species, 3)
         msd[lag] = float(np.mean(np.sum(d**2, axis=2)))
     return msd
+
+
+def msd_diagnostics(
+    times_fs: np.ndarray, msd: np.ndarray, window: tuple[float, float]
+) -> list[str]:
+    """Return warnings if the MSD is not consistent with simple diffusion.
+
+    Catches the common failure modes: non-linear MSD, super-linear growth
+    (rigid-body drift / dissociation) and saturation (sub-diffusive regime).
+    """
+    warnings: list[str] = []
+    n = len(msd)
+    i0 = max(1, int(window[0] * n))
+    i1 = min(n, int(window[1] * n))
+    if i1 - i0 < 3:
+        return warnings
+
+    coeff = np.polyfit(times_fs[i0:i1], msd[i0:i1], 1)
+    fit = np.polyval(coeff, times_fs[i0:i1])
+    ss_res = float(np.sum((msd[i0:i1] - fit) ** 2))
+    ss_tot = float(np.sum((msd[i0:i1] - msd[i0:i1].mean()) ** 2))
+    r2 = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
+    if r2 < 0.99:
+        warnings.append(
+            f"MSD is not linear in the fit window (R^2 = {r2:.3f})"
+        )
+
+    j0 = int(0.75 * n)
+    slope_win = float(coeff[0])
+    if n - j0 >= 3 and slope_win > 0:
+        slope_tail = float(np.polyfit(times_fs[j0:], msd[j0:], 1)[0])
+        ratio = slope_tail / slope_win
+        if ratio > 1.5:
+            warnings.append(
+                f"MSD accelerates with time (tail/window slope = {ratio:.1f}x): "
+                + "rigid-body drift or dissociation; check cell density and COM removal"
+            )
+        elif ratio < 0.5:
+            warnings.append(
+                f"MSD flattens out (tail/window slope = {ratio:.2f}x): "
+                + "sub-diffusive or confined regime, not steady-state diffusion"
+            )
+    return warnings
 
 
 def main() -> None:
@@ -154,8 +228,9 @@ def main() -> None:
     times_fs = np.arange(len(pos)) * args.save_interval * args.timestep
     cell = np.asarray(atoms.cell)
 
+    masses = atoms.get_masses()
     unwrapped = unwrap_positions(pos, cell)
-    msd = msd_multi_origin(unwrapped, species_mask)
+    msd = msd_multi_origin(unwrapped, species_mask, masses=masses)
 
     if len(msd) < 10:
         parser.error(
@@ -173,6 +248,13 @@ def main() -> None:
     d_ang2_per_fs = slope / 6.0
     d_cm2_per_s = d_ang2_per_fs * 0.1  # 1 Å^2/fs = 0.1 cm^2/s
 
+    warnings = msd_diagnostics(times_fs, msd, (args.fit_start, args.fit_end))
+    if d_cm2_per_s > 1e-3:
+        warnings.append(
+            f"D = {d_cm2_per_s:.2e} cm^2/s is orders of magnitude above "
+            + "solid-state diffusion; verify the cell is dense and periodic"
+        )
+
     print("=" * 70)
     print(f"  Model        : {args.model}")
     print(f"  Structure    : {args.config} (index {args.config_index})")
@@ -183,6 +265,8 @@ def main() -> None:
     print(f"  MSD slope    : {slope:.6e} Å^2/fs")
     print(f"  D            : {d_ang2_per_fs:.6e} Å^2/fs")
     print(f"                {d_cm2_per_s:.6e} cm^2/s")
+    for w in warnings:
+        print(f"  [warn] {w}")
     print("=" * 70)
 
     if args.output:

@@ -39,14 +39,21 @@ from ase import units  # noqa: E402
 from ase.io import read  # noqa: E402
 from ase.md.langevin import Langevin  # noqa: E402
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution  # noqa: E402
-from diffusion import msd_multi_origin, unwrap_positions  # noqa: E402
+from diffusion import (  # noqa: E402
+    msd_diagnostics,
+    msd_multi_origin,
+    unwrap_positions,
+)
 from mace.calculators.mace import MACECalculator  # noqa: E402
 
 from mlpdft.constants import DATA_DIR, OUTPUTS_DIR  # noqa: E402
 
 DEFAULT_MODEL = str(OUTPUTS_DIR / "mace_omat_medium" / "mace_omat_medium.model")
+# Dense, periodic bulk LiF (cell ~8.16 A, ~8.5 A^3/atom). Do NOT use the
+# LIF64_ISOLATED config: it is a 64-atom cluster in a 28 A vacuum box, so it
+# measures rigid-body cluster motion instead of bulk Li diffusion.
 DEFAULT_CONFIG = str(
-    DATA_DIR / "LIF64_ISOLATED" / "xyz_files" / "LIF64_ISOLATED_3_150.extxyz"
+    DATA_DIR / "LIF64_KJPAW_V2" / "xyz_files" / "LIF64_KJPAW_V2_10_200.extxyz"
 )
 DEFAULT_OUTPUT = OUTPUTS_DIR / "diffusion"
 K_B = 8.617333262e-5  # eV / K
@@ -64,8 +71,8 @@ def diffusion_cm2_per_s(
     seed,
     fit_start,
     fit_end,
-) -> tuple[float, np.ndarray, np.ndarray]:
-    """Run one NVT trajectory; return (D_cm2_s, times_fs, msd)."""
+) -> tuple[float, np.ndarray, np.ndarray, float]:
+    """Run one NVT trajectory; return (D_cm2_s, times_fs, msd, mean_T_K)."""
     np.random.seed(seed)
     species_mask = np.asarray(atoms.get_chemical_symbols()) == species
     if int(species_mask.sum()) == 0:
@@ -81,17 +88,20 @@ def diffusion_cm2_per_s(
     dyn.run(equil_steps)
 
     positions: list[np.ndarray] = []
+    temperatures: list[float] = []
 
     def save(dyn=None) -> None:
         positions.append(dyn.atoms.get_positions().copy())
+        temperatures.append(dyn.atoms.get_temperature())
 
     dyn.attach(save, interval=save_interval, dyn=dyn)
     dyn.run(steps)
 
     pos = np.asarray(positions)
     times_fs = np.arange(len(pos)) * save_interval * timestep
+    masses = atoms.get_masses()
     unwrapped = unwrap_positions(pos, np.asarray(atoms.cell))
-    msd = msd_multi_origin(unwrapped, species_mask)
+    msd = msd_multi_origin(unwrapped, species_mask, masses=masses)
 
     i0 = max(1, int(fit_start * len(msd)))
     i1 = min(len(msd), int(fit_end * len(msd)))
@@ -99,7 +109,8 @@ def diffusion_cm2_per_s(
         raise ValueError("linear-fit window too small; adjust --fit-start/--fit-end")
     slope, _ = np.polyfit(times_fs[i0:i1], msd[i0:i1], 1)
     D = slope / 6.0 * 0.1  # Å^2/fs -> cm^2/s
-    return D, times_fs, msd
+    mean_T = float(np.mean(temperatures)) if temperatures else float(temperature)
+    return D, times_fs, msd, mean_T
 
 
 def main() -> None:
@@ -135,12 +146,13 @@ def main() -> None:
     )
 
     Ds: list[float] = []
-    lines = ["# temperature_K  D_cm2_per_s", ""]
+    Ts_meas: list[float] = []
+    lines = ["# T_set_K  T_meas_K  D_cm2_per_s", ""]
     print("=" * 60)
     for T in args.temperatures:
         atoms = read(args.config, index=args.config_index)  # fresh structure
         atoms.calc = calc
-        D, times_fs, msd = diffusion_cm2_per_s(
+        D, times_fs, msd, mean_T = diffusion_cm2_per_s(
             atoms,
             args.species,
             T,
@@ -154,17 +166,21 @@ def main() -> None:
             args.fit_end,
         )
         Ds.append(D)
-        lines.append(f"{T:g}  {D:.6e}")
+        Ts_meas.append(mean_T)
+        lines.append(f"{T:g}  {mean_T:.2f}  {D:.6e}")
         np.savetxt(
             args.output / f"msd_{T:g}K.csv",
             np.column_stack([times_fs, msd]),
             header="time_fs  msd_ang2",
             comments="# ",
         )
-        print(f"  T = {T:>4} K    D = {D:.6e} cm^2/s")
+        print(f"  T set = {T:>4.0f} K   T obs = {mean_T:6.1f} K   D = {D:.6e} cm^2/s")
+        for w in msd_diagnostics(times_fs, msd, (args.fit_start, args.fit_end)):
+            print(f"    [warn] {w}")
     print("=" * 60)
 
-    Ts = np.asarray(args.temperatures)
+    # Fit ln D vs 1/(k_B T) using the measured (not requested) temperature.
+    Ts = np.asarray(Ts_meas)
     invT = 1.0 / (K_B * Ts)  # 1/eV
     lnD = np.log(np.asarray(Ds))
     slope, intercept = np.polyfit(invT, lnD, 1)
@@ -173,8 +189,8 @@ def main() -> None:
 
     np.savetxt(
         args.output / "arrhenius.csv",
-        np.column_stack([Ts, np.asarray(Ds)]),
-        header="T_K D_cm2_per_s",
+        np.column_stack([np.asarray(args.temperatures), Ts, np.asarray(Ds)]),
+        header="T_set_K T_meas_K D_cm2_per_s",
         comments="# ",
     )
 
@@ -183,6 +199,16 @@ def main() -> None:
 
     print(f"  E_a = {Ea:.4f} eV")
     print(f"  D_0 = {D0:.4e} cm^2/s")
+    if Ea < 0.1:
+        print(
+            f"  [warn] E_a = {Ea:.3f} eV is far below typical solid-state "
+            + "barriers (0.3-0.8 eV); the system may be liquid-like or drifting"
+        )
+    if max(Ds) > 1e-3:
+        print(
+            "  [warn] D is orders of magnitude above solid-state diffusion; "
+            + "verify the cell is dense and periodic"
+        )
     print(f"  Results written to: {args.output}")
 
 
