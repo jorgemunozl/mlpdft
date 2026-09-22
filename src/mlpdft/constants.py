@@ -34,12 +34,59 @@ SLIDES_REPO = PATH_REPO / "mlpdft_touying"
 
 PLOT_DIR = SLIDES_REPO / "plots"
 
-# Groups
-GROUPS_LIF = [
+
+# Li–F interface systems
+GROUPS_LIF_INTERFACE = [
     "LIFINTERFACE_KJPAW_V1",
     "LIFINTERFACE_KJPAW_V2",
     "LIFINTERFACE_KJPAW_NPT",
     "LIFINTERFACE_KJPAW_NPT_V2",
+]
+
+GROUP_LIWITHF = [
+    "LIWITHF_NPT_FINAL",
+    "LIWITHF_ISOLATED",
+    "LIWITHF_V3",
+]
+
+GROUPS_LIF64 = [
+    "LIF64_KJPAW_V2",
+    "LIF64_KJPAW_NPT",
+    "LIF64_KJPAW_NPT_V2",
+    "LIF64_KJPAW_NPT_V3",
+    "LIF64_KJPAW_NPT_FINAL",
+    "LIF64_ISOLATED",
+]
+
+GROUPS_LIF = GROUP_LIWITHF + GROUPS_LIF64
+
+GROUPS_LIBF4 = [
+   "LIBF4_V4",
+   "LIBF4_V2",
+   "LIBF4",
+   "LIBF4_FINAL",
+   "LIBF4_NPT",
+   "LIBF4_NPT_FINAL",
+]
+
+GROUPS_BLI = [
+    "BLI_V2",
+    "BLI_NPT",
+    "BLI_ISOLATED",
+]
+
+GROUPS_BLI_INTERFACE = [
+    "BLI_INTERFACE_NPT",
+    "BLI_INTERFACE_NPT_FINAL",
+    "BLI_INTERFACE_FINAL",
+]
+
+# Whole catalog (every group present in the dataset directory)
+GROUPS = GROUPS_LIF_INTERFACE + GROUPS_LIF + GROUPS_BLI
+GROUPS_INTERFACE = GROUPS_LIF_INTERFACE + GROUPS_BLI_INTERFACE
+
+# Bulk and isolated cells (no interface)
+GROUPS_BULK = [
     "LIWITHF_NPT_FINAL",
     "LIWITHF_ISOLATED",
     "LIF64_KJPAW_V2",
@@ -49,14 +96,8 @@ GROUPS_LIF = [
     "LIF64_KJPAW_NPT_FINAL",
     "LIWITHF_V3",
     "LIF64_ISOLATED",
-]
-
-GROUPS_BLIF = [
     "BLI_V2",
     "BLI_NPT",
-    "BLI_INTERFACE_NPT",
-    "BLI_INTERFACE_NPT_FINAL",
-    "BLI_INTERFACE_FINAL",
     "BLI_ISOLATED",
     "LIBF4_V4",
     "LIBF4_V2",
@@ -66,7 +107,97 @@ GROUPS_BLIF = [
     "LIBF4_NPT_FINAL",
 ]
 
-GROUPS = GROUPS_LIF + GROUPS_BLIF
+# ── by ensemble (NPT vs. NVT) ────────────────────────────────────
+# NPT = variable-cell MD (calculation='vc-md'); NVT = fixed-cell MD.
+
+GROUPS_NPT = [
+    "LIFINTERFACE_KJPAW_NPT",
+    "LIFINTERFACE_KJPAW_NPT_V2",
+    "LIWITHF_NPT_FINAL",
+    "LIF64_KJPAW_NPT",
+    "LIF64_KJPAW_NPT_V2",
+    "LIF64_KJPAW_NPT_V3",
+    "LIF64_KJPAW_NPT_FINAL",
+    "BLI_NPT",
+    "BLI_INTERFACE_NPT",
+    "BLI_INTERFACE_NPT_FINAL",
+    "LIBF4_NPT",
+    "LIBF4_NPT_FINAL",
+]
+
+GROUPS_NVT = [
+    "LIFINTERFACE_KJPAW_V1",
+    "LIFINTERFACE_KJPAW_V2",
+    "LIWITHF_ISOLATED",
+    "LIF64_KJPAW_V2",
+    "LIWITHF_V3",
+    "LIF64_ISOLATED",
+    "BLI_V2",
+    "BLI_INTERFACE_FINAL",
+    "BLI_ISOLATED",
+    "LIBF4_V4",
+    "LIBF4_V2",
+    "LIBF4",
+    "LIBF4_FINAL",
+]
+
+# ── geometry × ensemble ──────────────────────────────────────────
+GROUPS_INTERFACE_NPT = [
+    "LIFINTERFACE_KJPAW_NPT",
+    "LIFINTERFACE_KJPAW_NPT_V2",
+    "BLI_INTERFACE_NPT",
+    "BLI_INTERFACE_NPT_FINAL",
+]
+
+GROUPS_INTERFACE_NVT = [
+    "LIFINTERFACE_KJPAW_V1",
+    "LIFINTERFACE_KJPAW_V2",
+    "BLI_INTERFACE_FINAL",
+]
+
+GROUPS_BULK_NPT = [
+    "LIWITHF_NPT_FINAL",
+    "LIF64_KJPAW_NPT",
+    "LIF64_KJPAW_NPT_V2",
+    "LIF64_KJPAW_NPT_V3",
+    "LIF64_KJPAW_NPT_FINAL",
+    "BLI_NPT",
+    "LIBF4_NPT",
+    "LIBF4_NPT_FINAL",
+]
+
+GROUPS_BULK_NVT = [
+    "LIWITHF_ISOLATED",
+    "LIF64_KJPAW_V2",
+    "LIWITHF_V3",
+    "LIF64_ISOLATED",
+    "BLI_V2",
+    "BLI_ISOLATED",
+    "LIBF4_V4",
+    "LIBF4_V2",
+    "LIBF4",
+    "LIBF4_FINAL",
+]
+
+# Groups that still lack a converted dataset; their raw QE jobs live under ./lack
+LACK_DIR = PATH_REPO / "lack"
+LACK_GROUPS = [
+    "BLi3_v2",
+    "BLi_interface",
+    "EMIMLITFSI_ANODE_RV2_LACK",
+    "LIBF4_LACK",
+    "LIBF4_RELAX_LACK",
+    "LIBF4_V3_LACK",
+    "LIF64_ISOLATED_LACK",
+    "LIF64_KJPAW_FINAL_LACK",
+    "LIF64_KJPAW_LACK",
+    "LIF64_KJPAW_NPT_LACK",
+    "LIFINTERFACE_KJPAW_FINAL_LACK",
+    "LIFINTERFACE_KJPAW_NPT_FINAL_LACK",
+    "LIFINTERFACE_KJPAW_NPT_LACK",
+    "LIFINTERFACE_KJPAW_NPT_V2_LACK",
+    "LIFINTERFACE_KJPAW_V1_LACK",
+]
 
 # ── Small test subset for snapshot ensemble experiment ──
 TEST_GROUPS = [
@@ -80,6 +211,7 @@ TEST_GROUPS = [
     "LIBF4_NPT",  # salt NPT
     "LIBF4_NPT_FINAL",  # salt NPT final
 ]
+
 TEST_STRIDE = 3
 TEST_MAX_FRAMES = 150
 TEST_DATASET_NAME = "li_f_snapshot_test"
