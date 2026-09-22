@@ -12,7 +12,6 @@ import numpy as np
 from ase import Atoms
 from ase.io import read, write
 from matplotlib import pyplot as plt
-from pymbar.timeseries import detect_equilibration, subsample_correlated_data
 
 from mlpdft.config import DataSetConfig
 from mlpdft.constants import (
@@ -161,9 +160,12 @@ class DataSet:
         print(f"Wrote extxyz: {self.config.data_out_path}")
 
     def get_dataset_numbers(self) -> None:
-        """Print the number of equilibrated frames of the whole dataset."""
+        """
+        Print the number of raw frames for every group in the registry.
+        """
         for group in self.REGISTRY:
             ds = DataSet(DataSetConfig(group=group))
+            ds.resolve_paths()
             print(f"{group}: {ds.count_frames()}")
 
     def upload_to_hf(self) -> None:
@@ -180,7 +182,7 @@ def convert_groups() -> None:
                 max_frames=TEST_MAX_FRAMES,
             )
         )
-    ds.convert_qe_out_to_extxyz()
+        ds.convert_qe_out_to_extxyz()
 
 
 def main() -> None:
@@ -189,8 +191,10 @@ def main() -> None:
         group="LIF64_KJPAW_NPT",
     )
     ds = DataSet(config)
-    ds.convert_qe_out_to_extxyz()
+    ds.get_dataset_numbers()
 
 
 if __name__ == "__main__":
-    main()
+    config = DataSetConfig()
+    ds = DataSet(config)
+    ds.get_dataset_numbers()

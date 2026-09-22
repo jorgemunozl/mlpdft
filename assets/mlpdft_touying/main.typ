@@ -1318,11 +1318,24 @@ In 3D (d=3): *D=slope(MSD) / 6*
   ]
 )
 
+== Curating the dataset
+
+A complete view of the dataset, the number of frames and stride, and physical meaning, also make time.
+
+Also worth mention the low quality dataset.
+
+How we should separate this?
+
+Different classifiers, anode cathode electrolyte, SEI, INTERSTITIAL, INTERFACE, NPT VS NPT
+
+
+What happens with thermalized states.
+
+how the changes cell over time.
+
 == Obtaining observables from MACE Foundational model
 
-MACE OMAT will be able to obtain such observables from the foundational model?
-
-
+Here results about the run
 
 = References
 

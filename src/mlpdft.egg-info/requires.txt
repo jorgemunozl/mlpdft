@@ -3,4 +3,3 @@ mace-torch>=0.3.6
 huggingface-hub>=1.19.0
 jupyter>=1.1.1
 wandb>=0.16
-pymbar>=4.0.3
