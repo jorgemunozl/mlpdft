@@ -32,6 +32,7 @@ class DataSet:
     def __init__(self, config: DataSetConfig):
         self.config: DataSetConfig = config
         self._raw_frames: list[Atoms] | None = None
+        self._frame_count: int | None = None
         self.REGISTRY: list[str] = GROUPS
 
     def read_raw_frames(self) -> list[Atoms]:
@@ -50,7 +51,43 @@ class DataSet:
 
     def count_frames(self) -> int:
         """Number of raw frames in the QE output."""
-        return len(self.read_raw_frames())
+        if self._raw_frames is not None:
+            return len(self._raw_frames)
+        if self._frame_count is not None:
+            return self._frame_count
+
+        path = self.config.data_in_path
+        print(f"[DataSet.count_frames] {path}")
+        if path is None or not path.exists():
+            self._frame_count = 0
+        else:
+            config_markers = ("Program PWSCF", "ATOMIC_POSITIONS")
+            result_markers = (
+                "!    total energy",
+                "Forces acting on atoms",
+                "total   stress",
+                "Magnetic moment per site",
+                "End of self-consistent calculation",
+                "End of band structure calculation",
+            )
+            count = 0
+            has_config = False
+            has_results = False
+            with path.open(encoding="latin-1") as output:
+                for line in output:
+                    if any(marker in line for marker in config_markers):
+                        if has_config and has_results:
+                            count += 1
+                        has_config = True
+                        has_results = False
+                    elif has_config and any(
+                        marker in line for marker in result_markers
+                    ):
+                        has_results = True
+            if has_config and has_results:
+                count += 1
+            self._frame_count = count
+        return self._frame_count
 
     def resolve_paths(self) -> None:
         """Derive ``data_in_path`` /``data_out_path`` from ``group``."""
@@ -61,7 +98,7 @@ class DataSet:
         if cfg.frame_stride is None:
             cfg.frame_stride = 1
         if cfg.max_frames is None:
-            cfg.max_frames = int(len(self.read_raw_frames()) / cfg.frame_stride)
+            cfg.max_frames = int(self.count_frames() / cfg.frame_stride)
 
         cfg.data_out_path = (
             DATA_DIR

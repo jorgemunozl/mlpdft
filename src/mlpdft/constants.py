@@ -29,6 +29,8 @@ MAX_FRAMES = None  # use all frames after striding
 
 # Template path (sibling of this script)
 PATH_REPO = Path(__file__).resolve().parent.parent.parent
+DATA_DIR = PATH_REPO / "dataset"
+XYZ_DIR = "xyz_files"
 
 SLIDES_REPO = PATH_REPO / "mlpdft_touying"
 
@@ -81,8 +83,12 @@ GROUPS_BLI_INTERFACE = [
     "BLI_INTERFACE_FINAL",
 ]
 
-# Whole catalog (every group present in the dataset directory)
-GROUPS = GROUPS_LIF_INTERFACE + GROUPS_LIF + GROUPS_BLI
+# Whole catalog (every group directory present in the dataset directory)
+GROUPS = sorted(
+    path.name
+    for path in DATA_DIR.iterdir()
+    if path.is_dir() and path.name != XYZ_DIR
+) if DATA_DIR.is_dir() else []
 GROUPS_INTERFACE = GROUPS_LIF_INTERFACE + GROUPS_BLI_INTERFACE
 
 # Bulk and isolated cells (no interface)
@@ -216,9 +222,6 @@ TEST_STRIDE = 3
 TEST_MAX_FRAMES = 150
 TEST_DATASET_NAME = "li_f_snapshot_test"
 
-
-DATA_DIR = PATH_REPO / "dataset"
-XYZ_DIR = "xyz_files"
 
 SRC_DIR = PATH_REPO / "src" / "mlpdft"
 OUTPUTS_DIR = SRC_DIR / "outputs"
