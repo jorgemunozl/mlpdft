@@ -39,7 +39,7 @@ class DataSetConfig:
 
     frame_stride: int | None = field(
         default=None,
-        metadata={"description": "Keep one frame every N parsed frames (>=1)"},
+        metadata={"description": "Keep one frame every N parsed frames (0 = all)"},
     )
 
     max_frames: int | None = field(

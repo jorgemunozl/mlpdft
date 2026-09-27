@@ -32,7 +32,6 @@ class DataSet:
     def __init__(self, config: DataSetConfig):
         self.config: DataSetConfig = config
         self._raw_frames: list[Atoms] | None = None
-        self._frame_count: int | None = None
         self.REGISTRY: list[str] = GROUPS
 
     def read_raw_frames(self) -> list[Atoms]:
@@ -45,49 +44,11 @@ class DataSet:
             self._raw_frames = []
             return []
         text = path.read_text(encoding="latin-1")
+        text = text.replace("End of self-consistent calculation", "")
+        text = text.replace("End of band structure calculation", "")
         raw = read(StringIO(text), format="espresso-out", index=":")
         self._raw_frames = [raw] if isinstance(raw, Atoms) else list(raw)
         return self._raw_frames
-
-    def count_frames(self) -> int:
-        """Number of raw frames in the QE output."""
-        if self._raw_frames is not None:
-            return len(self._raw_frames)
-        if self._frame_count is not None:
-            return self._frame_count
-
-        path = self.config.data_in_path
-        print(f"[DataSet.count_frames] {path}")
-        if path is None or not path.exists():
-            self._frame_count = 0
-        else:
-            config_markers = ("Program PWSCF", "ATOMIC_POSITIONS")
-            result_markers = (
-                "!    total energy",
-                "Forces acting on atoms",
-                "total   stress",
-                "Magnetic moment per site",
-                "End of self-consistent calculation",
-                "End of band structure calculation",
-            )
-            count = 0
-            has_config = False
-            has_results = False
-            with path.open(encoding="latin-1") as output:
-                for line in output:
-                    if any(marker in line for marker in config_markers):
-                        if has_config and has_results:
-                            count += 1
-                        has_config = True
-                        has_results = False
-                    elif has_config and any(
-                        marker in line for marker in result_markers
-                    ):
-                        has_results = True
-            if has_config and has_results:
-                count += 1
-            self._frame_count = count
-        return self._frame_count
 
     def resolve_paths(self) -> None:
         """Derive ``data_in_path`` /``data_out_path`` from ``group``."""
@@ -95,10 +56,13 @@ class DataSet:
         if not cfg.config_type:
             cfg.config_type = cfg.group
         cfg.data_in_path = DATA_DIR / cfg.group / Path(str(cfg.group) + ".out")
-        if cfg.frame_stride is None:
+        if cfg.frame_stride is None or cfg.frame_stride == 0:
             cfg.frame_stride = 1
         if cfg.max_frames is None:
-            cfg.max_frames = int(self.count_frames() / cfg.frame_stride)
+            raw_frame_count = len(self.read_raw_frames())
+            cfg.max_frames = (
+                raw_frame_count + cfg.frame_stride - 1
+            ) // cfg.frame_stride
 
         cfg.data_out_path = (
             DATA_DIR
@@ -181,8 +145,8 @@ class DataSet:
             write(path, atoms, format="extxyz", append=i > 0)
 
     def validate(self) -> None:
-        if self.config.frame_stride is not None and self.config.frame_stride <= 0:
-            raise ValueError("frame_stride must be >= 1")
+        if self.config.frame_stride is not None and self.config.frame_stride < 0:
+            raise ValueError("frame_stride must be >= 0")
 
     def convert_qe_out_to_extxyz(self) -> None:
         """Full pipeline: resolve paths → parse → label → write extxyz."""
@@ -201,9 +165,15 @@ class DataSet:
         Print the number of raw frames for every group in the registry.
         """
         for group in self.REGISTRY:
-            ds = DataSet(DataSetConfig(group=group))
+            ds = DataSet(
+                DataSetConfig(
+                    group=group,
+                    frame_stride=0,
+                    equilibration_cutoff=0,
+                )
+            )
             ds.resolve_paths()
-            print(f"{group}: {ds.count_frames()}")
+            print(f"{group}: {len(ds.read_raw_frames())}")
 
     def upload_to_hf(self) -> None:
         """Upload the dataset to Hugging Face."""
