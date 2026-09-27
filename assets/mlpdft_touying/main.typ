@@ -1318,6 +1318,157 @@ In 3D (d=3): *D=slope(MSD) / 6*
   ]
 )
 
+== Key paper
+
+#figure(
+  image("images/explor.png", width: 80%),
+  caption: [Defects to collective ring diffusion]
+)
+
+
+== Radial Distribution Function
+
+#figure(
+  image("images/rdf.png", width: 25%),
+  caption: []
+)
+
+== Knock of mechanism
+
+#figure(
+  image("images/knock.png", width: 85%),
+  caption: [Knock off mechanism]
+)
+
+// --- Dataset Study tables ---------------------------------------------------
+// One summary slide + one detailed table per chemistry group.
+#let ds-group(total, rows) = text(size: 0.86em, figure(
+  table(
+    columns: (auto, auto, auto, 1fr),
+    stroke: 0.4pt,
+    inset: 3pt,
+    align: (left, right, left, left),
+    table.cell(fill: luma(235))[*Variation*],
+    table.cell(fill: luma(235))[*Frames*],
+    table.cell(fill: luma(235))[*Stage*],
+    table.cell(fill: luma(235))[*Physical meaning / role in Li⁺ history*],
+    ..rows.flatten(),
+  ),
+  caption: [Group total: #total frames],
+))
+
+== Dataset Study
+
+Five chemistry groups · 25 configurations · *218 008 frames*. One phase space, four bonding regimes — and a single Li⁺ history.
+
+#align(center)[
+  #text(size: 0.82em)[
+    #figure(
+      table(
+        columns: (auto, auto, auto, auto, 1fr),
+        stroke: 0.5pt,
+        inset: 4pt,
+        align: (left, right, right, left, left),
+        table.cell(fill: luma(230))[*Group*],
+        table.cell(fill: luma(230))[*Frames*],
+        table.cell(fill: luma(230))[*Var.*],
+        table.cell(fill: luma(230))[*Regime*],
+        table.cell(fill: luma(230))[*Why it matters for the Li⁺ history*],
+        [`LiF64`], [50 284], [6], [ionic crystal], [Crystalline LiF backbone of the SEI; the Li⁺ sublattice reference.],
+        [`LIWITHF`], [22 348], [3], [defective ionic], [Off-stoichiometric Li–F: defects open Li⁺-hopping channels.],
+        [`LIBF4`], [82 664], [6], [covalent / molecular], [LiBF₄ salt / B–F additive chemistry; covalent regime.],
+        [`BLI`], [55 943], [6], [metallic / interfacial], [Metallic Li–B and Li|SEI contacts where Li⁺ crosses phases.],
+        [`LIFINTERFACE`], [6 769], [4], [interfacial], [Li|LiF boundaries the Li⁺ flux must cross; uncertainty peaks here.],
+        table.cell(fill: luma(230))[*TOTAL*],
+        table.cell(fill: luma(230))[*218 008*],
+        table.cell(fill: luma(230))[*25*],
+        table.cell(fill: luma(230))[—],
+        table.cell(fill: luma(230))[One phase space, four bonding regimes, one Li⁺ history.],
+      ),
+      caption: [Where the 218 008 frames live (frame counts from `scripts/count.txt`)],
+    )
+  ]
+]
+
+== Dataset study · LiF64 — bulk LiF (64-atom, ionic crystal)
+
+The crystalline LiF backbone of the SEI: the reference Li⁺ sublattice and long-range ionic transport.
+
+#ds-group([50 284], (
+  ([`LIF64_ISOLATED`], [284], [reference], [Isolated LiF molecule; Li–F bond reference]),
+  ([`LIF64_KJPAW_V2`], [10 000], [baseline], [Bulk LiF, fixed cell; crystal baseline]),
+  ([`LIF64_KJPAW_NPT`], [10 000], [NPT], [Relaxed cell; thermal expansion, density]),
+  ([`LIF64_KJPAW_NPT_V2`], [10 000], [round 2], [Active-learning re-sample of bulk]),
+  ([`LIF64_KJPAW_NPT_V3`], [10 000], [round 3], [Further refinement of bulk LiF]),
+  ([`LIF64_KJPAW_NPT_FINAL`], [10 000], [final], [Converged Li⁺ transport reference]),
+))
+
+== Dataset study · LIWITHF — Li-rich, off-stoichiometric Li–F
+
+Li-rich Li–F: deviations from stoichiometry create the defects and open channels that let Li⁺ hop.
+
+#ds-group([22 348], (
+  ([`LIWITHF_ISOLATED`], [190], [reference], [Isolated Li–F species; molecular reference for Li–F bonding]),
+  ([`LIWITHF_V3`], [5 976], [round 3], [Li-rich deviations: point defects, off-stoichiometry, local disorder]),
+  ([`LIWITHF_NPT_FINAL`], [16 182], [final], [Long NPT production: defect migration and Li⁺ diffusion pathways]),
+))
+
+== Dataset study · LIBF4 — LiBF₄ salt (covalent B–F)
+
+The LiBF₄ salt: boron / B–F additive chemistry that modifies the interphase — the covalent regime.
+
+#ds-group([82 664], (
+  ([`LIBF4`], [1 747], [baseline], [First-pass LiBF₄ salt frames (original dataset)]),
+  ([`LIBF4_V2`], [917], [pilot], [Small exploratory round of salt configurations]),
+  ([`LIBF4_V4`], [20 000], [round 4], [Production-scale salt ensemble; current B–F chemistry]),
+  ([`LIBF4_NPT`], [20 000], [NPT], [Isobaric salt: Li–F / B–F coordination under a relaxed cell]),
+  ([`LIBF4_FINAL`], [20 000], [production], [Converged fixed-cell production run]),
+  ([`LIBF4_NPT_FINAL`], [20 000], [final], [Final isobaric salt production run]),
+))
+
+== Dataset study · BLI — boron–lithium interphase (metallic)
+
+Metallic Li–B and its interfaces: where Li⁺ leaves the metal and meets the interphase.
+
+#ds-group([55 943], (
+  ([`BLI_ISOLATED`], [160], [reference], [Isolated B / Li species; molecular reference]),
+  ([`BLI_V2`], [10 000], [round 2], [Bulk B–Li: metallic bonding and Li coordination]),
+  ([`BLI_NPT`], [10 000], [NPT], [Isobaric B–Li bulk; relaxed cell]),
+  ([`BLI_INTERFACE_NPT`], [6 163], [interface], [Li|B contact; the interfacial bonding regime]),
+  ([`BLI_INTERFACE_FINAL`], [14 379], [final], [Converged interface trajectory]),
+  ([`BLI_INTERFACE_NPT_FINAL`], [15 241], [final NPT], [Final isobaric interface production]),
+))
+
+== Dataset study · LIFINTERFACE — LiF interfaces (Li|LiF)
+
+The Li|LiF boundary the Li⁺ flux must cross — where model uncertainty concentrates.
+
+#ds-group([6 769], (
+  ([`LIFINTERFACE_KJPAW_V1`], [745], [round 1], [LiF interface configurations, first pass]),
+  ([`LIFINTERFACE_KJPAW_NPT`], [1 293], [NPT], [Isobaric LiF interface; relaxed cell]),
+  ([`LIFINTERFACE_KJPAW_V2`], [2 344], [round 2], [Refined LiF interface ensemble]),
+  ([`LIFINTERFACE_KJPAW_NPT_V2`], [2 387], [NPT round 2], [Refined isobaric LiF interface]),
+))
+
+== Dataset study · why it matters for the Li⁺ history
+
+#text(size: 0.9em)[
+  - *Ionic* (`LiF64`, `LIWITHF`): crystalline LiF backbone and its Li⁺ sublattice — the baseline Li⁺ environment.
+  - *Covalent* (`LIBF4`): LiBF₄ / B–F additive chemistry — species that shape the interphase.
+  - *Metallic / interfacial* (`BLI`, `LIFINTERFACE`): where Li⁺ leaves the metal and crosses into the SEI — the rate-limiting interfaces.
+  - *Stage labels:* `ISOLATED` = molecular reference · `V1…V4` = active-learning rounds · `NPT` = relaxed cell · `FINAL` = converged production.
+]
+
+
+== Curating the dataset part one
+
+Wondering if add thermalization.
+
+
+== Nature of the dataset
+
+
+
 == Curating the dataset
 
 A complete view of the dataset, the number of frames and stride, and physical meaning, also make time.
