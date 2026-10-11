@@ -1,4 +1,9 @@
-# Literature Review — Reference-energy (E₀) mismatch in foundation-model MLIPs for SEI
+# Literature Review
+
+Mostly for Multi Head thing
+
+And the other one. are key.
+
 
 **Date:** 2026-09-13
 **Scope:** foundation-model interatomic potentials, zero-shot vs fine-tuned transfer, the per-element
