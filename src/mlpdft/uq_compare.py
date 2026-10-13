@@ -23,33 +23,30 @@ from typing import Any
 
 os.environ.setdefault("WANDB_MODE", "offline")
 os.environ.setdefault("TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD", "1")
-warnings.filterwarnings(
-    "ignore", message=".*TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD.*"
-)
+warnings.filterwarnings("ignore", message=".*TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD.*")
 warnings.filterwarnings("ignore", message=".*cuequivariance.*not available.*")
 
-import numpy as np  # noqa: E402
-import torch  # noqa: E402
-from ase import Atoms  # noqa: E402
-from ase.io import read, write  # noqa: E402
-from mace.calculators.mace import MACECalculator  # noqa: E402
-from mace.cli.run_train import run  # noqa: E402
-from mace.tools import build_default_arg_parser  # noqa: E402
-from mace.tools.scripts_utils import LRScheduler as _LRScheduler  # noqa: E402
-from mace.tools.scripts_utils import remove_pt_head  # noqa: E402
+import numpy as np
+import torch
+from ase import Atoms
+from ase.io import read, write
+from mace.calculators.mace import MACECalculator
+from mace.cli.run_train import run
+from mace.tools import build_default_arg_parser
+from mace.tools.scripts_utils import LRScheduler as _LRScheduler
+from mace.tools.scripts_utils import remove_pt_head
 
-from mlpdft.config import (  # noqa: E402
+from mlpdft.config import (
     Mace_TrainerConfig,
     MaceTrainingHyperparams,
     MaceTrainingMetadata,
-)  # noqa: E402
-from mlpdft.constants import (  # noqa: E402
+)
+from mlpdft.constants import (
     ENERGY_KEY,
     ENERGY_OFFSET,
     FORCE_KEY,
     OUTPUTS_DIR,
 )
-
 
 _original_scheduler_init = _LRScheduler.__init__
 _original_scheduler_step = _LRScheduler.step
@@ -59,9 +56,7 @@ def _patched_scheduler_init(self, optimizer, args):
     if args.scheduler == "CosineAnnealingWarmRestarts":
         self.scheduler = args.scheduler
         self._optimizer_type = args.optimizer
-        scheduler_class = (
-            torch.optim.lr_scheduler.CosineAnnealingWarmRestarts
-        )
+        scheduler_class = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts
         self.lr_scheduler = scheduler_class(
             optimizer=optimizer,
             T_0=getattr(args, "cosine_T_0", 20),
@@ -89,9 +84,7 @@ TARGET_HEADS = ("uq_head_123", "uq_head_124", "uq_head_125")
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description=(
-            "Compare foundation-model UQ ensembles on held-out DFT data."
-        )
+        description=("Compare foundation-model UQ ensembles on held-out DFT data.")
     )
     parser.add_argument("--train-file", type=Path, required=True)
     parser.add_argument("--valid-file", type=Path, required=True)
@@ -101,14 +94,10 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=OUTPUTS_DIR / "uq_diffusion_comparison",
     )
-    parser.add_argument(
-        "--run-id", default=datetime.now().strftime("%Y%m%d_%H%M%S")
-    )
+    parser.add_argument("--run-id", default=datetime.now().strftime("%Y%m%d_%H%M%S"))
     parser.add_argument("--model-key", default="mace_omat_medium")
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
-    parser.add_argument(
-        "--dtype", choices=("float32", "float64"), default="float64"
-    )
+    parser.add_argument("--dtype", choices=("float32", "float64"), default="float64")
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--valid-batch-size", type=int, default=1)
@@ -126,11 +115,7 @@ def parse_args() -> argparse.Namespace:
 
 def parse_seeds(value: str) -> list[int]:
     try:
-        seeds = [
-            int(part.strip())
-            for part in value.split(",")
-            if part.strip()
-        ]
+        seeds = [int(part.strip()) for part in value.split(",") if part.strip()]
     except ValueError as exc:
         raise argparse.ArgumentTypeError(
             "Seeds must be comma-separated integers"
@@ -152,20 +137,13 @@ def _read_frames(path: Path, require_labels: bool = True) -> list[Atoms]:
         for index, atoms in enumerate(frames):
             if ENERGY_KEY not in atoms.info or FORCE_KEY not in atoms.arrays:
                 raise ValueError(
-                    f"Frame {index} in {path} lacks {ENERGY_KEY} "
-                    f"or {FORCE_KEY}"
+                    f"Frame {index} in {path} lacks {ENERGY_KEY} or {FORCE_KEY}"
                 )
             forces = np.asarray(atoms.arrays[FORCE_KEY])
-            if forces.shape != (len(atoms), 3) or not np.isfinite(
-                forces
-            ).all():
-                raise ValueError(
-                    f"Invalid force labels in frame {index} of {path}"
-                )
+            if forces.shape != (len(atoms), 3) or not np.isfinite(forces).all():
+                raise ValueError(f"Invalid force labels in frame {index} of {path}")
             if not np.isfinite(float(atoms.info[ENERGY_KEY])):
-                raise ValueError(
-                    f"Invalid energy label in frame {index} of {path}"
-                )
+                raise ValueError(f"Invalid energy label in frame {index} of {path}")
     return list(frames)
 
 
@@ -191,7 +169,7 @@ def _make_bootstrap_files(
             group_sample: list[Atoms] = []
             while len(group_sample) < size:
                 start = int(rng.integers(0, size - width + 1))
-                group_sample.extend(group_frames[start:start + width])
+                group_sample.extend(group_frames[start : start + width])
             sampled.extend(group_sample[:size])
 
         head_name = TARGET_HEADS[head_index]
@@ -201,9 +179,7 @@ def _make_bootstrap_files(
     return paths
 
 
-def _make_hyperparams(
-    args: argparse.Namespace, train_file: Path, valid_file: Path
-):
+def _make_hyperparams(args: argparse.Namespace, train_file: Path, valid_file: Path):
     values: dict[str, Any] = {
         "r_max": 6.0,
         "max_num_epochs": args.epochs,
@@ -385,9 +361,7 @@ def _run_training(
 
     model_path = run_dir / "models" / f"{run_name}.model"
     if not model_path.is_file():
-        raise FileNotFoundError(
-            f"MACE did not save the expected model: {model_path}"
-        )
+        raise FileNotFoundError(f"MACE did not save the expected model: {model_path}")
     return model_path
 
 
@@ -410,13 +384,9 @@ def _export_snapshot_models(
         if (epoch := _checkpoint_epoch(path)) is not None
     ]
     if not checkpoints:
-        raise FileNotFoundError(
-            f"No epoch checkpoints found in {checkpoint_dir}"
-        )
+        raise FileNotFoundError(f"No epoch checkpoints found in {checkpoint_dir}")
 
-    model = torch.load(
-        final_model_path, map_location="cpu", weights_only=False
-    )
+    model = torch.load(final_model_path, map_location="cpu", weights_only=False)
     exported_dir = run_dir / "snapshot_models"
     exported_dir.mkdir(parents=True, exist_ok=True)
     exported: list[Path] = []
@@ -424,15 +394,11 @@ def _export_snapshot_models(
 
     for index in range(1, count + 1):
         target_epoch = min(round(epochs * index / count), epochs - 1)
-        candidates = [
-            item for item in checkpoints if item[0] not in used_epochs
-        ]
+        candidates = [item for item in checkpoints if item[0] not in used_epochs]
         epoch, checkpoint_path = min(
             candidates, key=lambda item: abs(item[0] - target_epoch)
         )
-        checkpoint = torch.load(
-            checkpoint_path, map_location="cpu", weights_only=False
-        )
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
         model.load_state_dict(checkpoint["model"])
         model_path = exported_dir / f"{run_name}_epoch_{epoch}.model"
         torch.save(model, model_path)
@@ -453,10 +419,7 @@ def _spearman_correlation(left: np.ndarray, right: np.ndarray) -> float | None:
         start = 0
         while start < len(values):
             end = start + 1
-            while (
-                end < len(values)
-                and sorted_values[end] == sorted_values[start]
-            ):
+            while end < len(values) and sorted_values[end] == sorted_values[start]:
                 end += 1
             output[order[start:end]] = (start + end - 1) / 2 + 1
             start = end
@@ -476,9 +439,7 @@ def _summarize_subset(
     if not indices:
         return {"n_frames": 0}
     energy = energy_errors[indices]
-    components = np.concatenate(
-        [force_abs_errors[index].ravel() for index in indices]
-    )
+    components = np.concatenate([force_abs_errors[index].ravel() for index in indices])
     uncertainties = force_uncertainty[indices]
     frame_errors = force_frame_rmse[indices]
     order = np.argsort(uncertainties)
@@ -486,9 +447,7 @@ def _summarize_subset(
     for fraction in (0.1, 0.25, 0.5, 0.75, 1.0):
         selected_count = max(1, int(np.ceil(fraction * len(indices))))
         selected = order[:selected_count]
-        risk[str(fraction)] = float(
-            np.sqrt(np.mean(frame_errors[selected] ** 2))
-        )
+        risk[str(fraction)] = float(np.sqrt(np.mean(frame_errors[selected] ** 2)))
     return {
         "n_frames": len(indices),
         "energy_mae_mev_per_atom": float(np.mean(np.abs(energy)) * 1000),
@@ -570,19 +529,13 @@ def _evaluate_method(
             )
             mean_forces = np.mean(predicted_forces, axis=0)
             component_std = np.std(predicted_forces, axis=0)
-            force_uncertainty[index] = float(
-                np.sqrt(np.mean(component_std**2))
-            )
+            force_uncertainty[index] = float(np.sqrt(np.mean(component_std**2)))
             ref_forces = np.asarray(atoms.arrays[FORCE_KEY], dtype=float)
             frame_force_error = mean_forces - ref_forces
             force_abs_errors.append(np.abs(frame_force_error))
-            force_frame_rmse[index] = float(
-                np.sqrt(np.mean(frame_force_error**2))
-            )
+            force_frame_rmse[index] = float(np.sqrt(np.mean(frame_force_error**2)))
             ref_energy = float(atoms.info[ENERGY_KEY])
-            energy_errors[index] = (
-                energy_mean[index] - ref_energy
-            ) / len(atoms)
+            energy_errors[index] = (energy_mean[index] - ref_energy) / len(atoms)
             group = str(atoms.info.get("config_type", "unknown"))
             groups.append(group)
             writer.writerow(
@@ -592,16 +545,10 @@ def _evaluate_method(
                     "n_atoms": len(atoms),
                     "reference_energy_ev": ref_energy,
                     "predicted_energy_mean_ev": energy_mean[index],
-                    "predicted_energy_std_ev_per_atom": (
-                        energy_std_per_atom[index]
-                    ),
-                    "energy_abs_error_mev_per_atom": (
-                        abs(energy_errors[index]) * 1000
-                    ),
+                    "predicted_energy_std_ev_per_atom": (energy_std_per_atom[index]),
+                    "energy_abs_error_mev_per_atom": (abs(energy_errors[index]) * 1000),
                     "force_rmse_ev_per_angstrom": force_frame_rmse[index],
-                    "force_uncertainty_ev_per_angstrom": (
-                        force_uncertainty[index]
-                    ),
+                    "force_uncertainty_ev_per_angstrom": (force_uncertainty[index]),
                 }
             )
 
@@ -625,10 +572,7 @@ def _evaluate_method(
         ]
         single_energy_errors = np.asarray(
             [
-                (
-                    member_energies[member_index][index]
-                    - float(atoms.info[ENERGY_KEY])
-                )
+                (member_energies[member_index][index] - float(atoms.info[ENERGY_KEY]))
                 / len(atoms)
                 for index, atoms in enumerate(test_frames)
             ]
@@ -644,10 +588,7 @@ def _evaluate_method(
                     np.sqrt(
                         np.mean(
                             np.concatenate(
-                                [
-                                    error.ravel()
-                                    for error in single_force_errors
-                                ]
+                                [error.ravel() for error in single_force_errors]
                             )
                             ** 2
                         )
@@ -677,9 +618,7 @@ def main() -> None:
     options = parse_args()
     options.seeds = parse_seeds(options.seeds)
     if options.device == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError(
-            "CUDA was requested but is not available on this node"
-        )
+        raise RuntimeError("CUDA was requested but is not available on this node")
 
     train_file = options.train_file.expanduser().resolve()
     valid_file = options.valid_file.expanduser().resolve()
@@ -708,9 +647,7 @@ def main() -> None:
         )
         elapsed = time.perf_counter() - started
         committee_members.append((name, model_path, None))
-        run_records.append(
-            {"name": name, "seconds": elapsed, "model": str(model_path)}
-        )
+        run_records.append({"name": name, "seconds": elapsed, "model": str(model_path)})
 
     snapshot_name = "warm_snapshots"
     snapshot_dir = run_root / snapshot_name
@@ -733,9 +670,7 @@ def main() -> None:
         options.snapshot_count,
     )
     elapsed = time.perf_counter() - started
-    snapshot_members = [
-        (path.stem, path, None) for path in snapshot_paths
-    ]
+    snapshot_members = [(path.stem, path, None) for path in snapshot_paths]
     run_records.append(
         {
             "name": snapshot_name,
@@ -775,9 +710,7 @@ def main() -> None:
         multihead_export_dir = multihead_dir / "target_head_models"
         multihead_export_dir.mkdir(parents=True, exist_ok=True)
         for head_name in bootstrap_files:
-            single_head = remove_pt_head(
-                deepcopy(multihead_model_object), head_name
-            )
+            single_head = remove_pt_head(deepcopy(multihead_model_object), head_name)
             head_path = multihead_export_dir / f"{head_name}.model"
             torch.save(single_head, head_path)
             multihead_members.append((head_name, head_path, None))
@@ -786,9 +719,7 @@ def main() -> None:
                 "name": multihead_name,
                 "seconds": elapsed,
                 "model": str(multihead_model),
-                "target_head_models": [
-                    str(member[1]) for member in multihead_members
-                ],
+                "target_head_models": [str(member[1]) for member in multihead_members],
                 "pt_train_file": options.pt_train_file,
                 "pt_samples": options.pt_samples,
             }
