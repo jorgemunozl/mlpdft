@@ -1,18 +1,11 @@
-# Run the Foundation-Model UQ Comparison
-
-This workflow trains and compares independent MACE fine-tunes, warm snapshots,
-and a multi-head bootstrap model on the same curated Li/F data. It evaluates
-held-out DFT energy/force error and whether ensemble force disagreement ranks
-force error. It also exports standalone models for subsequent Li-diffusion MD.
+# Run the UQ Test
 
 ## Requirements
 
 - Python environment synchronized with `uv sync`.
 - A CUDA GPU recommended; the default runner requires CUDA.
-- The `mace_omat_medium` foundation model available locally, or cluster access
-  to download it.
 - Network access on the first multi-head run to obtain MACE's OMAT replay
-  data. Use `--skip-multihead` if replay data cannot be obtained.
+  data.
 - Curated extxyz files with `REF_energy` in frame info and `REF_forces` in
   arrays. Create these from the six core groups listed in
   [`research/UQ_TEST_PROTOCOL.md`](../research/UQ_TEST_PROTOCOL.md).
