@@ -17,7 +17,6 @@ import time
 import warnings
 from collections import defaultdict
 from copy import deepcopy
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +29,7 @@ import numpy as np
 import torch
 from ase import Atoms
 from ase.io import read, write
+from huggingface_hub import snapshot_download
 from mace.calculators.mace import MACECalculator
 from mace.cli.run_train import run
 from mace.tools import build_default_arg_parser
@@ -42,10 +42,13 @@ from mlpdft.config import (
     MaceTrainingMetadata,
 )
 from mlpdft.constants import (
+    DATA_DIR,
     ENERGY_KEY,
     ENERGY_OFFSET,
     FORCE_KEY,
     OUTPUTS_DIR,
+    PREFIX_HF,
+    XYZ_DIR,
 )
 
 _original_scheduler_init = _LRScheduler.__init__
@@ -81,20 +84,62 @@ _LRScheduler.step = _patched_scheduler_step
 DEFAULT_SEEDS = (123, 124, 125)
 TARGET_HEADS = ("uq_head_123", "uq_head_124", "uq_head_125")
 
+# Run defaults: the runner needs no flags. The block-split inputs live under
+# ``dataset/xyz_files/uq_splits`` and are auto-downloaded from the HF dataset
+# repo when missing. The run id is fixed so the runbook's paths are literal.
+# Override with flags if needed.
+DEFAULT_SPLIT_DIR = DATA_DIR / XYZ_DIR / "uq_splits"
+DEFAULT_RUN_ID = "lif_uq_001"
+
+UQ_DATASET_REPO = f"{PREFIX_HF}/li_f_uq_splits"
+UQ_SPLIT_FILENAMES = ("uq_train.extxyz", "uq_valid.extxyz", "uq_test.extxyz")
+
+
+def _ensure_split_files(paths: list[Path]) -> None:
+    """Download any missing split file from the UQ dataset repo on the Hub.
+
+    Private repo: requires ``HF_TOKEN`` (or ``huggingface-cli login``). Skips the
+    network entirely when every file is already present locally.
+    """
+    missing = [path for path in paths if not path.is_file()]
+    if not missing:
+        return
+    print(f"Downloading UQ splits from {UQ_DATASET_REPO} ...")
+    allow_patterns = [*UQ_SPLIT_FILENAMES, "uq_manifest.json"]
+    for parent in {path.parent for path in missing}:
+        parent.mkdir(parents=True, exist_ok=True)
+        snapshot_download(
+            repo_id=UQ_DATASET_REPO,
+            repo_type="dataset",
+            local_dir=str(parent),
+            allow_patterns=allow_patterns,
+        )
+    still_missing = [path for path in paths if not path.is_file()]
+    if still_missing:
+        raise FileNotFoundError(
+            f"Could not obtain split file(s) from {UQ_DATASET_REPO}: {still_missing}"
+        )
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=("Compare foundation-model UQ ensembles on held-out DFT data.")
     )
-    parser.add_argument("--train-file", type=Path, required=True)
-    parser.add_argument("--valid-file", type=Path, required=True)
-    parser.add_argument("--test-file", type=Path, required=True)
+    parser.add_argument(
+        "--train-file", type=Path, default=DEFAULT_SPLIT_DIR / "uq_train.extxyz"
+    )
+    parser.add_argument(
+        "--valid-file", type=Path, default=DEFAULT_SPLIT_DIR / "uq_valid.extxyz"
+    )
+    parser.add_argument(
+        "--test-file", type=Path, default=DEFAULT_SPLIT_DIR / "uq_test.extxyz"
+    )
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=OUTPUTS_DIR / "uq_diffusion_comparison",
     )
-    parser.add_argument("--run-id", default=datetime.now().strftime("%Y%m%d_%H%M%S"))
+    parser.add_argument("--run-id", default=DEFAULT_RUN_ID)
     parser.add_argument("--model-key", default="mace_omat_medium")
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
     parser.add_argument("--dtype", choices=("float32", "float64"), default="float64")
@@ -623,6 +668,7 @@ def main() -> None:
     train_file = options.train_file.expanduser().resolve()
     valid_file = options.valid_file.expanduser().resolve()
     test_file = options.test_file.expanduser().resolve()
+    _ensure_split_files([train_file, valid_file, test_file])
     train_frames = _read_frames(train_file)
     _read_frames(valid_file)
     test_frames = _read_frames(test_file)

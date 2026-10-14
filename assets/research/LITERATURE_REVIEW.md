@@ -1,13 +1,7 @@
 # Literature Review
 
-Mostly for Multi Head thing
-
-And the other one. are key.
-
-
 **Date:** 2026-09-13
-**Scope:** foundation-model interatomic potentials, zero-shot vs fine-tuned transfer, the per-element
-reference-energy (E₀) problem, and MLIPs for the solid-electrolyte interphase (SEI) / Li-ion systems.
+**Scope:** foundation-model interatomic potentials, zero-shot vs fine-tuned transfer, fine-tuning MLIPS, MLIPs for the solid-electrolyte interphase (SEI) / Li-ion systems, uncertainty quantification.
 **Purpose:** map the territory around the thesis and locate the exact gap.
 
 ---
@@ -52,7 +46,21 @@ Forces — gradients — are **unaffected** by any constant per-species shift, b
 
 ### 3.1 It is a real, general, and quantified issue
 
-The closest and most important prior work is:
+The two closest and most important prior work is:
+
+Multihead finetunning enables 
+
+Commite 
+
+and
+
+Comparative study of ensembled-based uncertainty quantification methods for neural network interatomic potentials.
+
+To study lithium diffusion we have
+
+A must know
+
+
 
 - **Tompa, Varga-Umbrich, Batatia, Elena, Bernstein, Csányi, *Fine-tuning MLIP foundation models:
   strategies for accuracy and transferability*, arXiv:2606.12704 (2026).** This is the state of the art

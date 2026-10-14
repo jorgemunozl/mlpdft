@@ -81,16 +81,15 @@ class DataSet:
         if cfg.equilibration_cutoff:
             raw = raw[cfg.equilibration_cutoff :]
 
-        energies = np.array([atoms.get_potential_energy() for atoms in raw])
-        plt.plot(range(len(energies)), energies)
-        plt.show()
-        t0, g, _ = detect_equilibration(energies)
-        print(f"Equilibration detected: t0={t0}, g={g}")
-        indices = subsample_correlated_data(energies[t0:], g=g)
-        print(f"Subsampled indices: {indices}")
-        selected = [raw[t0:][i] for i in indices]
+        # energies = np.array([atoms.get_potential_energy() for atoms in raw])
+        # plt.plot(range(len(energies)), energies)
+        # plt.show()
+        # t0, g, _ = detect_equilibration(energies)
+        # print(f"Equilibration detected: t0={t0}, g={g}")
+        # indices = subsample_correlated_data(energies[t0:], g=g)
+        # print(f"Subsampled indices: {indices}")
+        #   selected = [raw[t0:][i] for i in indices]
         selected = raw[:: (cfg.frame_stride or 1)]
-
         if cfg.max_frames:  # positive → cap; 0/None → use all
             selected = selected[: cfg.max_frames]
 
