@@ -44,7 +44,7 @@ PROTOCOL_GROUPS = [
     "LIFINTERFACE_KJPAW_FINAL",
 ]
 
-DEFAULT_STRIDE = 15
+DEFAULT_STRIDE = 30
 
 
 def pick_extxyz(group: str, stride: int | None) -> Path | None:
@@ -111,7 +111,7 @@ def parse_args() -> argparse.Namespace:
         help="Validation fraction of the non-test remainder per group",
     )
     parser.add_argument(
-        "--run-id", default="uq_splits", help="Manifest / filename prefix"
+        "--run-id", default="uq", help="Manifest / filename prefix"
     )
     parser.add_argument(
         "--strict",
