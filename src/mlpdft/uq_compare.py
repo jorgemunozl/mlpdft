@@ -151,6 +151,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seeds", default=",".join(map(str, DEFAULT_SEEDS)))
     parser.add_argument("--snapshot-count", type=int, default=3)
     parser.add_argument("--bootstrap-block-size", type=int, default=5)
+    parser.add_argument(
+        "--bootstrap-committee",
+        action="store_true",
+        help="Bootstrap the training data per committee member (reduces collapse)",
+    )
     parser.add_argument("--pt-train-file", default="omat")
     parser.add_argument("--pt-samples", type=int, default=1000)
     parser.add_argument("--skip-multihead", action="store_true")
@@ -197,6 +202,7 @@ def _make_bootstrap_files(
     output_dir: Path,
     seeds: list[int],
     block_size: int,
+    names: list[str] | None = None,
 ) -> dict[str, Path]:
     by_group: dict[str, list[Atoms]] = defaultdict(list)
     for atoms in train_frames:
@@ -204,6 +210,7 @@ def _make_bootstrap_files(
         by_group[group].append(atoms)
 
     output_dir.mkdir(parents=True, exist_ok=True)
+    names = names or list(TARGET_HEADS[: len(seeds)])
     paths: dict[str, Path] = {}
     for head_index, seed in enumerate(seeds):
         rng = np.random.default_rng(seed)
@@ -217,10 +224,10 @@ def _make_bootstrap_files(
                 group_sample.extend(group_frames[start : start + width])
             sampled.extend(group_sample[:size])
 
-        head_name = TARGET_HEADS[head_index]
-        path = output_dir / f"{head_name}_bootstrap.extxyz"
+        name = names[head_index]
+        path = output_dir / f"{name}_bootstrap.extxyz"
         write(path, sampled, format="extxyz")
-        paths[head_name] = path
+        paths[name] = path
     return paths
 
 
@@ -438,7 +445,12 @@ def _export_snapshot_models(
     used_epochs: set[int] = set()
 
     for index in range(1, count + 1):
-        target_epoch = min(round(epochs * index / count), epochs - 1)
+        # Collect at the END of each SGDR cycle (one epoch before the next
+        # warm restart), where the LR is at its minimum and the member is
+        # converged.  Even spacing across the run lands on the restart
+        # boundaries and captures the loss-spiked, just-kicked model.
+        cycle_length = epochs // count
+        target_epoch = min(index * cycle_length - 1, epochs - 1)
         candidates = [item for item in checkpoints if item[0] not in used_epochs]
         epoch, checkpoint_path = min(
             candidates, key=lambda item: abs(item[0] - target_epoch)
@@ -677,15 +689,30 @@ def main() -> None:
     run_root.mkdir(parents=True, exist_ok=False)
     run_records: list[dict[str, Any]] = []
     committee_members = []
+    committee_bootstrap: dict[str, Path] = {}
+    if options.bootstrap_committee:
+        bootstrap_dir = run_root / "committee_bootstrap_data"
+        committee_bootstrap = _make_bootstrap_files(
+            train_frames,
+            bootstrap_dir,
+            options.seeds,
+            options.bootstrap_block_size,
+            names=[f"committee_seed_{seed}" for seed in options.seeds],
+        )
     for seed in options.seeds:
         name = f"independent_seed_{seed}"
         run_dir = run_root / name
+        member_train_file = (
+            committee_bootstrap[f"committee_seed_{seed}"]
+            if options.bootstrap_committee
+            else train_file
+        )
         started = time.perf_counter()
         model_path = _run_training(
             options,
             name,
             run_dir,
-            train_file,
+            member_train_file,
             valid_file,
             test_file,
             seed,
@@ -693,7 +720,14 @@ def main() -> None:
         )
         elapsed = time.perf_counter() - started
         committee_members.append((name, model_path, None))
-        run_records.append({"name": name, "seconds": elapsed, "model": str(model_path)})
+        run_records.append(
+            {
+                "name": name,
+                "seconds": elapsed,
+                "model": str(model_path),
+                "train_file": str(member_train_file),
+            }
+        )
 
     snapshot_name = "warm_snapshots"
     snapshot_dir = run_root / snapshot_name
@@ -812,6 +846,7 @@ def main() -> None:
         "epochs": options.epochs,
         "snapshot_count": options.snapshot_count,
         "bootstrap_block_size": options.bootstrap_block_size,
+        "committee_bootstrapped": options.bootstrap_committee,
         "multihead_enabled": not options.skip_multihead,
         "runs": run_records,
     }
