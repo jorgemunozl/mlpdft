@@ -11,16 +11,19 @@ unreliability as well as an independent-model committee — or not.
 ## Data & Scope
 
 Primary test: Li/F diffusion, no boron chemistry. Use the final, non-isolated
-groups from [`DATASET.md`](DATASET.md):
+**NVT** groups from [`DATASET.md`](DATASET.md):
 
-- Bulk LiF: `LIF64_KJPAW_FINAL`, `LIF64_KJPAW_NPT_FINAL`
-- Li-rich Li–F: `LIWITHF_KJPAW_FINAL`, `LIWITHF_NPT_FINAL`
-- Li|LiF interface: `LIFINTERFACE_KJPAW_FINAL`, `LIFINTERFACE_KJPAW_NPT_FINAL`
+- Bulk LiF: `LIF64_KJPAW_FINAL`
+- Li-rich Li–F: `LIWITHF_KJPAW_FINAL`
+- Li|LiF interface: `LIFINTERFACE_KJPAW_FINAL`
+
+The NPT variants are excluded from the primary scope: the downstream diffusion
+validation runs in fixed-cell NVT, and NPT carries a density/barostat confound
+(non-uniform settings). They may be reintroduced later as a separate
+ensemble-transfer OOD probe.
 
 Rules:
 
-- Keep NVT/NPT labels and report them separately; never merge groups with
-  different DFT settings.
 - Before training, verify pseudopotentials, functional, k-points, smearing,
   cutoffs, SCF convergence, restart overlap, and concatenated runs.
 - Keep isolated structures for a separate reference-energy experiment, not
@@ -85,9 +88,10 @@ test set is excluded from all training, scheduler selection, and calibration.
 | Warm-snapshot committee | 1 fine-tune, cosine warm restarts; 3 cycle-minimum checkpoints | Candidate low-cost UQ |
 | Multi-head committee | Shared backbone, 3 bootstrap heads + OMAT replay head | Lower-cost head disagreement; report correlation + replay cost |
 
-`uq_compare.py` defaults: 100 epochs, snapshots near epochs 33/66/99. Confirm
-checkpoints are cycle minima and converged. Report equal-member and matched-cost
-comparisons. A larger spread is not "better UQ" unless it predicts larger errors.
+`uq_compare.py` defaults: 150 epochs, snapshots near epochs 50/100/150 (cycle
+ends 49/99/149 under T₀ = epochs//count = 50). Confirm checkpoints are cycle
+minima and converged. Report equal-member and matched-cost comparisons. A larger
+spread is not "better UQ" unless it predicts larger errors.
 
 ## Evaluation
 

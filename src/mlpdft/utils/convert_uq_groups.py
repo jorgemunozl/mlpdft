@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Convert the six protocol Li/F QE outputs into labeled extxyz for the UQ test.
+"""Convert the three protocol Li/F (NVT) QE outputs into labeled extxyz for the UQ test.
 
 Settings (agreed for the UQ comparison):
   - equilibration cutoff: discard the first 100 parsed frames
   - frame stride: 10 (6 for LIFINTERFACE_KJPAW_FINAL, whose trajectory is short)
   - cap: 200 frames per group
+
+The NPT variants are excluded: the downstream diffusion validation runs in
+fixed-cell NVT, and NPT carries a density/barostat confound (non-uniform
+settings).
 
 Produces ``dataset/<group>/xyz_files/<group>_<stride>_200.extxyz`` with
 ``REF_energy`` / ``REF_forces`` labels and ``config_type=<group>``.
@@ -22,11 +26,8 @@ MAX_FRAMES = 200
 # stride 6 is needed to reach 200 after the 100-frame cutoff.
 UQ_GROUPS = {
     "LIF64_KJPAW_FINAL": 10,
-    "LIF64_KJPAW_NPT_FINAL": 10,
     "LIWITHF_KJPAW_FINAL": 10,
-    "LIWITHF_NPT_FINAL": 10,
     "LIFINTERFACE_KJPAW_FINAL": 6,
-    "LIFINTERFACE_KJPAW_NPT_FINAL": 10,
 }
 
 

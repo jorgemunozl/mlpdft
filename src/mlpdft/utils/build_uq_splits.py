@@ -19,7 +19,7 @@ Labels are validated the same way `uq_compare.py` does: each frame must carry
 Usage:
     uv run python src/mlpdft/utils/build_uq_splits.py --dry-run
     uv run python src/mlpdft/utils/build_uq_splits.py \
-        --groups LIF64_KJPAW_NPT_FINAL LIWITHF_NPT_FINAL \
+        --groups LIF64_KJPAW_FINAL LIWITHF_KJPAW_FINAL \
         --output-dir dataset/xyz_files/uq_splits
 """
 
@@ -35,14 +35,13 @@ from ase.io import read, write
 from mlpdft.constants import DATA_DIR, ENERGY_KEY, FORCE_KEY, XYZ_DIR
 
 # Final Li/F groups from assets/research/UQ_EXPERIMENT.md (primary scope:
-# LiF / Li-rich / Li|LiF interface, no boron chemistry).
+# LiF / Li-rich / Li|LiF interface, NVT only, no boron chemistry). The NPT
+# variants are excluded: the downstream diffusion validation runs in fixed-cell
+# NVT, and NPT carries a density/barostat confound (non-uniform settings).
 PROTOCOL_GROUPS = [
     "LIF64_KJPAW_FINAL",
-    "LIF64_KJPAW_NPT_FINAL",
     "LIWITHF_KJPAW_FINAL",
-    "LIWITHF_NPT_FINAL",
     "LIFINTERFACE_KJPAW_FINAL",
-    "LIFINTERFACE_KJPAW_NPT_FINAL",
 ]
 
 DEFAULT_STRIDE = 15

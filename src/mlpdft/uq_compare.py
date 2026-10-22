@@ -143,7 +143,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-key", default="mace_omat_medium")
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
     parser.add_argument("--dtype", choices=("float32", "float64"), default="float64")
-    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--epochs", type=int, default=150)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--valid-batch-size", type=int, default=1)
     parser.add_argument("--num-workers", type=int, default=0)
