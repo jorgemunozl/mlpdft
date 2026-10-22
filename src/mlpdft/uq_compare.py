@@ -91,7 +91,7 @@ TARGET_HEADS = ("uq_head_123", "uq_head_124", "uq_head_125")
 DEFAULT_SPLIT_DIR = DATA_DIR / XYZ_DIR / "uq_splits"
 DEFAULT_RUN_ID = "lif_uq_001"
 
-UQ_DATASET_REPO = f"{PREFIX_HF}/li_f_uq_splits"
+UQ_DATASET_REPO = f"{PREFIX_HF}/li_f_uq_splits_v2"
 UQ_SPLIT_FILENAMES = ("uq_train.extxyz", "uq_valid.extxyz", "uq_test.extxyz")
 
 
@@ -152,9 +152,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--snapshot-count", type=int, default=3)
     parser.add_argument("--bootstrap-block-size", type=int, default=5)
     parser.add_argument(
-        "--bootstrap-committee",
-        action="store_true",
-        help="Bootstrap the training data per committee member (reduces collapse)",
+        "--no-bootstrap-committee",
+        action="store_false",
+        dest="bootstrap_committee",
+        help="Disable per-member training-data bootstrap (default: enabled)",
     )
     parser.add_argument("--pt-train-file", default="omat")
     parser.add_argument("--pt-samples", type=int, default=1000)

@@ -3,7 +3,7 @@
 
 Settings (agreed for the UQ comparison):
   - equilibration cutoff: discard the first 100 parsed frames
-  - frame stride: 10 (6 for LIFINTERFACE_KJPAW_FINAL, whose trajectory is short)
+  - frame stride: 30 (all groups, to decorrelate temporally adjacent AIMD frames)
   - cap: 200 frames per group
 
 The NPT variants are excluded: the downstream diffusion validation runs in
@@ -22,12 +22,13 @@ from mlpdft.dataset_mlpdft import DataSet
 EQUILIBRATION_CUTOFF = 100
 MAX_FRAMES = 200
 
-# group -> frame stride. LIFINTERFACE_KJPAW_FINAL has only ~1436 raw frames, so
-# stride 6 is needed to reach 200 after the 100-frame cutoff.
+# group -> frame stride. Stride 30 decorrelates the temporally adjacent AIMD
+# frames; the tradeoff is fewer frames per group (most severe for the short
+# LIFINTERFACE_KJPAW_FINAL trajectory).
 UQ_GROUPS = {
-    "LIF64_KJPAW_FINAL": 10,
-    "LIWITHF_KJPAW_FINAL": 10,
-    "LIFINTERFACE_KJPAW_FINAL": 6,
+    "LIF64_KJPAW_FINAL": 30,
+    "LIWITHF_KJPAW_FINAL": 30,
+    "LIFINTERFACE_KJPAW_FINAL": 30,
 }
 
 

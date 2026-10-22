@@ -19,7 +19,7 @@ from huggingface_hub import HfApi, create_repo
 
 from mlpdft.constants import DATA_DIR, PREFIX_HF, XYZ_DIR
 
-DEFAULT_REPO_ID = f"{PREFIX_HF}/li_f_uq_splits"
+DEFAULT_REPO_ID = f"{PREFIX_HF}/li_f_uq_splits_v2"
 SPLIT_DIR = DATA_DIR / XYZ_DIR / "uq_splits"
 
 
@@ -57,7 +57,7 @@ fine-tuned MACE foundation models (`uq_compare.py`).
 ## Generation parameters
 
 - Equilibration cutoff: `100` frames discarded
-- Frame stride: `10` (`6` for `LIFINTERFACE_KJPAW_FINAL`)
+- Frame stride: `30` (all groups, to decorrelate adjacent AIMD frames)
 - Cap: `200` frames per group
 - Energy key: `REF_energy`, Force key: `REF_forces`
 - `config_type` = source group name
