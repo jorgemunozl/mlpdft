@@ -34,7 +34,7 @@ from ase.io import read, write
 
 from mlpdft.constants import DATA_DIR, ENERGY_KEY, FORCE_KEY, XYZ_DIR
 
-# Final Li/F groups from assets/research/UQ_TEST_PROTOCOL.md (primary scope:
+# Final Li/F groups from assets/research/UQ_EXPERIMENT.md (primary scope:
 # LiF / Li-rich / Li|LiF interface, no boron chemistry).
 PROTOCOL_GROUPS = [
     "LIF64_KJPAW_FINAL",
