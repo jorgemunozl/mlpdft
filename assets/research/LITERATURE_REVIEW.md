@@ -46,19 +46,21 @@ Forces — gradients — are **unaffected** by any constant per-species shift, b
 
 ### 3.1 It is a real, general, and quantified issue
 
-The two closest and most important prior work is:
+The three anchors this paper compares against (the UQ-methods question):
 
-Multihead finetunning enables 
+- **Multi-head committee fine-tuning** (Beck et al., arXiv:2508.09907) — replaces an ensemble of
+  independently fine-tuned models with a shared backbone carrying several readout heads, giving
+  committee-style disagreement at near single-model cost. The multi-head arm of this project.
+- **Kurniawan, Wen, Tadmor, Transtrum, *Comparative study of ensemble-based uncertainty
+  quantification methods for neural network interatomic potentials* (arXiv:2508.06456)** — benchmarks
+  bootstrap / dropout / random-init / snapshot ensembles and finds UQ can be **counterintuitive out
+  of distribution** (uncertainty plateaus or decreases as error grows). The snapshot/committee
+  comparative anchor.
+- **Alghamdi et al., *Comparing fine-tuning strategies for MLFFs in lithium-ion diffusion*
+  (arXiv:2510.05020, §4)** — the application anchor: fine-tuning MACE-MPA-0 for LiF interstitial
+  diffusion.
 
-Commite 
-
-and
-
-Comparative study of ensembled-based uncertainty quantification methods for neural network interatomic potentials.
-
-To study lithium diffusion we have
-
-A must know
+For the reference-energy question specifically, the state of the art is:
 
 
 
@@ -116,6 +118,27 @@ That is the specific, citable gap.
 - Thermal conductivity of LiF/Li₂O via MLIP (Comput. Mater. Sci. 2026); amorphous fluorophosphate fast-ion
   conductors ([arXiv:2510.22912](https://arxiv.org/abs/2510.22912)); SEI structure via ML (Aalto thesis) —
   context, not competitors.
+
+### 4.1 Cell decision — interstitial Li in bulk LiF (2026-10-27)
+
+The diffusion-validation cell was reconsidered. The canonical Li⁺-conduction mechanism in LiF
+is an **interstitial knock-off** (an interstitial Li displaces a lattice Li), not a vacancy hop —
+so the right benchmark cell is **interstitial Li in a bulk LiF supercell**, *not* the Li|LiF
+interface the project originally emphasized. The Alghamdi reference Ea (0.22 eV zero-shot /
+0.20 eV fine-tuned vs. DeePMD 0.24 eV) is an *interstitial* quantity.
+
+Two consequences, both acted on:
+
+- **The project dataset lacks the interstitial configuration.** It has bulk LiF (`LIF64`),
+  Li-rich Li–F (`LIWITHF`), and interface (`LIFINTERFACE`) groups, but no bulk LiF supercell
+  with an interstitial Li — the one configuration the diffusion mechanism probes.
+- **Cutoff mismatch vs. Alghamdi's public data.** Both are PBE+PAW, but this project uses
+  **40/320 Ry (KJPAW)** while Alghamdi et al. use **110/440 Ry (PAW)**; mixing them would break
+  the self-consistency rule in [`DATASET.md`](DATASET.md).
+
+Decision and recommendation are in [`DIFFUSION_CELL.md`](DIFFUSION_CELL.md): generate the
+interstitial-Li dataset with the project's own 40/320 Ry KJPAW settings (3×3×3 ~216-atom cell,
+one Li interstitial, 300–600 K) rather than reusing Alghamdi's data.
 
 ## 5. Ensemble UQ — tangential (the abandoned thread)
 

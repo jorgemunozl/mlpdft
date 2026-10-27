@@ -1,152 +1,74 @@
-# UQ Experiment: Warm-Snapshot vs. Independent Committee for MACE
+# UQ Experiment 1 — First Fine-Tuning Run
+
+**Status:** ✅ **completed & reviewed** (analysis 2026-10-20).
+**Next:** [`UQ_EXPERIMENT_2.md`](UQ_EXPERIMENT_2.md) — the corrected rerun, now running.
 
 ## Goal
 
-Test whether a warm-restart snapshot ensemble from a fine-tuned MACE foundation
-model gives useful, compute-efficient uncertainty estimates (UQ) for
-Li-containing SEI-like materials. The claim is not that snapshot ensembles are
-new, but that their disagreement can predict held-out force errors and physical
-unreliability as well as an independent-model committee — or not.
+First full three-way comparison of uncertainty strategies for a fine-tuned MACE foundation
+model on the Li/F core: does ensemble disagreement track held-out DFT force error, and at what
+cost? Scope per [`DESCRIPTION.md`](DESCRIPTION.md) and [`ROUTE.md`](ROUTE.md).
 
-## Data & Scope
+## Configuration (as actually run)
 
-Primary test: Li/F diffusion, no boron chemistry. Use the final, non-isolated
-**NVT** groups from [`DATASET.md`](DATASET.md):
+- Model: **MACE-OMAT medium** (`mace_omat_medium`).
+- Budget: **100 epochs** (the later 150-epoch bump in the shared protocol came *after* this run).
+- Ensemble size K = 3; committee seeds 123/124/125.
+- Warm snapshots collected at **epochs 33/67/99** (evenly spaced) — *this is the bug fixed in
+  experiment 2*.
+- Multi-head: 3 block-bootstrap heads + OMAT replay head (1 000 pretrain samples).
+- Test: 480 frames = 6 groups × 80 (LIF64, LIF64-NPT, LIWITHF, LIWITHF-NPT, LIFINTERFACE,
+  LIFINTERFACE-NPT).
 
-- Bulk LiF: `LIF64_KJPAW_FINAL`
-- Li-rich Li–F: `LIWITHF_KJPAW_FINAL`
-- Li|LiF interface: `LIFINTERFACE_KJPAW_FINAL`
+## Results — corrected headline
 
-The NPT variants are excluded from the primary scope: the downstream diffusion
-validation runs in fixed-cell NVT, and NPT carries a density/barostat confound
-(non-uniform settings). They may be reintroduced later as a separate
-ensemble-transfer OOD probe.
+| method | force RMSE (eV/Å) | energy RMSE (meV/atom) | pooled Spearman | within-group mean Spearman | cost (s) |
+|---|---|---|---|---|---|
+| zero-shot foundation | 0.0251 | 1.64 (aligned) | — | — | 0 |
+| independent committee | 0.0150 | 1.50 | 0.391 | **0.608** | 8 632 |
+| multi-head bootstrap | **0.0144** | **1.42** | 0.616 | 0.124 | 11 392* |
+| warm snapshots | 0.0164 | 13.11 | **0.836** | 0.271 | **2 853** |
 
-Rules:
+\* multi-head cost includes the OMAT pretraining step, so it is not directly comparable to a
+single fine-tune.
 
-- Before training, verify pseudopotentials, functional, k-points, smearing,
-  cutoffs, SCF convergence, restart overlap, and concatenated runs.
-- Keep isolated structures for a separate reference-energy experiment, not
-  transport.
-- Treat `LIWITHBF`, `LIBF4`, `BLI`, `BLI3` and their interfaces as an
-  **optional boron ablation**, reported separately. `BCC_54` (pure BCC Li) is an
-  optional metal-side control.
+## Three corrections that change the reading
 
-Sampling: ~200 time-spaced frames per group after equilibration, with equal
-group contributions; report per-group results so long trajectories do not
-dominate.
+1. **The zero-shot "energy failure" is a reference-energy artifact.** Zero-shot energy RMSE of
+   384 482 meV/atom collapses to **1.64 meV/atom** once per-family offsets are removed (MACE
+   predicts cohesive energy; labels are raw totals). Fine-tuning's real payoff is **force**
+   accuracy (0.0251 → 0.0144–0.0164), not energy.
+2. **"Snapshots win calibration" (pooled 0.836) is a cross-group artifact.** Pooled Spearman is
+   driven by between-group scale (snapshot places ~10× the uncertainty on interface vs. bulk),
+   not by per-frame error tracking. Within-group the ranking **reverses**: committee **+0.61** >
+   snapshot +0.27 > multi-head +0.12. The committee is the only method that never anti-correlates;
+   multi-head and snapshot invert in interface/NPT (OOD) groups — the Kurniawan "uncertainty
+   breaks down OOD" signature.
+3. **Temporal correlation cuts the effective sample ~10×.** Lag-1 force-error autocorrelation
+   0.88–0.98, integrated τ = 4.7–33 frames → effective N ≈ 44 (vs. 480 nominal). A moving-block
+   bootstrap (block 20, 2000 resamples) keeps the committee's bulk advantage significant and the
+   OOD inversions non-significant — the calibration conclusion survives the correlation critique.
 
-### Equilibration & Sampling
+## Risk-coverage
 
-- Determine burn-in per trajectory (temperature, energy, cell/volume for NPT,
-  structural observables) — do not assume the first 100 frames suffice.
-- After burn-in, thin with stride 10 only if it reduces short-time correlation;
-  select across the full usable trajectory, not just the first 200 strided frames.
-- Exclude frames without valid DFT energy/forces; investigate non-converged SCF
-  or restart boundaries.
-- Store a manifest: group, source file, original frame index, ensemble,
-  composition, cell, DFT settings, split.
+Only the snapshot ensemble is monotonic, with the steepest low-error tail (10% of
+lowest-uncertainty frames → 0.0038 eV/Å). Committee and multi-head curves dip.
 
-## First Step
+## Confounds found (fixed in experiment 2)
 
-Build and freeze the dataset manifest and splits before any training.
+- **Snapshot under-training (audit B2) — root-caused.** Snapshots at 33/67/99 land on the
+  warm-restart boundaries (T₀ = 33 = epochs//count), so two of three members are the just-kicked,
+  loss-spiked model (energy RMSE 26.9 / 16.1 / 2.67 meV/atom). Fix: collect at **cycle-ends**
+  (one epoch before each restart), not evenly spaced.
+- **Committee collapse.** Members near-identical (force RMSE 0.0151 / 0.0150 / 0.0150; ensemble
+  force σ 0.0006 vs. snapshot 0.0053) — shared initialization removes diversity. A finding, not a
+  bug, but needs a stronger baseline.
+- **Cost accounting (audit E2).** Committee 8 632 s = 3 × ~2 880 s; snapshot 2 853 s (⅓);
+  multi-head 11 392 s *including* OMAT pretrain — report head-only cost separately.
 
-## Splits
+## What this run established
 
-- **60/40 block-based** train/held-out split at the trajectory level (never a
-  random neighboring-frame split) — ~120 train / 80 held-out per group.
-- Keep the held-out set locked until model choices and calibration are fixed.
-- Add a separate **leave-one-family-out** result (hold out an entire environment
-  family) to test transfer; report it separately from the within-trajectory
-  60/40 test.
-- Use `src/mlpdft/uq_compare.py` with explicit time-blocked `--valid-file` and
-  locked `--test-file`. Do not use `multi-train.py`'s internal random split as
-  the final test.
-
-## Questions & Hypotheses
-
-1. Does force disagreement rank held-out DFT force errors?
-2. At comparable accuracy, does a warm-snapshot committee provide useful
-   calibration and risk-vs-coverage versus independently fine-tuned models?
-3. Does high uncertainty flag configurations/trajectories where predicted Li
-   transport differs across models?
-
-The hypothesis is not that snapshots must win; "cheaper but less calibrated" is
-still informative.
-
-## Model Comparisons
-
-All methods start from the **same MACE-OMAT checkpoint** with the same data,
-architecture, energy reference, loss weights, precision, and epoch budget. The
-test set is excluded from all training, scheduler selection, and calibration.
-
-| Method | Construction | Purpose |
-|---|---|---|
-| Zero-shot | No fine-tuning | Value of adaptation |
-| Single fine-tune | Each committee member reported individually | Accuracy reference |
-| Independent committee | 3 fine-tunes, seeds 123/124/125, single cosine decay | Standard committee-UQ baseline |
-| Warm-snapshot committee | 1 fine-tune, cosine warm restarts; 3 cycle-minimum checkpoints | Candidate low-cost UQ |
-| Multi-head committee | Shared backbone, 3 bootstrap heads + OMAT replay head | Lower-cost head disagreement; report correlation + replay cost |
-
-`uq_compare.py` defaults: 150 epochs, snapshots near epochs 50/100/150 (cycle
-ends 49/99/149 under T₀ = epochs//count = 50). Confirm checkpoints are cycle
-minima and converged. Report equal-member and matched-cost comparisons. A larger
-spread is not "better UQ" unless it predicts larger errors.
-
-## Evaluation
-
-### Held-Out DFT Configurations
-
-Report overall and by group/ensemble/environment:
-
-- Energy MAE/RMSE (meV/atom); force MAE/RMSE (eV/Å).
-- Ensemble force uncertainty from member disagreement, with the aggregation rule
-  fixed in advance (RMS component std across atoms + max per-atom uncertainty).
-- Uncertainty-vs-error rank correlation; error by uncertainty quantile;
-  risk-vs-coverage curves.
-- Calibration on validation; empirical coverage on the locked test. Calibrate
-  scales on validation only.
-- Energy uncertainty as secondary; check energy-reference alignment (shared
-  offsets are invisible to disagreement).
-
-### Physical Validation: Li Transport
-
-Endpoints: Li diffusivity and effective activation energy, from long MACE MD
-(not short DFT-AIMD). Keep training/evaluation trajectories distinct from the
-MACE production trajectories.
-
-Start with: (1) bulk LiF `LIF64_KJPAW_FINAL`, (2) Li-rich `LIWITHF_KJPAW_FINAL`,
-(3) the LiF interface groups (check periodicity, slab construction, and
-interface normal).
-
-- Per environment: run each member at fixed cell and temperature with multiple
-  velocity seeds; equilibrate in NPT if needed, then measure production MSD in
-  fixed-cell NVT.
-- Interfaces: resolve Li displacement into in-plane and normal components;
-  report a normal diffusion coefficient only with a linear MSD regime. Unwrap
-  NPT cells.
-- Estimate D from the long-time MSD slope; estimate E_a only from a
-  multi-temperature series with independent replicas (the ~300 K DFT data alone
-  give no Arrhenius slope).
-- Report bulk, Li-rich, and interface results separately; track Li hops,
-  coordination changes, and stability.
-- Do not treat agreement as proof of accuracy; validate representative
-  high-uncertainty hops/barriers with DFT single points or NEB where possible.
-
-## Decision Criteria
-
-Record model-selection and calibration rules before the final test. The
-warm-snapshot approach is useful only if it has a favorable accuracy/cost
-tradeoff *and* its disagreement tracks held-out error or physical failure.
-Compare at matched ensemble size and matched training cost. If disagreement is
-larger but uncorrelated with error, conclude it is not useful UQ here.
-
-## Required Outputs
-
-- Versioned group/frame manifest and block-based train/valid/test files.
-- Per-model config, seed, checkpoint epoch, compute time, energy reference.
-- Per-group DFT accuracy and UQ calibration/ranking plots.
-- NVT production-MD inputs, seeds, temperatures, MSD/hop analyses, and
-  uncertainty across members and replicas.
-- Limitations: short DFT trajectories, group overlap, missing original QE inputs,
-  and DFT-setting mismatch.
+Fine-tuning buys force accuracy; no method dominates (committee = weak-but-reliable, never OOD
+inverts; snapshot/multi-head = stronger in-domain, invert OOD); the snapshot's monotonic
+risk-coverage at ⅓ cost is the strongest case for the paper's thesis *provided* the
+under-training confound is removed.
