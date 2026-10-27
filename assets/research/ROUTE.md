@@ -5,12 +5,11 @@
 Determine whether uncertainty from fine-tuned MACE ensembles can select DFT
 configurations that improve predictions of lithium diffusion more efficiently
 than random selection. Compare independent-seed fine-tuning, warm-restart
-snapshots, and multi-head fine-tuning. The central result is the tradeoff
+snapshots, and multi-head fine-tuning.The central result is the tradeoff
 between DFT labels acquired and reliable Li-transport predictions, not a broad
 benchmark across all Li-F-B battery chemistry.
 
-The FitSNAP comparison and broad cathode/electrolyte/SEI survey are out of
-scope. Boron-containing groups are optional transfer extensions.
+Boron-containing groups are optional transfer extensions.
 
 ## Scope
 
@@ -27,8 +26,9 @@ only as an optional pure-Li metal-side control; it is not a boron-containing
 group. `LIWITHBF`, `LIBF4`, `BLI`, `BLI3`, and their interfaces are optional and
 do not enter the primary Li/F diffusion claim.
 
-## Phase 1 — Dataset Audit and Frozen Splits
+## Phase 1 — Dataset Audit, Frozen Splits and Literature Review
 
+### Dataset Audit
 - Verify composition, periodic cell, trajectory boundaries, timestamps,
   functional, pseudopotentials, cutoffs, k-points, smearing, and SCF convergence
   for every selected group.
@@ -41,6 +41,15 @@ do not enter the primary Li/F diffusion claim.
   candidate-pool membership before model comparisons.
 - Keep the locked test disjoint from every acquisition candidate and never
   query it with DFT during active learning.
+
+### Public Datasets
+- The most adjacent is on the https://github.com/AlghamdiNada/Li_diffusion_with_MACE.git repository.
+
+### Literature Review
+- Review existing literature on MACE, uncertainty quantification, and DFT-based
+  active learning to inform the research approach.
+- Write a summary of the literature review, and main findings.
+
 
 ## Phase 2 — Initial Training Set and Baselines
 
