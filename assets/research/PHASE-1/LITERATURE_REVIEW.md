@@ -1,15 +1,17 @@
-# Literature Review — Uncertainty Quantification for Foundation MACE Potentials in Li-Ion Diffusion
+# Literature Review — Uncertainty Quantification and Active Learning for Foundation MACE on Li–F
 
 - **Date:** 2026-10-27
-- **Status:** rewritten around the paper's actual question; supersedes the 2026-09-13 draft, which framed the project around reference-energy (E₀) errors and zero-shot property dependence.
-- **Scope:** uncertainty quantification (UQ) for machine-learning interatomic potentials (MLIPs), with emphasis on cheap versus expensive ensemble constructions, uncertainty-guided active learning, and Li-ion/LiF transport.
-- **Project cross-reference:** [`DESCRIPTION.md`](DESCRIPTION.md), [`ROUTE.md`](ROUTE.md), [`UQ_EXPERIMENT_0.md`](UQ_EXPERIMENT_0.md), [`ACTIVE_LEARNING_PROTOCOL.md`](ACTIVE_LEARNING_PROTOCOL.md).
+- **Status:** reframed on 2026-10-29 for the UQ + AL + tier-0 anchor scope; supersedes the 2026-09-13 draft (E₀ and zero-shot property dependence) and the 2026-10-27 transport framing.
+- **Scope:** uncertainty quantification (UQ) for machine-learning interatomic potentials (MLIPs), with emphasis on cheap versus expensive ensemble constructions and uncertainty-guided active learning on a Li–F testbed. Transport is context, not a claimed observable.
+- **Project cross-reference:** [`DESCRIPTION.md`](../DESCRIPTION.md), [`ROUTE.md`](../ROUTE.md), [`UQ_EXPERIMENT_0.md`](../PHASE-2/UQ_EXPERIMENT_0.md), [`ACTIVE_LEARNING_PROTOCOL.md`](../PHASE-3/ACTIVE_LEARNING_PROTOCOL.md).
 
-**Search.** arXiv, alphaXiv, and Crossref; queries combined MLIP/MLFF, uncertainty quantification, ensemble, snapshot, multi-head, active learning, and Li-ion/LiF diffusion; cutoff 2026-10-27. The ranked retrieval set supplied for this revision was checked against canonical records. **Inclusion:** UQ methods or benchmarks for MLIPs, active learning, and Li-ion/LiF transport context. **Exclusion:** E₀-only or zero-shot-transfer papers, except where they affect energy metrics.
+**Search.** arXiv, alphaXiv, and Crossref; queries combined MLIP/MLFF, uncertainty quantification, ensemble, snapshot, multi-head, active learning, and Li-ion/LiF diffusion; cutoff 2026-10-27. The ranked retrieval set supplied for this revision was checked against canonical records. **Inclusion:** UQ methods or benchmarks for MLIPs, active learning, and Li–F/Li-ion context. **Exclusion:** E₀-only or zero-shot-transfer papers, except where they affect energy metrics.
 
 **Evidence basis.** Bibliographic metadata for every reference below was checked against the arXiv API or Crossref on 2026-10-27. Claims are taken from titles and abstracts; no claim-level full-text audit has been performed. This is a bounded review, not a systematic review or a proof that no other relevant paper exists.
 
-**Bottom line.** The literature establishes three things: ensemble disagreement is the practical default for MLIP UQ but is expensive and unreliable out of distribution; weight-sharing and single-model alternatives can cut that cost substantially; and better uncertainty does not automatically produce better active learning. It does **not** contain a matched comparison of independent fine-tuning committees, warm-restart snapshot ensembles, and multi-head committees for a foundation MACE model on Li–F transport, nor a test of whether those uncertainty signals improve active learning for Li diffusivity or activation energy over random acquisition. That is the paper's opening.
+**Framing note (2026-10-29).** The Li-ion/LiF transport literature in §7 is retained as testbed justification and as a model-form-uncertainty caveat. It is no longer a validation target: the paper does not report \(D\) or \(E_a\). Passages that still mention a "transport QoI" are read as historical context; the current claims are in `DESCRIPTION.md`.
+
+**Bottom line.** The literature establishes three things: ensemble disagreement is the practical default for MLIP UQ but is expensive and unreliable out of distribution; weight-sharing and single-model alternatives can cut that cost substantially; and better uncertainty does not automatically produce better active learning. It does **not** contain a matched comparison of independent fine-tuning committees, warm-restart snapshot ensembles, and multi-head committees for a foundation MACE model on a multi-environment Li–F dataset, nor a test of whether those uncertainty signals improve active learning for held-out force error over random acquisition. That is the paper's opening.
 
 ---
 
@@ -27,13 +29,13 @@ The comparison is not merely "which method has the lowest force error." It asks:
 
 - Does ensemble disagreement **rank** held-out DFT force errors within each Li/F environment?
 - Is the uncertainty **calibrated** in force-error units, and does it produce useful risk–coverage curves?
-- Does the spread across members track uncertainty in the physical quantities of interest — Li diffusivity \(D\) and effective activation energy \(E_a\)?
+- Does the spread across members stay calibrated within each environment, and does that calibration survive the shift from bulk LiF to F-doped Li and the interface film?
 - At matched ensemble size and honest compute accounting, which construction gives the best accuracy/UQ per unit cost?
 - Does using that uncertainty to acquire DFT configurations beat random acquisition at equal label budget?
 
 These are five different questions. A method can win one and lose another. The review is organized around that distinction.
 
-The previous draft's E₀/property-dependent zero-shot story is **out of scope**. Reference-energy alignment remains a preprocessing check for energy metrics, but it is not the paper's hypothesis and should not organize the related-work section. Energy metrics are secondary here; force accuracy, uncertainty ranking, transport QoI, and label/compute efficiency are primary.
+The previous draft's E₀/property-dependent zero-shot story is **out of scope**. Reference-energy alignment remains a preprocessing check for energy metrics, but it is not the paper's hypothesis and should not organize the related-work section. Energy metrics are secondary here; force accuracy, uncertainty ranking, within-environment calibration, and label/compute efficiency are primary.
 
 ### 1.1 Terminology used below
 
@@ -46,7 +48,7 @@ The previous draft's E₀/property-dependent zero-shot story is **out of scope**
 | **Discrimination / ranking** | Whether uncertainty is larger for more erroneous predictions (e.g. Spearman correlation, error-by-uncertainty quantile). |
 | **Calibration** | Whether predicted uncertainty has the stated coverage or likelihood; a ranking can be good while calibration is poor, and vice versa. |
 | **Risk–coverage** | Error among retained predictions as the lowest-uncertainty fraction is varied. |
-| **Transport QoI** | \(D\) and \(E_a\) from long MD, not a single-frame energy or force. |
+| **Environment** | Bulk LiF, F-doped Li metal, or the thin LiF/Li interface film; splits and metrics are reported per environment. |
 | **Labels-to-target / compute-to-target** | New DFT labels, or wall-clock compute, needed to reach a pre-declared accuracy target. |
 
 ---
@@ -102,9 +104,9 @@ The independent committee is the right reference because it is the most studied 
 
 Kurniawan et al. include random-initialization and bootstrap ensembles in their comparison, alongside dropout and snapshot ensembles. Their key result is not that one construction wins everywhere, but that all of them can fail OOD: uncertainty may plateau or decrease while error grows. That makes the independent committee a necessary baseline but a weak novelty claim.
 
-The project's own first run is consistent with the broader warning: committee members can be highly correlated when they share a foundation checkpoint and training recipe, so "three seeds" does not guarantee three independent hypotheses ([`UQ_EXPERIMENT_1.md`](UQ_EXPERIMENT_1.md)). The literature on GNN epistemic collapse offers a plausible mechanism, though it is not an MLIP-specific result ([Vieira et al., 2026](https://arxiv.org/abs/2605.22593)). The practical lesson is to report member-to-member diversity, not just ensemble size.
+The project's own first run is consistent with the broader warning: committee members can be highly correlated when they share a foundation checkpoint and training recipe, so "three seeds" does not guarantee three independent hypotheses ([`UQ_EXPERIMENT_1.md`](../PHASE-2/UQ_EXPERIMENT_1.md)). The literature on GNN epistemic collapse offers a plausible mechanism, though it is not an MLIP-specific result ([Vieira et al., 2026](https://arxiv.org/abs/2605.22593)). The practical lesson is to report member-to-member diversity, not just ensemble size.
 
-**Role in this paper:** reference construction for cost and accuracy; the method that must be beaten or matched on discrimination, calibration, and transport QoI.
+**Role in this paper:** reference construction for cost and accuracy; the method that must be beaten or matched on discrimination, calibration, and label efficiency.
 
 ### 3.2 Warm-restart snapshots: cheap, plausible, and under-evidenced
 
@@ -120,7 +122,7 @@ But the specific claim this paper needs — that a warm-restart snapshot ensembl
 
 These are not the same thing. A shallow ensemble shares most weights across members and is trained with a probabilistic objective; a warm-restart snapshot ensemble shares one optimization trajectory and varies the checkpoint. The paper should define its arm precisely and should not cite shallow ensembles as if they were direct evidence for warm snapshots.
 
-There is also an operational trap. A checkpoint taken at an arbitrary epoch is not an ensemble member; it may be a loss-spiked model just after a restart. The members should be taken at **cycle minima**, and the selection rule should be fixed before looking at test performance. The project's first run collected snapshots at evenly spaced epochs that coincided with restart boundaries, and two of the three members were loss-spiked just after a restart; the corrected run uses cycle-end checkpoints ([`UQ_EXPERIMENT_1.md`](UQ_EXPERIMENT_1.md), [`UQ_EXPERIMENT_2.md`](UQ_EXPERIMENT_2.md)). This is a concrete design lesson, not a literature result: the snapshot recipe is only as good as its checkpoint-selection rule.
+There is also an operational trap. A checkpoint taken at an arbitrary epoch is not an ensemble member; it may be a loss-spiked model just after a restart. The members should be taken at **cycle minima**, and the selection rule should be fixed before looking at test performance. The project's first run collected snapshots at evenly spaced epochs that coincided with restart boundaries, and two of the three members were loss-spiked just after a restart; the corrected run uses cycle-end checkpoints ([`UQ_EXPERIMENT_1.md`](../PHASE-2/UQ_EXPERIMENT_1.md), [`UQ_EXPERIMENT_2.md`](../PHASE-2/UQ_EXPERIMENT_2.md)). This is a concrete design lesson, not a literature result: the snapshot recipe is only as good as its checkpoint-selection rule.
 
 **Role in this paper:** the low-training-cost candidate. The hypothesis is not that snapshots are intrinsically better, but that they may reach comparable discrimination and transport-QoI uncertainty at a fraction of the fine-tuning cost. The risk is that their members are too correlated, or that the cycle-end checkpoints are not diverse enough to represent epistemic uncertainty.
 
@@ -156,7 +158,7 @@ That is the closest cost–accuracy evidence in the retrieval, but it is **not**
 | Direct MLIP evidence | Strong (generic ensembles; benchmarks) | Weak for foundation MLIPs; snapshot ensembles only as one benchmark arm | Strong for MACE force UQ and AL (Beck et al.) |
 | Role here | Reference | Candidate low-cost method | Candidate low-cost method |
 
-The table makes the paper's contribution legible: it is not "another ensemble." It is a **matched, cost-aware comparison** of three constructions that are usually studied separately, followed by a test of whether their uncertainty is useful for Li transport and active learning.
+The table makes the paper's contribution legible: it is not "another ensemble." It is a **matched, cost-aware comparison** of three constructions that are usually studied separately, followed by a test of whether their uncertainty is useful for within-environment error ranking and active learning.
 
 ---
 
@@ -216,7 +218,7 @@ The paper should test all three. A method that has a high pooled Spearman but an
 
 ### 5.3 Pooled correlations can hide environment-level failures
 
-If bulk LiF has low error and low spread while the interface has high error and high spread, a pooled Spearman correlation across all frames can look impressive even if within each environment the correlation is weak or negative. This is a general statistical caution, and it is directly relevant to a dataset with bulk, Li-rich, and interface groups. The paper should report **within-group** discrimination and calibration as primary, with pooled numbers only as a secondary summary.
+If bulk LiF has low error and low spread while the interface has high error and high spread, a pooled Spearman correlation across all frames can look impressive even if within each environment the correlation is weak or negative. This is a general statistical caution, and it is directly relevant to a dataset with bulk LiF, F-doped Li, and interface groups. The paper should report **within-group** discrimination and calibration as primary, with pooled numbers only as a secondary summary.
 
 ### 5.4 Calibration is not the same as ranking
 
@@ -242,8 +244,8 @@ Farris et al. provide a systematic comparison of variational Bayesian neural net
 | Snapshot ensembles are a recognized construction | Kurniawan et al.; generic lineage Huang et al. | High that it exists; low that it is validated for foundation MACE |
 | Ensemble disagreement often fails OOD | Kurniawan, Dale, Shuang, PROBE | Moderate–high, multiple settings |
 | Single-model UQ can match ensembles | Zhu, LLPR, AdaptNTK, e²IP | Moderate, method-specific |
-| Better UQ improves active learning | LLPR, AdaptNTK, Beck; counterevidence Dale | Mixed; not established for Li–F transport |
-| UQ tracks transport QoI (\(D\), \(E_a\)) | No direct study found | Low / open |
+| Better UQ improves active learning | LLPR, AdaptNTK, Beck; counterevidence Dale | Mixed; not established for Li–F environments |
+| UQ stays calibrated across Li–F environments | No direct study found | Low / open |
 
 ---
 
@@ -268,9 +270,9 @@ There are several reasons AL can fail even with a good ranking:
 - **Label noise / DFT inconsistency:** acquiring a high-uncertainty frame is useless if its label is unreliable.
 - **Distribution mismatch:** the candidate pool may not contain the configurations that would improve the target QoI.
 - **Cost asymmetry:** a method may need fewer labels but more compute per label, so "labels-to-target" and "compute-to-target" can disagree.
-- **QoI disconnect:** reducing force RMSE may not reduce uncertainty in \(D\) or \(E_a\), especially if transport is controlled by rare hops or long-time correlations.
+- **Calibration disconnect:** pooled force RMSE can improve while within-environment calibration does not, especially when the environments differ in scale.
 
-The project's protocol already anticipates these issues: same candidate pool, equal batch size, random control, group stratification, diversity gap, locked test, and both labels-to-target and compute-to-target ([`ACTIVE_LEARNING_PROTOCOL.md`](ACTIVE_LEARNING_PROTOCOL.md)). The literature supports that design.
+The project's protocol already anticipates these issues: same candidate pool, equal batch size, random control, group stratification, diversity gap, locked test, and both labels-to-target and compute-to-target ([`ACTIVE_LEARNING_PROTOCOL.md`](../PHASE-3/ACTIVE_LEARNING_PROTOCOL.md)). The literature supports that design.
 
 ### 6.3 What "matched cost" should mean
 
@@ -286,9 +288,11 @@ A cheap-training method with expensive inference can lose in an AL loop with a l
 
 ## 7. Li-ion and LiF application context
 
-The Li-ion literature is not primarily a UQ literature. Its role here is to establish that LiF is a scientifically meaningful testbed, that transport quantities are sensitive to model choice, and that ensemble UQ has not been validated on those quantities.
+The Li-ion literature is not primarily a UQ literature. Its role here is to establish that LiF is a scientifically meaningful testbed, that model choice materially changes LiF behavior, and that ensemble UQ has not been validated across chemically distinct Li–F environments.
 
-### 7.1 LiF interstitial diffusion is a clean transport testbed
+### 7.1 LiF interstitial diffusion as physical context
+
+> Transport is not a claimed output of this paper. This section explains why the LiF system is a meaningful testbed and why fine-tuning ensembles cannot capture model-form uncertainty.
 
 Alghamdi et al. compare fine-tuning strategies for MACE on interstitial Li diffusion in LiF. MACE-MPA-0 zero-shot predicts \(E_a = 0.22\) eV; a fine-tuned model with only 300 data points predicts \(E_a = 0.20\) eV; both agree with a DeePMD reference of \(E_a = 0.24\) eV trained on more than 40,000 actively learned points ([Alghamdi et al., 2026](https://doi.org/10.1088/2515-7655/ae6c5a)). This is a strong transfer result and a useful accuracy anchor. Crucially, it is a **force-derived transport** result; it does not test uncertainty calibration, and it does not test whether ensemble disagreement predicts transport error.
 
@@ -313,18 +317,18 @@ These papers reinforce two points:
 
 ### 7.4 SEI relevance
 
-Zhong and Persson use diffusion-based structure prediction and MLIPs to study amorphous lithium fluorophosphate phases in the SEI, reporting a projected room-temperature conductivity of about \(0.18\) mS cm⁻¹ and \(E_a \approx 0.40\) eV for the amorphous phase ([Zhong & Persson, 2025](https://doi.org/10.1021/acsenergylett.5c03526)). This is application context, not a UQ method paper, but it shows why Li–F–P–O–F disorder and interfaces matter for transport. The project's LiF/Li-rich/interface scope is a simplified but defensible slice of that problem.
+Zhong and Persson use diffusion-based structure prediction and MLIPs to study amorphous lithium fluorophosphate phases in the SEI, reporting a projected room-temperature conductivity of about \(0.18\) mS cm⁻¹ and \(E_a \approx 0.40\) eV for the amorphous phase ([Zhong & Persson, 2025](https://doi.org/10.1021/acsenergylett.5c03526)). This is application context, not a UQ method paper, but it shows why Li–F–P–O–F disorder and interfaces matter for transport. The project's LiF/F-doped-Li/interface scope is a simplified but defensible slice of that problem.
 
 ### 7.5 Why LiF is a good UQ testbed
 
 LiF offers a useful combination:
 
-- a well-defined interstitial diffusion mechanism with a reference \(E_a\);
-- bulk, Li-rich, and interface environments that create a natural in-domain/OOD axis;
-- force-derived transport quantities that can be compared across models;
-- a literature anchor (Alghamdi et al.) for accuracy, not just uncertainty.
+- a well-defined defect chemistry with a literature reference \(E_a\);
+- bulk LiF, F-doped Li, and interface environments that create a natural in-domain/OOD axis;
+- a literature anchor (Alghamdi et al.) for accuracy, not just uncertainty;
+- a physically interpretable static sanity check (defect formation energies) that does not require transport.
 
-The gap is that no retrieved paper tests whether ensemble uncertainty **predicts** transport error or **improves** transport accuracy per label. That is the application-level contribution.
+The gap is that no retrieved paper tests whether ensemble uncertainty **ranks** error within each Li–F environment or **improves** held-out accuracy per label. That is the application-level contribution.
 
 ---
 
@@ -347,35 +351,35 @@ The gap is that no retrieved paper tests whether ensemble uncertainty **predicts
 
 1. **No matched three-way comparison for foundation MACE on Li–F.** The retrieved literature compares some ensemble methods on some systems, but not independent committees vs warm-restart snapshots vs multi-head committees under one checkpoint, one data budget, one ensemble size, and one cost accounting.
 2. **No dedicated evidence for warm-restart snapshots in foundation MLIPs.** Snapshot ensembles appear as one arm in a broader benchmark, and shallow ensembles are a different construction. The specific cost/calibration claim for warm snapshots on MACE is open.
-3. **No transport-QoI validation.** UQ papers evaluate energies, forces, or generic OOD detection. They do not test whether ensemble spread tracks \(D\) or \(E_a\), or whether it flags the high-uncertainty hops that change those quantities.
-4. **No Li–F active-learning comparison against random with honest compute accounting.** LLPR and NTK papers are strong precedents, but they are not Li–F transport studies. Beck et al. demonstrate AL for MACE-MP-0, but not for Li–F diffusivity.
+3. **No environment-stratified calibration benchmark.** UQ papers evaluate energies, forces, or generic OOD detection. They rarely report whether calibration and risk–coverage hold separately for bulk, doped-metal, and interface environments.
+4. **No Li–F active-learning comparison against random with honest compute accounting.** LLPR and NTK papers are strong precedents, but they are not Li–F environment studies. Beck et al. demonstrate AL for MACE-MP-0, but not across a bulk/doped/interface split.
 5. **No separation of parameter uncertainty from model-form uncertainty.** Fine-tuning ensembles cannot see XC-functional or architecture uncertainty, which the Li-ion literature shows can be comparable to ensemble spread.
 
 ### 8.3 The gap statement
 
-> In the retrieved literature, no study compares independent fine-tuning committees, warm-restart snapshot ensembles, and multi-head committees under a common foundation MACE checkpoint, matched ensemble size, and matched compute accounting, then tests whether their uncertainty ranks force errors within Li–F environments and improves active learning for Li diffusivity and activation energy over random acquisition.
+> In the retrieved literature, no study compares independent fine-tuning committees, warm-restart snapshot ensembles, and multi-head committees under a common foundation MACE checkpoint, matched ensemble size, and matched compute accounting, then tests whether their uncertainty ranks force errors within Li–F environments and improves active learning for held-out force error over random acquisition.
 
 This is a **bounded-search gap claim**, not a claim of absolute novelty. The paper should phrase it as "we found no study that..." and should cite the nearest neighbors explicitly: Beck et al. for multi-head, Schäfer et al. for shallow ensembles, Kurniawan et al. for snapshot/ensemble benchmarks, Bi et al. and Ananth & Yue for cheap AL, and Alghamdi et al. for LiF transport.
 
 ### 8.4 Contributions the paper can defend
 
 1. **A matched comparison of three ensemble constructions** at the same foundation checkpoint, data budget, ensemble size, and evaluation protocol.
-2. **Environment-resolved UQ diagnostics** — within-group discrimination, calibration, and risk–coverage for bulk LiF, Li-rich Li–F, and Li|LiF interface, rather than pooled correlations.
-3. **A transport-QoI test** — whether ensemble spread tracks \(D\) and \(E_a\) across members and MD replicas, not just force RMSE.
+2. **Environment-resolved UQ diagnostics** — within-group discrimination, calibration, and risk–coverage for bulk LiF, F-doped Li, and the thin LiF/Li interface film, rather than pooled correlations.
+3. **A distribution-shift test** — whether calibration fitted in bulk LiF survives F-doped Li and the interface film, rather than only pooled force RMSE.
 4. **A cost-aware active-learning test** — labels-to-target and compute-to-target against a random control, with training and inference costs separated.
-5. **A negative-result-ready claim** — if cheap ensembles do not beat random or do not track transport, the paper reports that rather than forcing a "snapshots win" narrative.
+5. **A negative-result-ready claim** — if cheap ensembles do not beat random or do not stay calibrated across environments, the paper reports that rather than forcing a "snapshots win" narrative.
 
-The headline is the label/compute cost of reaching a transport accuracy target, not a leaderboard over every UQ method.
+The headline is the label/compute cost of reaching a held-out force-error target, not a leaderboard over every UQ method.
 
 ### 8.5 What would falsify the paper's claims
 
 | Outcome | Interpretation |
 |---|---|
-| Warm snapshots match the committee on within-group discrimination and transport QoI at substantially lower compute cost (≤1/2, ideally ≤1/3) | Supports the cost-efficiency hypothesis. |
+| Warm snapshots match the committee on within-group discrimination and calibration at substantially lower compute cost (≤1/2, ideally ≤1/3) | Supports the cost-efficiency hypothesis. |
 | Warm snapshots are cheaper but anti-correlate or collapse OOD | Cheap but not useful UQ; report as a negative result. |
 | Multi-head dominates on both discrimination and compute | The snapshot route is not justified; multi-head is the practical choice. |
-| All three are ≈ random in AL | Uncertainty is not the bottleneck; reframe the paper around calibration/transport diagnostics, not AL. |
-| UQ tracks force error but not \(D\) or \(E_a\) | Force-level UQ does not transfer to transport; this is itself an important finding. |
+| All three are ≈ random in AL | Uncertainty is not the bottleneck; reframe the paper around calibration diagnostics, not AL. |
+| UQ ranks pooled error but fails within an environment | Pooled discrimination is misleading; report environment-stratified results. |
 
 ---
 

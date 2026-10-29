@@ -1,5 +1,13 @@
 # UQ Experiment Protocol: Warm-Snapshot vs. Independent Committee for MACE vs. Multi Head finetunning
 
+> **Status (2026-10-29):** the transport endpoints in this planning document are
+> superseded by the UQ + AL framing in `../DESCRIPTION.md` and `../ROUTE.md`.
+> The frozen splits are in `../PHASE-1/AUDIT.md`; the retrospective AL protocol
+> is `../PHASE-3/ACTIVE_LEARNING_PROTOCOL.md`. This file is retained as a
+> planning record.
+
+
+
 ## Goal
 
 Test whether a warm-restart snapshot ensemble from a fine-tuned MACE foundation
@@ -11,7 +19,7 @@ unreliability as well as an independent-model committee — or not.
 ## Data & Scope
 
 Primary test: Li/F diffusion, no boron chemistry. Use the final, non-isolated
-**NVT** groups from [`DATASET.md`](DATASET.md):
+**NVT** groups from [`DATASET.md`](../PHASE-1/DATASET.md):
 
 - Bulk LiF: `LIF64_KJPAW_FINAL`
 - Li-rich Li–F: `LIWITHF_KJPAW_FINAL`

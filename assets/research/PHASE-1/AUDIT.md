@@ -157,6 +157,12 @@ What is frozen:
 The in-domain test and the OOD test are both locked. Neither is queried during
 active learning.
 
+The manifest was materialized with `build_phase1_splits.py` into
+`dataset/xyz_files/uq_splits/` (git-ignored): `uq_train.extxyz` (8,313),
+`uq_valid.extxyz` (1,781), `uq_test.extxyz` (1,781), and `uq_ood.extxyz`
+(1,696). A re-read check found no missing `REF_energy` or `REF_forces`, and
+13,571 unique `(source_file, source_frame)` pairs with no cross-split overlap.
+
 ## 7. Unresolved and blocking
 
 1. **Thermostat and timestep are not in the extxyz.** The `.out` logs contain no
@@ -171,9 +177,9 @@ active learning.
 4. **The clean F-doped leg is small.** Excluding the NPT run leaves 2,788 V3
    frames; after the 70/15/15 split, training has 1,952 frames. This is enough
    for a controlled comparison but limits per-environment calibration curves.
-5. **The manifest is not the extxyz split.** `frames.csv` records file and
-   frame indices; a builder is still needed to materialize
-   `uq_train.extxyz` / `uq_valid.extxyz` / `uq_test.extxyz`.
+5. **The split files are generated, not committed.** `dataset/` is
+   git-ignored. Rebuild with `build_phase1_splits.py` after any audit change and
+   re-run the leak check before training.
 6. **Li–Li distances are not lattice constants.** Thermal and local distortion
    dominate the nearest-neighbour statistic.
 
@@ -183,9 +189,9 @@ active learning.
   them.
 - Recover the QE input decks for temperature, thermostat, timestep, and SCF
   thresholds.
-- Build the extxyz splits from `frames.csv`, then verify frame counts and label
-  keys before training.
+- Rebuild the split files after any audit change and re-check counts, labels,
+  and cross-split disjointness.
 - Decide whether the excluded 7,550-frame F-doped NPT run is worth keeping as
   an auxiliary high-density OOD set.
-- Update `ACTIVE_LEARNING_PROTOCOL.md`, `DIFFUSION_CELL.md`, and
-  `LITERATURE_REVIEW.md` to the UQ + AL framing.
+- Keep `ACTIVE_LEARNING_PROTOCOL.md`, `DIFFUSION_CELL.md`, and
+  `LITERATURE_REVIEW.md` in sync with the UQ + AL framing (first pass done).

@@ -1,5 +1,12 @@
 # Diffusion-Validation Cell Decision — Interstitial Li in Bulk LiF
 
+> **Status: superseded (2026-10-29).** Transport validation (diffusivity and
+> activation energy) is out of scope under the current UQ + AL framing. This
+> memo is retained as the record of the diffusion-cell decision. The physical
+> check is now the static tier-0 anchor in `../DESCRIPTION.md` and `../ROUTE.md`
+> Phase 5; the dataset constraints that motivated the change are in
+> `../PHASE-1/AUDIT.md`.
+
 **Date:** 2026-10-27
 **Question:** which DFT cell is the right one to validate Li⁺ diffusivity and
 activation energy for the active-learning claim, and is the existing Li|LiF
@@ -35,7 +42,7 @@ literature.
 
 ## 2. Why the existing dataset is insufficient for this validation
 
-The project dataset ([`DATASET.md`](DATASET.md)) contains bulk LiF (`LIF64_*`),
+The project dataset ([`DATASET.md`](../PHASE-1/DATASET.md)) contains bulk LiF (`LIF64_*`),
 Li-rich Li–F (`LIWITHF_*`), and Li|LiF interface (`LIFINTERFACE_*`) groups, plus
 B-/salt groups. It **lacks a bulk LiF supercell with an interstitial Li** — the
 one configuration the diffusion mechanism actually probes. Relying on the
@@ -61,7 +68,7 @@ configurations (the DeePMD/MACE fine-tuning splits are 216-atom cells, and the
 MACE-MPA-0 active-learning steps `a_step_1/2`, `b_step_1` exist), but at a
 cutoff (110/440 Ry) that is **not** consistent with this project's 40/320 Ry
 KJPAW convention. Mixing the two would introduce a DFT-setting mismatch that
-[`DATASET.md`](DATASET.md) already flags as a hazard ("cutoff and convergence
+[`DATASET.md`](../PHASE-1/DATASET.md) already flags as a hazard ("cutoff and convergence
 settings are not uniform").
 
 ## 4. Recommendation
@@ -80,5 +87,5 @@ not Alghamdi's, so it is self-consistent with the rest of the pool:
   acquire.
 
 This gives a self-consistent, citable activation-energy target and closes the
-gap identified in [`DATASET.md`](DATASET.md), while keeping the interface data
+gap identified in [`DATASET.md`](../PHASE-1/DATASET.md), while keeping the interface data
 for the separate OOD/transfer leg.
