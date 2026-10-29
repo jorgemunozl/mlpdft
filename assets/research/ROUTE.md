@@ -1,164 +1,176 @@
-# Project Route: UQ-Guided Active Learning for Li Diffusion with MACE
+# Project Route: UQ and Active Learning for Fine-Tuned MACE on a Li–F Testbed
 
-## Research Goal
+## Research goal
 
-Determine whether uncertainty from fine-tuned MACE ensembles can select DFT
-configurations that improve predictions of lithium diffusion more efficiently
-than random selection. Compare independent-seed fine-tuning, warm-restart
-snapshots, and multi-head fine-tuning.The central result is the tradeoff
-between DFT labels acquired and reliable Li-transport predictions, not a broad
-benchmark across all Li-F-B battery chemistry.
+At equal label budget, with measured compute cost, determine which of three
+ensemble-based uncertainty-quantification strategies for a fine-tuned MACE
+foundation potential best ranks held-out DFT error within chemically distinct
+Li–F environments, stays calibrated, and selects informative DFT configurations
+more efficiently than random sampling.
 
-Boron-containing groups are optional transfer extensions.
+The Li–F data is a controlled testbed. The paper does not claim a transport,
+SEI-formation, or electrochemical result.
 
-## Scope
+## Phase 0 — Freeze scope and claims
 
-Use the final non-isolated Li/F groups:
+Record before training:
 
-- `LIF64_KJPAW_FINAL` and `LIF64_KJPAW_NPT_FINAL`: bulk LiF.
-- `LIWITHF_KJPAW_FINAL` and `LIWITHF_NPT_FINAL`: Li-rich Li-F.
-- `LIFINTERFACE_KJPAW_FINAL` and `LIFINTERFACE_KJPAW_NPT_FINAL`: Li|LiF
-  interface.
+- the claims and non-claims from `DESCRIPTION.md`;
+- the environment definitions (bulk LiF, F-doped Li, interface film, Li metal);
+- the primary metrics and the pre-registered success thresholds;
+- the negative-result branch.
 
-Keep NVT and NPT labels. Use NPT to equilibrate cell/volume where needed, then
-use fixed-cell NVT production trajectories for MSD analysis. Include `BCC_54`
-only as an optional pure-Li metal-side control; it is not a boron-containing
-group. `LIWITHBF`, `LIBF4`, `BLI`, `BLI3`, and their interfaces are optional and
-do not enter the primary Li/F diffusion claim.
+No result may broaden the claim to transport, SEI formation, or other
+chemistries.
 
-## Phase 1 — Dataset Audit, Frozen Splits and Literature Review
+## Phase 1 — Dataset audit, provenance, and frozen splits (current focus)
 
-### Dataset Audit
-- Verify composition, periodic cell, trajectory boundaries, timestamps,
-  functional, pseudopotentials, cutoffs, k-points, smearing, and SCF convergence
-  for every selected group.
-- Record group, trajectory/cell ID, source file, original frame index,
-  ensemble, composition, cell, and DFT setup for every structure.
-- Determine the equilibration cutoff independently for each trajectory using
-  temperature, energy, cell/volume for NPT, and structural observables.
-- Split by contiguous trajectory blocks or independent runs, never by random
-  neighboring frames. Freeze training, validation/calibration, locked test, and
-  candidate-pool membership before model comparisons.
-- Keep the locked test disjoint from every acquisition candidate and never
-  query it with DFT during active learning.
+### Provenance and de-duplication
 
-### Public Datasets
-- The most adjacent is on the https://github.com/AlghamdiNada/Li_diffusion_with_MACE.git repository.
+- Build a per-file table: group, filename, stride, frame count, frame-0 hash,
+  composition, cell, DFT settings, and SCF status.
+- Collapse files that are strides or subsets of the same trajectory. Known
+  hazard: `LIFINTERFACE` V1/V2/NPT/NPT_V2 share one frame-0 hash, and some
+  `*_NPT_FINAL` files duplicate `LIF64_KJPAW_V2` / `LIWITHF_V3` frames.
+- Report unique trajectories and unique frames, not file counts.
+- Confirm composition and cell for every group. Measured: `LIWITHF` is
+  53 Li + 1 F (F-doped Li metal); `LIFINTERFACE` is 86 Li + 36 F (a two-layer
+  LiF film on Li, ~4 Å of LiF, with a ~2 Å gap to the periodic image).
+- Verify functional, pseudopotentials, cutoffs, k-points, smearing, timestep,
+  thermostat, and SCF convergence. Treat the 110/440 Ry literature values as
+  external references, not pool data.
 
-### Literature Review
-- Review existing literature on MACE, uncertainty quantification, and DFT-based
-  active learning to inform the research approach.
-- Write a summary of the literature review, and main findings.
+### Environment labels
 
+Label every frame by environment from its structure, not only its directory:
 
-## Phase 2 — Initial Training Set and Baselines
+- bulk LiF: Li and F coordination consistent with rocksalt;
+- F-doped Li: Li-rich metal with isolated F;
+- interface film: LiF layers in contact with Li metal;
+- Li metal: pure Li.
 
-Build the seed training set from time-spaced equilibrated configurations in the
-six core groups. Use equal per-group contributions initially; treat a target of
-about 200 structures per group as a sampling target, not 200 independent
-observations. Use the same seed set, validation data, foundation checkpoint,
-energy reference, and training budget for all methods.
+Record per-frame Li coordination, distance to the LiF/Li boundary, and local
+composition. These labels drive the stratified metrics in Phase 3.
 
-Evaluate the zero-shot MACE foundation model and train:
+### Frozen splits
 
-1. Three independent fine-tunes from the same foundation checkpoint (reference
-   committee).
-2. One warm-restart fine-tune; export checkpoints at planned cycle minima.
-3. One multi-head fine-tune with three block-bootstrap target heads and the
-   required OMAT replay head. Report replay data and cost separately.
+- Split by contiguous trajectory blocks and by independent trajectory, never by
+  random neighbouring frames.
+- Hold out at least one independent trajectory per environment where more than
+  one exists; otherwise hold out contiguous blocks and state the limitation. Do
+  not let versioned copies of the same trajectory cross the split.
+- Keep the locked test disjoint from calibration and from every acquisition
+  candidate.
+- Target a usable per-environment test size. If the interface trajectory cannot
+  supply it, report the interface result as a case study and say so before
+  looking at outcomes.
+- Freeze the manifest (file, frame index, environment, split) before any model
+  comparison.
 
-## Phase 3 — UQ Validation Before Acquisition
+### Phase 1 outputs
 
-Use the validation/calibration data to check energy/force MAE and RMSE,
-force-error ranking by ensemble disagreement, uncertainty calibration, and
-risk-versus-coverage. Fit any calibration scale using calibration data only.
-Report these diagnostics by Li/F environment and NVT/NPT provenance. Use them to
-freeze acquisition scores and settings before querying new DFT structures.
-Do not inspect or report locked-test results during this phase or between
-active-learning rounds.
+The frozen audit is [`AUDIT.md`](AUDIT.md) plus `audit/provenance.csv`,
+`audit/frames.csv` (per-frame environment and split), and `audit/manifest.json`.
+Split counts, equilibration cutoffs, and excluded sets are recorded there.
 
-Use a predeclared score, such as maximum per-atom force standard deviation for
-each frame. Include a single-model point-estimate baseline. Do not treat greater
-ensemble spread as better UQ unless it predicts greater error.
+## Phase 2 — Models, baselines, and cost accounting
 
-## Phase 4 — Active Learning Loop (Required)
+Use one foundation checkpoint, one seed set, one energy reference, and one
+training budget for all arms:
 
-Generate an unlabeled candidate pool from MACE MD in the target Li/F diffusion
-environments: bulk LiF, Li-rich Li-F, and Li|LiF interface. Use temperatures
-relevant to the transport study, filter unphysical structures, and preserve
-candidate trajectory IDs. Keep this pool separate from calibration and locked
-test data.
+1. three independent fine-tunes (reference committee);
+2. one warm-restart fine-tune with cycle-end checkpoints;
+3. one multi-head fine-tune with block-bootstrap heads and the replay head.
 
-For each acquisition round:
+Baselines: zero-shot MACE, a single fine-tune point estimate, and random
+acquisition. Record wall-clock, GPU-hours, and inference cost per arm and per
+retrain.
 
-1. Score the same candidate pool with independent, snapshot, and multi-head
-   ensembles using the same predeclared uncertainty score.
-2. Select the same number of candidates per method, stratified across the three
-   environments so one system cannot consume the entire query budget.
-3. Select an equal-size random batch from the same pool as the control. Dedup
-   overlapping selections and do not query locked test frames.
-4. Calculate DFT energy and forces for selected candidates with consistent
-   settings; record convergence and discard or separately flag failures.
-5. Add each method's acquired labels to its own training set and retrain with
-   the same validation/calibration and locked-test sets.
+## Phase 3 — UQ validation before acquisition
 
-Run multiple rounds if compute permits. Plot held-out force error and transport
-QoI error against cumulative new DFT labels. Compare UQ selection with random
-selection at equal label budgets, and report GPU-hours/inference cost as well.
-The active-learning claim requires new DFT labels; uncertainty ranking alone
-does not constitute an active-learning result.
+On calibration data only, report:
 
-## Phase 5 — Physical Validation: Li Transport
+- force and energy MAE/RMSE, overall and **within each environment**;
+- calibration: ECE, NLL, calibration curves;
+- discrimination: Spearman ρ(σ, error), AULC;
+- risk–coverage curves.
 
-The primary quantities of interest are Li diffusivity and effective diffusion
-activation energy.
+Pooled numbers are secondary and must be labelled as such: the environments
+differ in scale, so a pooled correlation can be driven entirely by
+between-group contrast. Fit any calibration scale on calibration data only.
+Freeze the acquisition score before any label is revealed.
 
-- For every method and AL round, run long MACE MD with identical cells,
-  temperatures, and multiple independent velocity seeds.
-- Use NPT only for cell equilibration when needed, then measure production MSD
-  in fixed-cell NVT. Use cell-aware unwrapping for any variable-cell analysis.
-- Estimate diffusivity from a supported long-time MSD linear regime. At the
-  interface, resolve in-plane and normal components only when geometry and
-  sampling support them.
-- Obtain effective activation energy from a multi-temperature Arrhenius fit
-  with independent replicas and uncertainty estimates. One approximately
-  300 K AIMD dataset is not a temperature series.
-- Track Li hops and coordination changes. Check convergence of hop statistics,
-  MSD windows, replica-to-replica diffusivity, and activation energy.
-- Validate representative high-uncertainty hops with DFT single points or NEB
-  where feasible. Ensemble agreement alone does not establish physical
-  accuracy.
+Include a single-model point-estimate baseline. Do not treat larger spread as
+better UQ unless it predicts larger error.
 
-## Phase 6 — Analysis and Success Criteria
+## Phase 4 — Active-learning evaluation
 
-The primary success criterion is that an uncertainty-driven acquisition method
-reaches predeclared force-error and Li-transport accuracy targets with fewer new
-DFT labels than random selection. Before opening the locked test, predeclare
-these target tolerances, acquisition batch size, calibration method, and stopping
-rule. Use validation/calibration data during rounds; evaluate the locked test
-once after acquisition and model choices are complete.
+Primary evidence is a **retrospective** AL simulation on the existing labeled
+pool: hide labels from the acquisition rule, acquire in rounds, retrain, and
+measure held-out error against cumulative labels. This compares acquisition
+rules at equal label budget without new DFT.
 
+If budget allows, confirm with one real-DFT round on a small batch; report it
+separately and do not pool it with the retrospective curves.
+
+For each round:
+
+1. score the same pool with all three arms using the frozen score;
+2. select equal-size batches stratified by environment;
+3. select an equal-size random batch from the same pool as the control;
+4. deduplicate selections; never acquire locked-test frames;
+5. retrain each arm on its own acquired labels;
+6. evaluate on calibration data only until the loop closes.
+
+Report held-out error versus cumulative labels, acquisition composition per
+round, and GPU-hours per arm. An uncertainty-ranking result alone is not an AL
+result.
+
+## Phase 5 — Tier-0 physical anchor
+
+One static check, no new DFT by default:
+
+- build Li vacancy and Li interstitial cells in bulk LiF (3×3×3, cross-checked
+  at 2×2×2);
+- evaluate the fine-tuned MACE potential;
+- compare formation energies with the published values (≈0.76 eV vacancy,
+  ≈1.73 eV interstitial).
+
+Accept agreement within ~0.2 eV, accounting for the 110/440 Ry literature
+settings versus 40/320 Ry here. If the disagreement exceeds that, run a small
+matched-settings DFT check before making any physical claim. The anchor is a
+sanity check on the potential, not a second research thrust.
+
+## Phase 6 — Analysis and success criteria
+
+Pre-register before Phase 3:
+
+- the primary metric (within-environment ranking and calibration);
+- the AL comparison (area under the label-efficiency curve versus random);
+- the minimum effect size worth claiming;
+- the stopping rule and the negative-result branch.
+
+Open the locked test once, after acquisition and model choices are complete.
 Report:
 
-- Final locked-test force/energy errors, uncertainty-error ranking, calibration,
-  and risk-versus-coverage by group and ensemble.
-- Li diffusivity and activation energy with model-member and replica spread.
-- Active-learning curves versus cumulative DFT labels for each method and the
-  random control.
-- DFT-label count, GPU-hours, training time, and inference cost.
+- locked-test force/energy errors and calibration by environment;
+- within-environment Spearman/AULC and risk–coverage by arm;
+- AL curves versus cumulative labels for each arm and random;
+- cost per arm;
+- tier-0 anchor result;
+- B/salt transfer results, if included, reported separately and never pooled
+  with the primary claim.
 
-If UQ fails to rank errors or does not improve label efficiency, report the
-negative result. Do not broaden the primary claim to boron, electrolyte, or
-other battery chemistries based on the Li/F study.
+If the arms do not separate, report the null result. A well-measured "cheap
+snapshots match the committee" is a result, not a failure.
 
-## Deliverables
+## Phase 7 — Limitations and reporting
 
-- Frozen manifest and disjoint train, calibration/validation, locked-test, and
-  candidate-pool IDs.
-- Per-round DFT query lists, input/output files, convergence status, and added
-  label counts.
-- Reproducible configs and checkpoints for all three UQ methods.
-- Figures for uncertainty versus error, calibration, active-learning label
-  efficiency, Li diffusivity, and activation-energy convergence.
-- A limitations report covering trajectory correlation/length, group overlap,
-  DFT-setting consistency, and transport sampling uncertainty.
+State explicitly:
+
+- small dataset, one foundation checkpoint, one seed set;
+- environments are compositionally distinct, so pooled metrics are misleading;
+- the interface cell is a thin LiF/Li film, not a buried interface;
+- no transport, SEI-formation, or electrochemical validation;
+- DFT settings are not uniform across the pool and the literature;
+- trajectory correlation limits the effective sample size.

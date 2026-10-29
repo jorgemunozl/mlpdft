@@ -6,25 +6,26 @@ This dataset was originally assembled for training a FitSNAP potential and is
 being reused to study uncertainty quantification (UQ) in a fine-tuned MACE
 foundation model. The paper compares independent committees, warm-restart
 snapshots, and multi-head fine-tuning, asking whether ensemble disagreement
-predicts held-out DFT errors and helps assess Li transport. The primary physical
-validation is Li diffusivity and effective activation energy in bulk LiF,
-Li-rich Li-F, and Li|LiF interface environments. Boron-containing families are
-optional extensions for testing transfer to B-modified chemistry. These
-component systems do not by themselves simulate electrochemical SEI formation.
+predicts held-out DFT error, stays calibrated across environments, and improves
+active-learning label efficiency over random sampling. The Li-F groups are a
+testbed with three chemically distinct environments; transport and SEI formation
+are out of scope. Boron-containing families are optional extensions for testing
+transfer to B-modified chemistry. These component systems do not by themselves
+simulate electrochemical SEI formation.
 
-## Core Li/F Diffusion Families
+## Core Li/F Environments
 
 | Family | Why it belongs in the UQ study |
 |---|---|
-| **LIWITHF** | Li-rich Li-F environments complement stoichiometric LiF and expose off-stoichiometry, defects, and local disorder relevant to Li motion. |
-| **LIFINTERFACE** | Li\|LiF boundaries directly test interface-specific UQ and, with the interface normal confirmed, anisotropic Li transport. |
-| **LIF64** | Stoichiometric bulk LiF is the ionic-crystal control for Li coordination, bulk mobility, and the LiF side of an interface. Isolated LiF is a reference environment, not condensed-phase transport. |
+| **LIWITHF** | 53 Li + 1 F: F-doped Li metal, a compositionally shifted anode-side environment distinct from bulk LiF. |
+| **LIFINTERFACE** | 86 Li + 36 F: a thin two-layer LiF film on Li metal, used as the OOD interface environment. The cell is a thin-film model, not a buried interface. |
+| **LIF64** | Stoichiometric bulk LiF is the ionic-crystal control for Li coordination and the bulk limit. Isolated LiF is a reference environment, not condensed-phase data. |
 
 ## Optional Li-Metal Control
 
 | Family | Why it may be useful |
 |---|---|
-| **BCC54** | Pure body-centered-cubic Li, not a boron-containing cell. It provides a metal-side reference for transport across a Li/LiF interface, but is optional for a LiF-only diffusion study. |
+| **BCC54** | Pure body-centered-cubic Li, not a boron-containing cell. It provides a pure-metal reference environment for UQ transfer, but is optional. |
 
 ## Optional Boron-Containing Extensions
 
@@ -33,15 +34,15 @@ component systems do not by themselves simulate electrochemical SEI formation.
 | **LIWITHBF** | Mixed Li-B-F environments test transfer into B/F-modified Li-rich chemistry, distinct from stoichiometric LiBF4 salt. |
 | **LIBF4** | LiBF4 provides B-F salt chemistry and a covalent bonding regime alongside ionic Li interactions; include it for salt/additive questions. |
 | **BLI3** | B-Li bulk environments provide an alloy-side reference for BLI3 interfaces. Confirm exact stoichiometry from structures rather than inferring it from the group name. |
-| **BLI3_INTERFACE** | B-Li-containing interfaces test UQ and Li motion at an alloy/interphase boundary; identify adjoining phases and interface orientation from the structure. |
+| **BLI3_INTERFACE** | B-Li-containing interfaces test UQ transfer at an alloy/interphase boundary; identify adjoining phases and interface orientation from the structure. |
 | **BLI** | B-Li bulk environments provide metallic coordination references for BLI interfaces. |
-| **BLI_INTERFACE** | Li-B contact interfaces test committee UQ and interface-crossing transport in boron-containing chemistry. |
+| **BLI_INTERFACE** | Li-B contact interfaces test committee UQ at a metal/compound contact in boron-containing chemistry. |
 
 ## MD Ensembles
 
 The tables list groups by QE ensemble only; they do not imply identical DFT
 settings. Isolated reference groups are omitted because they are not
-condensed-phase transport trajectories.
+condensed-phase trajectories.
 
 ### NVT (Fixed Cell)
 
@@ -83,9 +84,10 @@ analysis.
 - Check whether versioned/final groups reuse or resample the same trajectory
   before treating one as an independent held-out test.
 - Report parsed frame counts as configurations, not as independent statistical
-  samples. Long-time diffusivity and activation energies require longer MACE
-  trajectories, multiple replicas, and multiple temperatures; these short DFT
-  AIMD runs primarily provide reference structures and labels.
+  samples. The effective sample size is set by the number of independent
+  trajectories and contiguous blocks, not by the number of frames.
+- Use measured compositions, not group names, to define environments:
+  `LIWITHF` is 53 Li + 1 F and `LIFINTERFACE` is 86 Li + 36 F.
 
 ## Missing Inputs to Resolve
 

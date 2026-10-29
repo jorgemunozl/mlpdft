@@ -1,0 +1,234 @@
+{
+  "generated_utc": "2026-10-29T16:55:41+00:00",
+  "data_root": "/home/jorge/project/mlpdft/dataset",
+  "groups_requested": [
+    "LIF64_KJPAW_V2",
+    "LIF64_KJPAW_FINAL",
+    "LIF64_KJPAW_NPT",
+    "LIF64_KJPAW_NPT_V2",
+    "LIF64_KJPAW_NPT_V3",
+    "LIF64_KJPAW_NPT_FINAL",
+    "LIF64_ISOLATED",
+    "LIWITHF_V3",
+    "LIWITHF_KJPAW_FINAL",
+    "LIWITHF_NPT_FINAL",
+    "LIWITHF_ISOLATED",
+    "LIFINTERFACE_KJPAW_V1",
+    "LIFINTERFACE_KJPAW_V2",
+    "LIFINTERFACE_KJPAW_NPT",
+    "LIFINTERFACE_KJPAW_NPT_V2",
+    "LIFINTERFACE_KJPAW_FINAL",
+    "LIFINTERFACE_KJPAW_NPT_FINAL",
+    "BCC_54_KJPAW_FINAL",
+    "BCC_54_KJPAW_NPT_FINAL"
+  ],
+  "groups_missing": [
+    "BCC_54_KJPAW_FINAL",
+    "BCC_54_KJPAW_NPT_FINAL"
+  ],
+  "n_files": 63,
+  "frames_raw": 38759,
+  "frames_unique": 27960,
+  "duplicates_removed": 10799,
+  "split_counts": {
+    "ood_test": 1696,
+    "excluded_extra": 11949,
+    "train_pool": 8313,
+    "calibration": 1781,
+    "test": 1781,
+    "excluded": 222,
+    "excluded_scf": 348,
+    "excluded_equilibration": 1870
+  },
+  "equilibration_cutoffs": {
+    "bulk_LiF": 3,
+    "isolated_reference": 0,
+    "F_doped_Li": 0,
+    "interface": 586
+  },
+  "group_scf_warning_rates": {
+    "LIF64_KJPAW_V2": 0.0,
+    "LIF64_KJPAW_FINAL": 0.0,
+    "LIF64_KJPAW_NPT": 0.0,
+    "LIF64_KJPAW_NPT_V2": 0.0,
+    "LIF64_KJPAW_NPT_V3": 0.0,
+    "LIF64_KJPAW_NPT_FINAL": 0.0,
+    "LIF64_ISOLATED": 0.0,
+    "LIWITHF_V3": 0.0,
+    "LIWITHF_KJPAW_FINAL": 0.0,
+    "LIWITHF_NPT_FINAL": 0.30713138054628597,
+    "LIWITHF_ISOLATED": 0.0,
+    "LIFINTERFACE_KJPAW_V1": 9.342281879194632,
+    "LIFINTERFACE_KJPAW_V2": 0.0008532423208191126,
+    "LIFINTERFACE_KJPAW_NPT": 0.29930394431554525,
+    "LIFINTERFACE_KJPAW_NPT_V2": 0.5358190196899875,
+    "LIFINTERFACE_KJPAW_FINAL": 0.0,
+    "LIFINTERFACE_KJPAW_NPT_FINAL": 0.8157170923379174
+  },
+  "environments": {
+    "F_doped_Li": {
+      "unique_frames": 10671,
+      "families": {
+        "ca118cbe2c609527:NPT": 7550,
+        "ca118cbe2c609527:NVT": 2788,
+        "f62f88176d7d7935:NVT": 333
+      },
+      "split_counts": {
+        "train_pool": 1952,
+        "calibration": 418,
+        "test": 418,
+        "ood_test": 333,
+        "excluded_extra": 7550
+      },
+      "compositions": {
+        "{\"F\": 1, \"Li\": 53}": 10671
+      }
+    },
+    "bulk_LiF": {
+      "unique_frames": 12462,
+      "families": {
+        "84bcf69d1907baae:NPT": 7329,
+        "84bcf69d1907baae:NVT": 4666,
+        "8af8ba3ff6912ca9:NVT": 333,
+        "ab18430ca61a17ce:NPT": 134
+      },
+      "split_counts": {
+        "ood_test": 934,
+        "excluded_extra": 4199,
+        "train_pool": 5131,
+        "calibration": 1099,
+        "test": 1099
+      },
+      "compositions": {
+        "{\"F\": 32, \"Li\": 32}": 12462
+      }
+    },
+    "interface": {
+      "unique_frames": 4605,
+      "families": {
+        "7d229232cac506fa:NVT": 2691,
+        "7d229232cac506fa:NPT": 1714,
+        "b8a2c107fe4dfb36:NPT": 200
+      },
+      "split_counts": {
+        "excluded_scf": 348,
+        "excluded_equilibration": 1870,
+        "train_pool": 1230,
+        "calibration": 264,
+        "test": 264,
+        "ood_test": 429,
+        "excluded_extra": 200
+      },
+      "compositions": {
+        "{\"F\": 36, \"Li\": 86}": 4605
+      }
+    },
+    "isolated_reference": {
+      "unique_frames": 222,
+      "families": {
+        "3ac4b071081a7e92:NVT": 133,
+        "70d298783b23265d:NVT": 89
+      },
+      "split_counts": {
+        "excluded": 222
+      },
+      "compositions": {
+        "{\"F\": 32, \"Li\": 32}": 133,
+        "{\"F\": 1, \"Li\": 53}": 89
+      }
+    }
+  },
+  "families": {
+    "bulk_LiF": {
+      "84bcf69d1907baae:NVT": {
+        "frames": 4666,
+        "splits": {
+          "ood_test": 934,
+          "excluded_extra": 3732
+        }
+      },
+      "8af8ba3ff6912ca9:NVT": {
+        "frames": 333,
+        "splits": {
+          "excluded_extra": 333
+        }
+      },
+      "84bcf69d1907baae:NPT": {
+        "frames": 7329,
+        "splits": {
+          "train_pool": 5131,
+          "calibration": 1099,
+          "test": 1099
+        }
+      },
+      "ab18430ca61a17ce:NPT": {
+        "frames": 134,
+        "splits": {
+          "excluded_extra": 134
+        }
+      }
+    },
+    "isolated_reference": {
+      "3ac4b071081a7e92:NVT": {
+        "frames": 133,
+        "splits": {
+          "excluded": 133
+        }
+      },
+      "70d298783b23265d:NVT": {
+        "frames": 89,
+        "splits": {
+          "excluded": 89
+        }
+      }
+    },
+    "F_doped_Li": {
+      "ca118cbe2c609527:NVT": {
+        "frames": 2788,
+        "splits": {
+          "train_pool": 1952,
+          "calibration": 418,
+          "test": 418
+        }
+      },
+      "f62f88176d7d7935:NVT": {
+        "frames": 333,
+        "splits": {
+          "ood_test": 333
+        }
+      },
+      "ca118cbe2c609527:NPT": {
+        "frames": 7550,
+        "splits": {
+          "excluded_extra": 7550
+        }
+      }
+    },
+    "interface": {
+      "7d229232cac506fa:NVT": {
+        "frames": 2691,
+        "splits": {
+          "excluded_scf": 348,
+          "excluded_equilibration": 585,
+          "train_pool": 1230,
+          "calibration": 264,
+          "test": 264
+        }
+      },
+      "7d229232cac506fa:NPT": {
+        "frames": 1714,
+        "splits": {
+          "excluded_equilibration": 1285,
+          "ood_test": 429
+        }
+      },
+      "b8a2c107fe4dfb36:NPT": {
+        "frames": 200,
+        "splits": {
+          "excluded_extra": 200
+        }
+      }
+    }
+  },
+  "split_rule": "Energy per atom and volume per atom are checked in 16 blocks against the last four blocks; earlier blocks outside tolerance are marked excluded_equilibration. Families are ranked by SCF cleanliness first, then size; frames from groups with more than 0.1 diagonalization warnings per SCF step are excluded_scf from the primary blocks. Within each environment, the largest (family, ensemble) group is then sorted by timestep and split contiguously into train/pool, calibration, and in-domain test (0.15 each). The largest non-primary family is reserved as an independent OOD test, evenly subsampled to at most 1000 frames; remaining families are excluded from the primary claim. Isolated cells are excluded."
+}
