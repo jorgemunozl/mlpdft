@@ -125,3 +125,39 @@ The calibration leg lands exactly where the pre-registered decision rules in
 
 **Caveat:** the interface test group is only n = 18, so interface CIs are wide;
 the OOD conclusion is qualitative there, as already flagged in the protocol.
+
+---
+
+## 8. Expected results — where they are answered
+
+This section maps each outcome anticipated in
+[`UQ_EXPERIMENT_2.md`](UQ_EXPERIMENT_2.md) and the pre-registered protocol to
+the evidence in this report.
+
+| Expected result | Answered in | Status |
+|---|---|---|
+| Cycle-end snapshots remove the experiment-1 under-training confound | §5.1, §6 | **Answered.** Within-group Spearman 0.271 → 0.834 and member energies converge. The magnitude is confounded by the test-set change (480 → 178 frames). |
+| The snapshot ensemble is the cost-effective calibrator | §3, §4, §5.2 | **Answered on point estimates.** 0.834 vs 0.656 (committee) at ⅓ the cost. No paired test of the difference; per-group CIs overlap. |
+| The committee remains the force-accuracy reference | §2, §5.4 | **Answered, but it is a tie.** 0.0087 vs 0.0089 (multi-head), with no CI on the difference. |
+| Multi-head is competitive in-domain and collapses at the interface | §3, §5.3 | **Partly answered.** In-domain yes. At the interface n = 18, the CI includes zero, and the interface test is a held-out block of the same trajectory, not an independent OOD set. |
+| Reference-energy alignment fixes the energy metric | §2, §5 | **Answered.** 1.5–13 → 0.1–0.5 meV/atom after alignment. |
+| Full-data ceiling for the active-learning target | §7 | **Partly answered.** 0.0087–0.0090 is the 214-frame committee, not a model trained on all 214 frames, and it predates the 8,313-frame frozen split. |
+| Per-method training cost for compute-to-target | §4, §5.2 | **Answered.** Snapshot 4,996 s; committee 14,975 s; multi-head 43,148 s including the OMAT pretrain. |
+| Leak-free, frozen splits | §1 | **Configuration recorded.** The split construction is in `build_uq_splits.py`; it is not re-audited here. |
+
+**Not answered by this run:**
+
+- **H1 (calibration → data efficiency)** and **H3 (acquisition behavior)** need
+  the active-learning loop; this report stops at the calibration leg.
+- **H2 (snapshot cost-efficiency)** is answered on cost, not on labels; the
+  labels-to-target side is deferred to the AL loop.
+- **OOD claims** need the independent `uq_ood.extxyz` split. The interface test
+  used here is a held-out time block of the same trajectory.
+- **Statistical separation of the three arms** needs a paired bootstrap of the
+  method differences; the per-group CIs reported here are not a test of the
+  ranking.
+
+**Where the numbers come from:** `outputs/outputs_v3/evaluation/uq_summary.json`
+and the four `*_predictions.csv` files. The headline force RMSE is
+atom-weighted; the risk–coverage curves are frame-RMS, so their 100% endpoint is
+0.0076 (committee) rather than the 0.0087 headline.
