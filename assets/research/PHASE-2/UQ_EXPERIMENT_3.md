@@ -120,6 +120,17 @@ If any check fails, stop. Do not run the full experiment against a broken arm.
 
 ## Full run
 
+The runner's no-flag default **is** this experiment:
+
+```bash
+uv run --locked python -m mlpdft.uq_compare
+```
+
+It expands to `--arms mhc,frozen-probe --mhc-heads 4 --mhc-epochs 400
+--probe-epochs 400 --run-id lif_uq_mhc_001`, and it automatically merges
+`lif_uq_001/evaluation/uq_summary.json` when that directory exists. The explicit
+equivalent, for a different output directory or run id:
+
 ```bash
 uv run --locked python -m mlpdft.uq_compare \
   --output-dir src/mlpdft/outputs/uq_diffusion_comparison \

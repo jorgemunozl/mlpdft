@@ -206,10 +206,12 @@ FROZEN_BODY_LAYERS = 6
 
 # Run defaults: the runner needs no flags. The block-split inputs live under
 # ``dataset/xyz_files/uq_splits`` and are auto-downloaded from the HF dataset
-# repo when missing. The run id is fixed so the runbook's paths are literal.
-# Override with flags if needed.
+# repo when missing. The no-flag default is the current experiment: the
+# frozen-body MHC plus its point-estimate control. Previous-result merging is
+# automatic when the Exp 2 run directory is present.
 DEFAULT_SPLIT_DIR = DATA_DIR / XYZ_DIR / "uq_splits"
-DEFAULT_RUN_ID = "lif_uq_001"
+DEFAULT_RUN_ID = "lif_uq_mhc_001"
+PREVIOUS_RUN_ID = "lif_uq_001"
 
 UQ_DATASET_REPO = f"{PREFIX_HF}/li_f_uq_splits_v2"
 UQ_SPLIT_FILENAMES = ("uq_train.extxyz", "uq_valid.extxyz", "uq_test.extxyz")
@@ -259,7 +261,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=OUTPUTS_DIR / "uq_diffusion_comparison",
     )
-    parser.add_argument("--run-id", default=DEFAULT_RUN_ID)
+    parser.add_argument(
+        "--run-id",
+        default=None,
+        help=f"Run directory name (default: {DEFAULT_RUN_ID}; 'lif_uq_mhc_smoke' with --smoke-test)",
+    )
     parser.add_argument("--model-key", default="mace_omat_medium")
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
     parser.add_argument("--dtype", choices=("float32", "float64"), default="float64")
@@ -285,8 +291,8 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Comma-separated arms to train/evaluate: committee, snapshots, "
             "multihead-bootstrap, mhc, frozen-probe, zero-shot. Defaults to "
-            "committee,snapshots,multihead-bootstrap (mhc,frozen-probe under "
-            "--smoke-test)."
+            "mhc,frozen-probe (Experiment 3). Pass committee,snapshots,"
+            "multihead-bootstrap to reproduce Experiment 2."
         ),
     )
     parser.add_argument(
@@ -349,7 +355,7 @@ ALL_ARMS = (
     "frozen-probe",
     "zero-shot",
 )
-DEFAULT_ARMS = ("committee", "snapshots", "multihead-bootstrap")
+DEFAULT_ARMS = ("mhc", "frozen-probe")
 
 
 def parse_arms(value: str | None, smoke_test: bool = False) -> tuple[str, ...]:
@@ -1293,8 +1299,12 @@ def main() -> None:
         arms = parse_arms(options.arms, smoke_test=options.smoke_test)
     except ValueError as exc:
         raise SystemExit(str(exc)) from exc
+    options.run_id = options.run_id or (
+        "lif_uq_mhc_smoke" if options.smoke_test else DEFAULT_RUN_ID
+    )
     if options.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but is not available on this node")
+    print(f"UQ run '{options.run_id}': arms = {','.join(arms)}")
     if options.smoke_test:
         print(
             "Smoke test: 2 epochs per frozen arm; checks run before evaluation "
@@ -1319,6 +1329,20 @@ def main() -> None:
             )
         _remove_run_directory(run_root, base_dir)
     run_root.mkdir(parents=True, exist_ok=False)
+
+    include_summaries = list(options.include_summary)
+    if not include_summaries:
+        previous_summary = (
+            base_dir / PREVIOUS_RUN_ID / "evaluation" / "uq_summary.json"
+        )
+        if previous_summary.is_file():
+            include_summaries = [previous_summary]
+            print(f"Auto-including previous results: {previous_summary}")
+        else:
+            print(
+                "No previous uq_summary.json found; evaluating only this run's "
+                "arms (no committee/snapshot comparison will be merged)"
+            )
 
     mhc_epochs = 2 if options.smoke_test else options.mhc_epochs
     probe_epochs = 2 if options.smoke_test else options.probe_epochs
@@ -1577,7 +1601,7 @@ def main() -> None:
                 calibration_frames=calibration_frames,
             )
         for method, summary in _load_prior_summaries(
-            options.include_summary
+            include_summaries
         ).items():
             if method in summaries:
                 print(f"Not importing {method}: it was evaluated in this run")
@@ -1613,7 +1637,7 @@ def main() -> None:
         "committee_bootstrapped": options.bootstrap_committee,
         "multihead_enabled": "multihead-bootstrap" in arms
         and not options.skip_multihead,
-        "include_summary": [str(path) for path in options.include_summary],
+        "include_summary": [str(path) for path in include_summaries],
         "runs": run_records,
     }
     (run_root / "experiment_manifest.json").write_text(

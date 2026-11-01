@@ -7,7 +7,7 @@
 | **Python 3.11** | Pinned by `.python-version`; torch 2.6 has no 3.15 wheels |
 | **`uv`** package manager | Install it via `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | **~10 GB free disk** | Mostly for model weights + dataset |
-| **Internet** | Only on the login node; compute nodes are offline (download the dataset, model and replay file first) |
+| **Internet** | Only on the login node; compute nodes are offline (pre-download the splits and the foundation model) |
 
 > `uv` can also be installed via pip: `pip install uv`
 
@@ -30,18 +30,36 @@ If `uv` picks the wrong interpreter, run `uv python pin 3.11` first.
 
 > Use tmux or another tool so the run survives disconnects. Needs a CUDA GPU.
 
-`uq_compare.py` is the runner (not `multi-train.py`):
+`uq_compare.py` is the runner (not `multi-train.py`). Run it **without flags**:
 
 ```bash
-uv run --locked python -m mlpdft.uq_compare --run-id lif_uq_001
+uv run --locked python -m mlpdft.uq_compare
 ```
 
-The output lands in `src/mlpdft/outputs/uq_diffusion_comparison/lif_uq_001`.
+With no flags this runs the current experiment: the frozen-body multi-head
+committee (`mhc`) plus its point-estimate control (`frozen-probe`), 4 heads,
+400 epochs each. It writes to
+`src/mlpdft/outputs/uq_diffusion_comparison/lif_uq_mhc_001`.
+
+If the previous run directory `lif_uq_001` is still present, the committee and
+snapshot results are merged into the new summary automatically; if it is absent
+the run still completes with the two new arms plus a fresh zero-shot evaluation.
+
+Optional 2-epoch smoke test before the production run (this one needs flags):
+
+```bash
+uv run --locked python -m mlpdft.uq_compare \
+  --smoke-test --run-id lif_uq_mhc_smoke --overwrite
+```
+
+Delete or rename `lif_uq_mhc_001` before rerunning, otherwise the runner stops
+with a clear "run directory already exists" error.
+
 ## 4. Give me the results
 
 ```bash
-tar czf uq_test_output.tar.gz \
-  -C src/mlpdft/outputs/uq_diffusion_comparison lif_uq_001
+tar czf uq_mhc_output.tar.gz \
+  -C src/mlpdft/outputs/uq_diffusion_comparison lif_uq_mhc_001
 ```
 
-Send me `uq_test_output.tar.gz`.
+Send me `uq_mhc_output.tar.gz`.
