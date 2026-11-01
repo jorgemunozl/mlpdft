@@ -51,6 +51,7 @@ from mace.tools.scripts_utils import remove_pt_head
 from mlpdft.constants import DATA_DIR, FORCE_KEY, OUTPUTS_DIR, XYZ_DIR
 from mlpdft.uq_compare import (
     DEFAULT_SEEDS,
+    _cleanup_checkpoints,
     _ensure_split_files,
     _export_snapshot_models,
     _make_bootstrap_files,
@@ -324,6 +325,7 @@ def _train_ensemble(
                 seed,
                 options.epochs,
             )
+            _cleanup_checkpoints(iteration_dir / name)
             members.append((name, model_path, None))
     elif strategy == "snapshot":
         name = "warm_snapshots"
@@ -341,6 +343,7 @@ def _train_ensemble(
         snapshots = _export_snapshot_models(
             run_dir, name, final_model, options.epochs, options.snapshot_count
         )
+        _cleanup_checkpoints(run_dir)
         members = [(path.stem, path, None) for path in snapshots]
     elif strategy == "multihead":
         bootstrap = _make_bootstrap_files(
@@ -371,6 +374,7 @@ def _train_ensemble(
             head_path = export_dir / f"{head_name}.model"
             torch.save(single_head, head_path)
             members.append((head_name, head_path, None))
+        _cleanup_checkpoints(run_dir)
     else:
         raise ValueError(f"Unknown strategy: {strategy}")
 

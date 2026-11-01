@@ -20,7 +20,10 @@ AL leg; ceiling RMSE fixed here).
 - Warm snapshots: one run, warm restarts `scheduler_t0 = 50`, snapshots collected
   at **cycle-ends 49/99/149** (one epoch before each restart) — the fix from
   experiment 1.
-- Multi-head: 3 bootstrap heads + OMAT replay (`pt_samples = 1000`).
+- Multi-head: 3 bootstrap heads + **Materials Project** replay, requested as
+  `pt_train_file = "omat"`. In mace-torch 0.3.15 every `mp`/`omat`/`matpes_*`
+  value is routed to `mp_traj_combined.xyz`, so this is MP replay, not OMAT
+  (`--pt-samples 1000`).
 - Test: 178 frames, NVT only — LIF64 (80) + LIWITHF (80) + LIFINTERFACE (18).
 
 ## 2. Force and energy accuracy (atom-weighted)
@@ -65,13 +68,23 @@ All three are now monotonic (in experiment 1 only snapshots were), but the
 snapshot and committee low-error tails are much steeper than multi-head's
 (0.0024–0.0025 vs 0.0045 at the 10% quantile).
 
+> **Correction (code fix, not yet applied to this table).** These rows were
+> computed by averaging per-frame RMSEs, which up-weights frames with few atoms.
+> That is why the 100% row does not reproduce the overall force RMSE
+> (committee 0.0076 vs 0.0087). `uq_compare.py` now uses the atom-weighted
+> formula (`sum of squared errors / number of components`), which makes the
+> 100% row identical to the overall RMSE. Regenerate this table from the saved
+> `*_predictions.csv` files before quoting the 10–75% values; the qualitative
+> ordering (steep committee/snapshot tails, flat multi-head tail) is expected to
+> hold but the numbers will move.
+
 ## 4. Cost (from the manifest, seconds)
 
 | method | cost |
 |---|---|
 | warm snapshots | **4 996** (one fine-tune) |
 | independent committee | 14 975 (3 × ~5 000) |
-| multi-head bootstrap | 43 148 (incl. OMAT pretrain) |
+| multi-head bootstrap | 43 148 (incl. MP replay) |
 
 Snapshot is ~⅓ the committee and ~⅛ the multi-head, while being the best
 calibrator.
