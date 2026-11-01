@@ -94,7 +94,7 @@ test set is excluded from all training, scheduler selection, and calibration.
 | Single fine-tune | Each committee member reported individually | Accuracy reference |
 | Independent committee | 3 fine-tunes, seeds 123/124/125, single cosine decay | Standard committee-UQ baseline |
 | Warm-snapshot committee | 1 fine-tune, cosine warm restarts; 3 cycle-minimum checkpoints | Candidate low-cost UQ |
-| Multi-head committee | Shared backbone, 3 bootstrap heads + OMAT replay head | Lower-cost head disagreement; report correlation + replay cost |
+| Multi-head fine-tuning with replay (MH-FT; historical plan, not the frozen-body MHC) | Shared trainable body, 3 bootstrap heads + MP replay head | Lower-cost head disagreement; report correlation + replay cost |
 
 `uq_compare.py` defaults: 150 epochs, snapshots near epochs 50/100/150 (cycle
 ends 49/99/149 under T₀ = epochs//count = 50). Confirm checkpoints are cycle

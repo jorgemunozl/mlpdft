@@ -11,17 +11,20 @@
 
 **Framing note (2026-10-29).** The Li-ion/LiF transport literature in §7 is retained as testbed justification and as a model-form-uncertainty caveat. It is no longer a validation target: the paper does not report \(D\) or \(E_a\). Passages that still mention a "transport QoI" are read as historical context; the current claims are in `DESCRIPTION.md`.
 
-**Bottom line.** The literature establishes three things: ensemble disagreement is the practical default for MLIP UQ but is expensive and unreliable out of distribution; weight-sharing and single-model alternatives can cut that cost substantially; and better uncertainty does not automatically produce better active learning. It does **not** contain a matched comparison of independent fine-tuning committees, warm-restart snapshot ensembles, and multi-head committees for a foundation MACE model on a multi-environment Li–F dataset, nor a test of whether those uncertainty signals improve active learning for held-out force error over random acquisition. That is the paper's opening.
+**Bottom line.** The literature establishes three things: ensemble disagreement is the practical default for MLIP UQ but is expensive and unreliable out of distribution; weight-sharing and single-model alternatives can cut that cost substantially; and better uncertainty does not automatically produce better active learning. It does **not** contain a matched comparison of independent fine-tuning committees, warm-restart snapshot ensembles, and the two multi-head variants (MH-FT and MHC) for a foundation MACE model on a multi-environment Li–F dataset, nor a test of whether those uncertainty signals improve active learning for held-out force error over random acquisition. That is the paper's opening.
 
 ---
 
 ## 1. What this paper is, and what the literature must support
 
-The paper compares three ways of constructing an ensemble around the same foundation MACE checkpoint:
+The paper compares four ensemble arms around the same foundation MACE checkpoint. The first three are the core comparison; the fourth separates the published method from the fine-tuning implementation that is often confused with it:
 
 1. **Independent committee** — three full fine-tunes from the same checkpoint, with different seeds and/or bootstrap resamples.
 2. **Warm-restart snapshot ensemble** — one fine-tune with a cyclic (SGDR-style) learning-rate schedule; the three members are checkpoints taken at cycle minima.
-3. **Multi-head committee** — one shared backbone with three output heads trained with different bootstrap targets, plus the replay head needed to limit forgetting.
+3. **Multi-head fine-tuning with replay (MH-FT)** — one *trainable* backbone with three output heads trained on different bootstrap targets, plus a Materials Project replay head. This is the released `mace-torch` multi-head fine-tuning path and the arm measured in Experiment 2.
+4. **Frozen-body multi-head committee (MHC)** — Beck et al.'s construction: the atomic-environment descriptors and the original head are frozen, and four randomly initialised heads are trained on disjoint slices with no replay. This is the arm added in Experiment 3.
+
+Arms 3 and 4 share the multi-head mechanism but not what is trained. They have different accuracy, cost and diversity behaviour, so they are reported separately and are not interchangeable.
 
 The project checkpoint is **MACE-OMAT medium** ([Batatia et al., 2023](https://arxiv.org/abs/2401.00096)). The papers below often use MACE-MP-0 (Beck et al.) or MACE-MPA-0 (Alghamdi et al.); their results are method evidence, not same-checkpoint benchmarks.
 
@@ -43,7 +46,8 @@ The previous draft's E₀/property-dependent zero-shot story is **out of scope**
 |---|---|
 | **Independent committee** | \(K\) separately fine-tuned models; spread comes from initialization, data order, and bootstrap resampling. |
 | **Warm-restart snapshot ensemble** | One fine-tune with cyclic learning-rate restarts; members are cycle-end checkpoints. "Warm restart" here means an optimization restart, **not** warm-starting from another task. |
-| **Multi-head committee** | One shared body with \(K\) output heads; spread comes from head-specific parameters and training targets. |
+| **Multi-head committee** | One shared body with \(K\) output heads; spread comes from head-specific parameters and training targets. In Beck et al. the body is **frozen** and the heads are new. |
+| **Multi-head fine-tuning (MH-FT)** | The released MACE multi-head path: the body is trained jointly, heads are warm-started, and a replay head limits forgetting. Not the same method as MHC, even though both use multiple heads. |
 | **Shallow ensemble** | A weight-sharing ensemble in which most of the model is shared and only a shallow part is replicated; trained with a probabilistic objective. Related to, but not identical with, a multi-head committee. |
 | **Discrimination / ranking** | Whether uncertainty is larger for more erroneous predictions (e.g. Spearman correlation, error-by-uncertainty quantile). |
 | **Calibration** | Whether predicted uncertainty has the stated coverage or likelihood; a ranking can be good while calibration is poor, and vice versa. |
@@ -114,7 +118,7 @@ The warm-restart snapshot ensemble is the paper's most distinctive arm. The cons
 
 The idea has a clear generic deep-learning lineage. Huang et al. proposed snapshot ensembles to obtain several local minima along one optimization path at no additional training cost, using cyclic learning rates ([Huang et al., 2017](https://arxiv.org/abs/1704.00109)). Kurniawan et al. include snapshot ensembles in their MLIP benchmark, so the construction is not unknown in the MLIP literature ([Kurniawan et al., 2026](https://doi.org/10.1088/2632-2153/ae9fb4)).
 
-But the specific claim this paper needs — that a warm-restart snapshot ensemble from a **fine-tuned foundation MACE model** is a cost-effective UQ method for **Li–F transport**, competitive with an independent committee and a multi-head committee — is not established by those papers. The retrieval found no dedicated MLIP paper that uses "warm snapshots" as its central method. The closest conceptual neighbors are:
+But the specific claim this paper needs — that a warm-restart snapshot ensemble from a **fine-tuned foundation MACE model** is a cost-effective UQ method for **Li–F transport**, competitive with an independent committee and the two multi-head variants (MH-FT and MHC) — is not established by those papers. The retrieval found no dedicated MLIP paper that uses "warm snapshots" as its central method. The closest conceptual neighbors are:
 
 - **snapshot ensembles** as one of several generic ensemble constructions (Kurniawan et al.);
 - **shallow ensembles** as a weight-sharing way to reduce ensemble training cost (Schäfer et al.);
@@ -135,36 +139,36 @@ This is the most directly relevant cost-reduction result for the paper. It shows
 But there are caveats:
 
 - The heads share the same representation, so their errors may be correlated; head disagreement is not the same as independent-model disagreement.
-- Beck et al. train only the new heads on a frozen foundation model. If the project fine-tunes the backbone, the cost and the uncertainty behavior change.
-- The multi-head model in the project includes a replay head trained on OMAT data to limit forgetting. Replay adds data and compute; it should be reported separately, not hidden in the head-training cost.
-- A multi-head committee with three heads has only three members; the uncertainty estimate is coarse, and the spread may be dominated by head initialization.
+- Beck et al. train only the new heads on a frozen foundation model. If the backbone is fine-tuned instead, both the cost and the uncertainty behaviour change. The project keeps these as two separate arms (MH-FT and MHC) for exactly that reason.
+- MH-FT includes a replay head trained on Materials Project data (requested as `omat`) to limit forgetting. Replay adds data and compute; it is reported separately, not hidden in the head-training cost. MHC has no replay head.
+- Few heads mean a coarse spread: three bootstrap heads in MH-FT, four disjoint heads in MHC. The spread may be dominated by head initialisation, especially when each head sees a small slice.
 
 The related **shallow ensemble** literature is also relevant, but it is a different design. Schäfer et al. systematically study training strategies for shallow ensembles and find that explicit negative-log-likelihood (NLL) optimization improves calibration relative to random-initialization ensembles or a last-layer Laplace approximation. Models trained only on energy objectives give miscalibrated force uncertainties; explicitly modeling force uncertainty via an NLL objective is essential, though expensive. They then show that full-model fine-tuning of a shallow ensemble originally trained with a probabilistic energy loss — or sampled from the Laplace posterior — retains calibration while reducing training time by up to 96% ([Schäfer et al., 2026](https://arxiv.org/abs/2602.15747)).
 
 That is the closest cost–accuracy evidence in the retrieval, but it is **not** a warm-restart snapshot study. It supports the general proposition that weight sharing plus a probabilistic objective can make ensembles much cheaper; it does not tell us whether cycle-end checkpoints from one SGDR run will be calibrated on Li–F forces.
 
-**Role in this paper:** the low-inference-cost, shared-backbone competitor. The hypothesis is that multi-head training is cheaper than an independent committee and may be better calibrated than snapshots, but its heads may be too correlated and its replay cost may erode the advantage.
+**Role in this paper:** the low-inference-cost, shared-backbone competitors. MH-FT tests whether the released fine-tuning recipe is cheaper than an independent committee and whether its replay cost erodes that advantage. MHC tests whether freezing the descriptors preserves the foundation model's accuracy while giving committee-quality uncertainty at head-only cost.
 
-### 3.4 Comparison of the three arms
+### 3.4 Comparison of the arms
 
-| Property | Independent committee | Warm-restart snapshots | Multi-head committee |
-|---|---|---|---|
-| Source of spread | Separate fine-tunes (seed/bootstrap) | Checkpoints along one optimization trajectory | Head-specific parameters on a shared body |
-| Training cost | \(K\times\) fine-tune | \(\approx 1\times\) fine-tune | \(\approx 1\times\) backbone + head training; replay extra |
-| Inference cost | \(K\times\) | \(K\times\) | \(\approx 1\times\) |
-| Diversity mechanism | Initialization, data order, bootstrap | Optimization path / cycle minima | Head initialization, bootstrap targets |
-| Main strength | Most interpretable; closest to gold-standard deep ensemble | Cheapest training; simple to add to an existing fine-tune | Cheapest inference; strong published cost-reduction evidence |
-| Main risk | Expensive; members can collapse | Members may be highly correlated; checkpoint selection is fragile | Heads share representations; replay confounds cost; few members |
-| Direct MLIP evidence | Strong (generic ensembles; benchmarks) | Weak for foundation MLIPs; snapshot ensembles only as one benchmark arm | Strong for MACE force UQ and AL (Beck et al.) |
-| Role here | Reference | Candidate low-cost method | Candidate low-cost method |
+| Property | Independent committee | Warm-restart snapshots | Multi-head fine-tuning (MH-FT) | Frozen-body MHC |
+|---|---|---|---|---|
+| Source of spread | Separate fine-tunes (seed/bootstrap) | Checkpoints along one optimization trajectory | Head parameters, bootstrap targets, jointly trained body | Random head initialisation on disjoint data slices, frozen body |
+| Training cost | \(K\times\) fine-tune | \(\approx 1\times\) fine-tune | \(\approx 1\times\) fine-tune + MP replay | Forward-heavy body, readouts only; no replay |
+| Inference cost | \(K\times\) | \(K\times\) | \(\approx 1\times\) mean, \(K\) passes for force spread | \(\approx 1\times\) mean, \(K\) passes for force spread |
+| Diversity mechanism | Initialisation, data order, bootstrap | Optimization path / cycle minima | Head initialisation, bootstrap targets | Disjoint data slices plus random head initialisation |
+| Main strength | Most interpretable; closest to gold-standard deep ensemble | Cheapest training; simple to add to an existing fine-tune | Strong published evidence; one model | Preserves the foundation representation; no replay; cheap heads |
+| Main risk | Expensive; members can collapse | Members may be highly correlated; checkpoint selection is fragile | Replay confounds cost; the body can drift from the foundation model | Few frames per head; accuracy bounded by the frozen body |
+| Direct MLIP evidence | Strong (generic ensembles; benchmarks) | Weak for foundation MLIPs; snapshot ensembles only as one benchmark arm | Strong for MACE fine-tuning | Strong for MACE force UQ and AL (Beck et al.) |
+| Role here | Reference | Candidate low-cost method | Experiment 2 arm | Experiment 3 arm; the paper's method |
 
-The table makes the paper's contribution legible: it is not "another ensemble." It is a **matched, cost-aware comparison** of three constructions that are usually studied separately, followed by a test of whether their uncertainty is useful for within-environment error ranking and active learning.
+The table makes the paper's contribution legible: it is not "another ensemble." It is a **matched, cost-aware comparison** of three ensemble families — with the multi-head family split into the fine-tuning implementation and the frozen-body committee — followed by a test of whether their uncertainty is useful for within-environment error ranking and active learning.
 
 ---
 
 ## 4. Single-model alternatives: the cost floor and the competition
 
-A reviewer will ask why the paper compares three ensembles instead of using a cheaper single-model UQ method. Single-model methods approach the same prediction problem with a different uncertainty model; they set the cost floor and should be discussed as alternatives, not ignored.
+A reviewer will ask why the paper compares three ensemble families (four arms) instead of using a cheaper single-model UQ method. Single-model methods approach the same prediction problem with a different uncertainty model; they set the cost floor and should be discussed as alternatives, not ignored.
 
 ### 4.1 Last-layer projection regression (LLPR)
 
@@ -349,7 +353,7 @@ The gap is that no retrieved paper tests whether ensemble uncertainty **ranks** 
 
 ### 8.2 What is not established in the retrieved set
 
-1. **No matched three-way comparison for foundation MACE on Li–F.** The retrieved literature compares some ensemble methods on some systems, but not independent committees vs warm-restart snapshots vs multi-head committees under one checkpoint, one data budget, one ensemble size, and one cost accounting.
+1. **No matched comparison for foundation MACE on Li–F.** The retrieved literature compares some ensemble methods on some systems, but not independent committees vs warm-restart snapshots vs the two multi-head variants (MH-FT and MHC) under one checkpoint, one data budget, one ensemble size, and one cost accounting.
 2. **No dedicated evidence for warm-restart snapshots in foundation MLIPs.** Snapshot ensembles appear as one arm in a broader benchmark, and shallow ensembles are a different construction. The specific cost/calibration claim for warm snapshots on MACE is open.
 3. **No environment-stratified calibration benchmark.** UQ papers evaluate energies, forces, or generic OOD detection. They rarely report whether calibration and risk–coverage hold separately for bulk, doped-metal, and interface environments.
 4. **No Li–F active-learning comparison against random with honest compute accounting.** LLPR and NTK papers are strong precedents, but they are not Li–F environment studies. Beck et al. demonstrate AL for MACE-MP-0, but not across a bulk/doped/interface split.
@@ -357,13 +361,13 @@ The gap is that no retrieved paper tests whether ensemble uncertainty **ranks** 
 
 ### 8.3 The gap statement
 
-> In the retrieved literature, no study compares independent fine-tuning committees, warm-restart snapshot ensembles, and multi-head committees under a common foundation MACE checkpoint, matched ensemble size, and matched compute accounting, then tests whether their uncertainty ranks force errors within Li–F environments and improves active learning for held-out force error over random acquisition.
+> In the retrieved literature, no study compares independent fine-tuning committees, warm-restart snapshot ensembles, and the two multi-head variants (fine-tuning with replay and frozen-body committees) under a common foundation MACE checkpoint, matched ensemble size, and matched compute accounting, then tests whether their uncertainty ranks force errors within Li–F environments and improves active learning for held-out force error over random acquisition.
 
 This is a **bounded-search gap claim**, not a claim of absolute novelty. The paper should phrase it as "we found no study that..." and should cite the nearest neighbors explicitly: Beck et al. for multi-head, Schäfer et al. for shallow ensembles, Kurniawan et al. for snapshot/ensemble benchmarks, Bi et al. and Ananth & Yue for cheap AL, and Alghamdi et al. for LiF transport.
 
 ### 8.4 Contributions the paper can defend
 
-1. **A matched comparison of three ensemble constructions** at the same foundation checkpoint, data budget, ensemble size, and evaluation protocol.
+1. **A matched comparison of three ensemble families (four arms)** at the same foundation checkpoint, data budget, ensemble size, and evaluation protocol. The multi-head family is split into MH-FT (fine-tuned body + replay) and MHC (frozen body + disjoint heads) because they are different methods, not two names for one baseline.
 2. **Environment-resolved UQ diagnostics** — within-group discrimination, calibration, and risk–coverage for bulk LiF, F-doped Li, and the thin LiF/Li interface film, rather than pooled correlations.
 3. **A distribution-shift test** — whether calibration fitted in bulk LiF survives F-doped Li and the interface film, rather than only pooled force RMSE.
 4. **A cost-aware active-learning test** — labels-to-target and compute-to-target against a random control, with training and inference costs separated.
@@ -377,7 +381,7 @@ The headline is the label/compute cost of reaching a held-out force-error target
 |---|---|
 | Warm snapshots match the committee on within-group discrimination and calibration at substantially lower compute cost (≤1/2, ideally ≤1/3) | Supports the cost-efficiency hypothesis. |
 | Warm snapshots are cheaper but anti-correlate or collapse OOD | Cheap but not useful UQ; report as a negative result. |
-| Multi-head dominates on both discrimination and compute | The snapshot route is not justified; multi-head is the practical choice. |
+| A multi-head arm dominates on both discrimination and compute | The snapshot route is not justified; report which variant (MH-FT or MHC) dominates and at what cost. |
 | All three are ≈ random in AL | Uncertainty is not the bottleneck; reframe the paper around calibration diagnostics, not AL. |
 | UQ ranks pooled error but fails within an environment | Pooled discrimination is misleading; report environment-stratified results. |
 
@@ -402,7 +406,7 @@ References are grouped by role. The first group is the core comparison set most 
 
 ### 10.1 Core comparison set
 
-1. **Beck, Simko, Schaaf, Marsalek, Schran (2025).** *Multi-head committees enable direct uncertainty prediction for atomistic foundation models.* J. Chem. Phys. 163, 234103. [DOI](https://doi.org/10.1063/5.0302097) · [arXiv:2508.09907](https://arxiv.org/abs/2508.09907). Shared-backbone multi-head committee on MACE-MP-0; force UQ correlates with error; 5% training set in AL. **Most directly relevant to the multi-head arm.**
+1. **Beck, Simko, Schaaf, Marsalek, Schran (2025).** *Multi-head committees enable direct uncertainty prediction for atomistic foundation models.* J. Chem. Phys. 163, 234103. [DOI](https://doi.org/10.1063/5.0302097) · [arXiv:2508.09907](https://arxiv.org/abs/2508.09907). Shared-backbone multi-head committee on MACE-MP-0; force UQ correlates with error; 5% training set in AL. **Direct source of the MHC arm (Experiment 3); MH-FT uses the released MACE fine-tuning path instead.**
 2. **Schäfer, Kellner, Kästner, Ceriotti (2026).** *How to Train a Shallow Ensemble.* [arXiv:2602.15747](https://arxiv.org/abs/2602.15747). Weight-sharing shallow ensembles; NLL force loss needed for calibration; full-model fine-tuning of a probabilistic shallow ensemble cuts training time by up to 96%. **Closest cost–accuracy evidence, but not warm snapshots.**
 3. **Kurniawan, Wen, Tadmor, Transtrum (2026).** *Comparative study of ensemble-based uncertainty quantification methods for neural network interatomic potentials.* Mach. Learn.: Sci. Technol. 7, 055018. [DOI](https://doi.org/10.1088/2632-2153/ae9fb4) · [arXiv:2508.06456](https://arxiv.org/abs/2508.06456). Benchmarks bootstrap, dropout, random-init, and snapshot ensembles on carbon allotropes; uncertainty can plateau or decrease OOD. **Direct precedent for snapshot ensembles and the OOD warning.**
 4. **Bi, Wang, Cheng (2026).** *Full-data accuracy with fewer labels for training and fine-tuning machine-learning force fields.* [arXiv:2607.14486](https://arxiv.org/abs/2607.14486). LLPR, a forward-pass-cheap per-configuration UQ estimator; committee UQ called impractical for foundation MLFFs; electrolyte AL. **Direct competitor for cheap AL.**

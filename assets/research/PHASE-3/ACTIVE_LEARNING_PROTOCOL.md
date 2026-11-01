@@ -147,7 +147,10 @@ Report per method and for the random baseline:
 2. **Labels-to-target (LTT)** — acquired labels to first reach the target.
 3. **Compute-to-target (CTT)** — cumulative wall-clock across all retrains to
    first reach the target. Per-round cost is measured per method (committee ≈ 3×
-   a fine-tune, multi-head ≈ head-training, snapshot ≈ 1× a fine-tune).
+   a fine-tune; MH-FT ≈ 1× a fine-tune plus MP replay; frozen-body MHC ≈
+   head-only training; snapshot ≈ 1× a fine-tune). The current AL runner uses
+   MH-FT for its `multihead` strategy; switching it to MHC is a separate code
+   change and must not be reported as the same arm.
 4. **Acquired-environment composition** — fraction of acquired frames from each
    environment over rounds (H3 diagnostic).
 5. **Within-environment error** — bulk, F-doped, and interface reported

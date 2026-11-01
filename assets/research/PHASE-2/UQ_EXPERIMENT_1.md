@@ -16,7 +16,8 @@ cost? Scope per [`DESCRIPTION.md`](DESCRIPTION.md) and [`ROUTE.md`](ROUTE.md).
 - Ensemble size K = 3; committee seeds 123/124/125.
 - Warm snapshots collected at **epochs 33/67/99** (evenly spaced) — *this is the bug fixed in
   experiment 2*.
-- Multi-head: 3 block-bootstrap heads + OMAT replay head (1 000 pretrain samples).
+- Multi-head: 3 block-bootstrap heads + MP replay head (1 000 pretrain samples; requested as
+  `omat`, which mace-torch 0.3.15 routes to MP). This is MH-FT, not the frozen-body MHC.
 - Test: 480 frames = 6 groups × 80 (LIF64, LIF64-NPT, LIWITHF, LIWITHF-NPT, LIFINTERFACE,
   LIFINTERFACE-NPT).
 
@@ -29,7 +30,7 @@ cost? Scope per [`DESCRIPTION.md`](DESCRIPTION.md) and [`ROUTE.md`](ROUTE.md).
 | multi-head bootstrap | **0.0144** | **1.42** | 0.616 | 0.124 | 11 392* |
 | warm snapshots | 0.0164 | 13.11 | **0.836** | 0.271 | **2 853** |
 
-\* multi-head cost includes the OMAT pretraining step, so it is not directly comparable to a
+\* multi-head cost includes the MP replay step, so it is not directly comparable to a
 single fine-tune.
 
 ## Three corrections that change the reading
@@ -64,7 +65,7 @@ lowest-uncertainty frames → 0.0038 eV/Å). Committee and multi-head curves dip
   force σ 0.0006 vs. snapshot 0.0053) — shared initialization removes diversity. A finding, not a
   bug, but needs a stronger baseline.
 - **Cost accounting (audit E2).** Committee 8 632 s = 3 × ~2 880 s; snapshot 2 853 s (⅓);
-  multi-head 11 392 s *including* OMAT pretrain — report head-only cost separately.
+  multi-head 11 392 s *including* MP replay — report head-only cost separately.
 
 ## What this run established
 
