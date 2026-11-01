@@ -155,7 +155,7 @@ the evidence in this report.
 | Multi-head is competitive in-domain and collapses at the interface | §3, §5.3 | **Partly answered.** In-domain yes. At the interface n = 18, the CI includes zero, and the interface test is a held-out block of the same trajectory, not an independent OOD set. |
 | Reference-energy alignment fixes the energy metric | §2, §5 | **Answered.** 1.5–13 → 0.1–0.5 meV/atom after alignment. |
 | Full-data ceiling for the active-learning target | §7 | **Partly answered.** 0.0087–0.0090 is the 214-frame committee, not a model trained on all 214 frames, and it predates the 8,313-frame frozen split. |
-| Per-method training cost for compute-to-target | §4, §5.2 | **Answered.** Snapshot 4,996 s; committee 14,975 s; multi-head 43,148 s including the OMAT pretrain. |
+| Per-method training cost for compute-to-target | §4, §5.2 | **Answered.** Snapshot 4,996 s; committee 14,975 s; multi-head 43,148 s including the MP replay. |
 | Leak-free, frozen splits | §1 | **Configuration recorded.** The split construction is in `build_uq_splits.py`; it is not re-audited here. |
 
 **Not answered by this run:**
@@ -172,5 +172,7 @@ the evidence in this report.
 
 **Where the numbers come from:** `outputs/outputs_v3/evaluation/uq_summary.json`
 and the four `*_predictions.csv` files. The headline force RMSE is
-atom-weighted; the risk–coverage curves are frame-RMS, so their 100% endpoint is
-0.0076 (committee) rather than the 0.0087 headline.
+atom-weighted. The risk–coverage table above predates the atom-weighting fix and
+is frame-RMS, so its 100% endpoint is 0.0076 (committee) rather than the 0.0087
+headline; the runner now uses the atom-weighted formula, whose 100% endpoint
+equals the headline. Regenerate that table before quoting it.
