@@ -3,8 +3,9 @@
 ## One-sentence description
 
 We compare three ensemble-based uncertainty-quantification strategies for a
-fine-tuned MACE foundation potential — independent fine-tuning committee,
-warm-restart snapshots, and multi-head fine-tuning — on whether they rank
+fine-tuned MACE foundation potential — an independent fine-tuning committee,
+warm-restart snapshots, and a shared-body multi-head committee trained with the
+foundation body frozen — on whether they rank
 held-out DFT error, remain calibrated across chemically distinct Li–F
 environments, and select informative DFT configurations more efficiently than
 random sampling.
@@ -70,10 +71,11 @@ physical claim.
 
 We will claim:
 
-- a measured ranking of the three arms on within-environment error
+- a measured ranking of the arms on within-environment error
   discrimination, calibration, and risk–coverage;
 - a measured label-efficiency comparison against random acquisition;
-- a measured cost–accuracy tradeoff;
+- a measured cost–accuracy tradeoff that includes the zero-fine-tune
+  (frozen-body) operating point;
 - a negative result, stated as such, if the arms do not separate.
 
 We will not claim:

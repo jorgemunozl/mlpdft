@@ -37,3 +37,6 @@ lammps_example/
 !mlpdft_touying/main.typ
 
 .rules/
+
+# Vector figures are source, not build output
+!assets/research/**/figures/*.pdf
