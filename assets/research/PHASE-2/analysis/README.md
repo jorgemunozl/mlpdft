@@ -2,9 +2,9 @@
 
 Pilot analysis of the 214-frame run in
 `/home/jorge/project/mlpdft/outputs/outputs_v3/` (178 locked test frames:
-80 bulk LiF, 80 F-doped Li, 18 interface). It exists to close the statistical
-gaps in `UQ_EXPERIMENT_2_RESULTS.md`: within-environment risk--coverage, a
-paired test of method differences, and a scale (coverage) diagnostic.
+80 bulk LiF, 80 F-doped Li, 18 interface). It closes the statistical gaps in
+`UQ_EXPERIMENT_2_RESULTS.md`: within-environment risk–coverage, a paired test
+of method differences, and a scale (coverage) diagnostic.
 
 **These are pilot numbers.** The final numbers are regenerated on the frozen
 post-generation splits with the same commands.
@@ -15,8 +15,12 @@ post-generation splits with the same commands.
 |---|---|
 | `uq_analysis.json` | full machine-readable report |
 | `uq_analysis.md` | per-method tables and paired differences |
-| `figures/fig_risk_coverage.pdf` | risk--coverage inside each environment |
-| `figures/fig_error_over_sigma.pdf` | median error / predicted spread per arm |
+| `figures/fig1_testbed.pdf` | three environments and the pool/split composition |
+| `figures/fig2_discrimination.pdf` | within-environment Spearman with block-bootstrap CIs |
+| `figures/fig3_calibration.pdf` | risk–coverage per environment and error/spread scale |
+
+Figure 4 (label and compute efficiency) is generated from the active-learning
+manifest once the loop has run; it is not available for this pilot.
 
 Regenerate with:
 
@@ -29,10 +33,21 @@ python src/mlpdft/utils/uq_analysis.py \
   --prediction zero_shot=$D/zero_shot_predictions.csv \
   --output-dir assets/research/PHASE-2/analysis --block 20 --n-boot 2000
 
-python src/mlpdft/utils/make_uq_figures.py \
+python src/mlpdft/utils/make_paper_figures.py \
+  --split-manifest dataset/xyz_files/uq_splits/split_manifest.json \
+  --train-file dataset/xyz_files/uq_splits/uq_train.extxyz \
   --analysis assets/research/PHASE-2/analysis/uq_analysis.json \
-  --outdir assets/research/PHASE-2/analysis/figures
+  --outdir assets/research/PHASE-2/analysis/figures --only 1,2,3
+
+# after the active-learning run
+python src/mlpdft/utils/make_paper_figures.py \
+  --al-manifest outputs/.../al_manifest.json \
+  --outdir assets/research/PHASE-2/analysis/figures --only 4
 ```
+
+Figures are built at the paper's 5.5 in text width, written as PDF (vector, for
+the paper) and SVG (preview), and audited for font embedding, axis labels,
+5 pt text, and overlaps on save.
 
 ## Method
 
@@ -59,7 +74,7 @@ python src/mlpdft/utils/make_uq_figures.py \
 - Every arm is **under-scaled**: median error / spread is 2.7–6.4× for committee
   and snapshots, and 13.8–66.5× for multi-head. The disagreement ranks errors
   better than it sizes them; calibrated error bars would need a fitted scale.
-- Risk--coverage within an environment is much flatter than the pooled curve in
+- Risk–coverage within an environment is much flatter than the pooled curve in
   the draft. The pooled "steep tail" was partly a group-composition effect.
 
 ## Limits
