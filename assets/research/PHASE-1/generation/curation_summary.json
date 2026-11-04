@@ -1,0 +1,78 @@
+{
+  "generated_utc": "2026-11-04T21:28:47+00:00",
+  "method": "frame i -> SCF block i*stride; keep zero-warning, post-equilibration frames",
+  "sources": [
+    {
+      "tag": "LIWITHF_NPT_dense",
+      "group": "LIWITHF_NPT_FINAL",
+      "frames_total": 5394,
+      "scf_clean": 4009,
+      "post_equilibration": 3372,
+      "selected": 2603,
+      "equilibration_cutoff": 6066,
+      "transition_time": 6180,
+      "regime": "dense",
+      "output": "dataset/xyz_files/curated_npt/LIWITHF_NPT_dense.extxyz",
+      "sha256": "7e64599a8d05790ac38134ee90b2e0b3dfab9a89c8ecafa7e14fcce0a07f23b5"
+    },
+    {
+      "tag": "LIFINTERFACE_NPT_clean",
+      "group": "LIFINTERFACE_KJPAW_NPT",
+      "frames_total": 431,
+      "scf_clean": 344,
+      "post_equilibration": 297,
+      "selected": 233,
+      "equilibration_cutoff": 402,
+      "transition_time": null,
+      "regime": null,
+      "output": "dataset/xyz_files/curated_npt/LIFINTERFACE_NPT_clean.extxyz",
+      "sha256": "dd88c0c3e386cd0378b13f96faaacc2501e48d11a5ac219f05d5caabb0d9e8da"
+    },
+    {
+      "tag": "LIFINTERFACE_NPT_V2_clean",
+      "group": "LIFINTERFACE_KJPAW_NPT_V2",
+      "frames_total": 795,
+      "scf_clean": 482,
+      "post_equilibration": 299,
+      "selected": 157,
+      "equilibration_cutoff": 1488,
+      "transition_time": null,
+      "regime": null,
+      "output": "dataset/xyz_files/curated_npt/LIFINTERFACE_NPT_V2_clean.extxyz",
+      "sha256": "643f85dfce241a8aeb7d459c585965158e014911fff97968ac597d1c8be59af4"
+    }
+  ],
+  "recovered": {
+    "F_doped_dense": 2603,
+    "interface_npt": 233,
+    "interface_npt_v2": 157,
+    "interface_unique": 390
+  },
+  "clean_pool_before": {
+    "bulk_LiF": 5131,
+    "F_doped_Li": 1952,
+    "interface": 1230
+  },
+  "clean_pool_after_recovery": {
+    "bulk_LiF": 5131,
+    "F_doped_Li": 4555,
+    "interface": 1620
+  },
+  "clean_pool_after_generation": {
+    "bulk_LiF": 5131,
+    "F_doped_Li": 4555,
+    "interface": 4620
+  },
+  "generation": {
+    "LIFINTERFACE_AL_V1": {
+      "start_frame": 1008,
+      "production_frames": 1500,
+      "role": "pool"
+    },
+    "LIFINTERFACE_AL_V2": {
+      "start_frame": 1500,
+      "production_frames": 1500,
+      "role": "test/OOD"
+    }
+  }
+}
