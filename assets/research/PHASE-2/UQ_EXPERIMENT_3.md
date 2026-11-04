@@ -169,6 +169,12 @@ and coverage are already per group, so they can be read directly from the
 summary. Pooled Spearman is secondary and must be labelled as such; per-group
 values are the headline.
 
+**Imported arms:** the committee, snapshot and multi-head rows merged from
+`lif_uq_001/evaluation/uq_summary.json` were evaluated before Pearson, RLL and
+coverage existed, so they carry only the old fields. Re-evaluate their saved
+models with the current runner before comparing calibration across arms; the
+ranking comparison is unaffected.
+
 ## Deliverables
 
 1. Four-arm table (A/B reused, C/D new) with per-group n, force/energy accuracy,
