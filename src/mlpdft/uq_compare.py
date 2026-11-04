@@ -882,6 +882,51 @@ def _spearman_correlation(left: np.ndarray, right: np.ndarray) -> float | None:
     return float(corr) if np.isfinite(corr) else None
 
 
+def _pearson_correlation(left: np.ndarray, right: np.ndarray) -> float | None:
+    if len(left) < 2 or np.ptp(left) == 0 or np.ptp(right) == 0:
+        return None
+    corr = np.corrcoef(left, right)[0, 1]
+    return float(corr) if np.isfinite(corr) else None
+
+
+def _relative_log_likelihood(
+    errors: np.ndarray, sigmas: np.ndarray, rmse: float
+) -> float | None:
+    """Relative log-likelihood of Kellner et al., as used in the MHC paper.
+
+    Positive values mean the per-point sigma beats a constant-RMSE predictor;
+    1 is the oracle sigma = |error|.  A small floor keeps exact zeros finite.
+    """
+    errors = np.asarray(errors, dtype=float)
+    sigmas = np.asarray(sigmas, dtype=float)
+    if errors.size == 0 or not np.isfinite(rmse) or rmse <= 0:
+        return None
+    sigma_squared = np.maximum(sigmas**2, 1e-24)
+    nll = 0.5 * (errors**2 / sigma_squared + np.log(2 * np.pi * sigma_squared))
+    nll_constant = 0.5 * (
+        errors**2 / rmse**2 + np.log(2 * np.pi * rmse**2)
+    )
+    oracle_sigma = np.maximum(np.abs(errors), 1e-8)
+    nll_oracle = 0.5 * (
+        errors**2 / oracle_sigma**2 + np.log(2 * np.pi * oracle_sigma**2)
+    )
+    numerator = float(np.sum(nll - nll_constant))
+    denominator = float(np.sum(nll_oracle - nll_constant))
+    if denominator == 0 or not np.isfinite(denominator):
+        return None
+    return numerator / denominator
+
+
+def _coverage(errors: np.ndarray, sigmas: np.ndarray, factor: float) -> float | None:
+    errors = np.asarray(errors, dtype=float)
+    sigmas = np.asarray(sigmas, dtype=float)
+    if errors.size == 0:
+        return None
+    return float(
+        np.mean(np.abs(errors) <= factor * np.abs(sigmas) * (1.0 + 1e-9) + 1e-12)
+    )
+
+
 def _summarize_subset(
     indices: list[int],
     energy_errors: np.ndarray,
@@ -923,11 +968,15 @@ def _summarize_subset(
         "spearman_uncertainty_vs_force_error": _spearman_correlation(
             uncertainties, frame_errors
         ),
+        "pearson_uncertainty_vs_force_error": _pearson_correlation(
+            uncertainties, frame_errors
+        ),
         "low_uncertainty_risk_coverage_force_rmse": risk,
     }
 
 
-def _atom_level_spearman(
+def _atom_level_correlation(
+    metric: str,
     indices: list[int],
     atom_uncertainties: list[np.ndarray],
     atom_absolute_errors: list[np.ndarray],
@@ -936,7 +985,11 @@ def _atom_level_spearman(
         return None
     uncertainty = np.concatenate([atom_uncertainties[index] for index in indices])
     error = np.concatenate([atom_absolute_errors[index] for index in indices])
-    return _spearman_correlation(uncertainty, error)
+    if metric == "spearman":
+        return _spearman_correlation(uncertainty, error)
+    if metric == "pearson":
+        return _pearson_correlation(uncertainty, error)
+    raise ValueError(f"Unknown correlation metric: {metric}")
 
 
 def _evaluate_method(
@@ -996,6 +1049,8 @@ def _evaluate_method(
     force_frame_rmse = np.zeros(n_frames)
     energy_errors = np.zeros(n_frames)
     force_abs_errors: list[np.ndarray] = []
+    force_signed_errors: list[np.ndarray] = []
+    force_component_sigmas: list[np.ndarray] = []
     atom_uncertainties: list[np.ndarray] = []
     atom_absolute_errors: list[np.ndarray] = []
     groups: list[str] = []
@@ -1027,6 +1082,8 @@ def _evaluate_method(
             ref_forces = np.asarray(atoms.arrays[FORCE_KEY], dtype=float)
             frame_force_error = mean_forces - ref_forces
             force_abs_errors.append(np.abs(frame_force_error))
+            force_signed_errors.append(frame_force_error)
+            force_component_sigmas.append(component_std)
             # Per-atom sigma as in the MHC paper (Eq. 4): mean over the three
             # force components of the per-component committee std.
             atom_uncertainties.append(np.mean(component_std, axis=1))
@@ -1067,7 +1124,14 @@ def _evaluate_method(
     }
     for group, indices in group_indices.items():
         by_group[group]["atom_level_spearman_uncertainty_vs_force_error"] = (
-            _atom_level_spearman(indices, atom_uncertainties, atom_absolute_errors)
+            _atom_level_correlation(
+                "spearman", indices, atom_uncertainties, atom_absolute_errors
+            )
+        )
+        by_group[group]["atom_level_pearson_uncertainty_vs_force_error"] = (
+            _atom_level_correlation(
+                "pearson", indices, atom_uncertainties, atom_absolute_errors
+            )
         )
 
     calibration = None
@@ -1151,12 +1215,67 @@ def _evaluate_method(
             force_uncertainty,
         ),
         "by_group": by_group,
-        "atom_level_spearman_uncertainty_vs_force_error": _atom_level_spearman(
-            all_indices, atom_uncertainties, atom_absolute_errors
+        "atom_level_spearman_uncertainty_vs_force_error": _atom_level_correlation(
+            "spearman", all_indices, atom_uncertainties, atom_absolute_errors
+        ),
+        "atom_level_pearson_uncertainty_vs_force_error": _atom_level_correlation(
+            "pearson", all_indices, atom_uncertainties, atom_absolute_errors
         ),
         "calibration": calibration,
         "member_accuracy": member_metrics,
     }
+    if calibration is not None:
+        alpha_force = float(calibration["alpha_force"])
+        alpha_energy = float(calibration["alpha_energy"])
+
+        def _add_calibration_metrics(
+            subset: dict[str, Any], indices: list[int]
+        ) -> None:
+            signed_errors = np.concatenate(
+                [force_signed_errors[index].ravel() for index in indices]
+            )
+            scaled_sigmas = np.concatenate(
+                [force_component_sigmas[index].ravel() for index in indices]
+            ) * alpha_force
+            subset["rll_force"] = _relative_log_likelihood(
+                signed_errors,
+                scaled_sigmas,
+                subset["force_rmse_ev_per_angstrom"],
+            )
+            subset["coverage_1sigma_force"] = _coverage(
+                signed_errors, scaled_sigmas, 1.0
+            )
+            subset["coverage_2sigma_force"] = _coverage(
+                signed_errors, scaled_sigmas, 2.0
+            )
+            energy_sigmas = energy_std_per_atom[indices] * alpha_energy
+            subset["coverage_1sigma_energy"] = _coverage(
+                energy_errors[indices], energy_sigmas, 1.0
+            )
+            subset["coverage_2sigma_energy"] = _coverage(
+                energy_errors[indices], energy_sigmas, 2.0
+            )
+
+        _add_calibration_metrics(summary["overall"], all_indices)
+        for group, indices in group_indices.items():
+            _add_calibration_metrics(summary["by_group"][group], indices)
+        calibration.update(
+            {
+                "rll_force": summary["overall"]["rll_force"],
+                "coverage_1sigma_force": summary["overall"][
+                    "coverage_1sigma_force"
+                ],
+                "coverage_2sigma_force": summary["overall"][
+                    "coverage_2sigma_force"
+                ],
+                "coverage_1sigma_energy": summary["overall"][
+                    "coverage_1sigma_energy"
+                ],
+                "coverage_2sigma_energy": summary["overall"][
+                    "coverage_2sigma_energy"
+                ],
+            }
+        )
     if len(members) < 2:
         # A single point estimate has no disagreement, so ranking metrics are
         # undefined rather than zero.

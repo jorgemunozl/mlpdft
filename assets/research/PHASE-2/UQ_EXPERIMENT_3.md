@@ -155,22 +155,24 @@ from A40 and A100 are not comparable.
 Emitted by the runner into `evaluation/`:
 
 - `uq_summary.json` — all methods, per-group and overall: force/energy MAE and
-  RMSE, frame-level Spearman, risk–coverage at 10/25/50/75/100%, per-atom
-  Spearman (paper Eq. 4 aggregation), calibration α on the 53 validation frames
-  (Eq. 5), member accuracy.
+  RMSE; frame-level and per-atom **Spearman** and **Pearson** correlations;
+  risk–coverage at 10/25/50/75/100%; calibration α on the 53 validation frames
+  (Eq. 5), **RLL** and **1σ/2σ empirical coverage** on the locked test; member
+  accuracy.
 - `<method>_predictions.csv` — per-frame errors and σ.
 - `<method>_atom_level.npz` — per-atom σ and |error|, for per-atom coverage and
   calibration curves.
 - `smoke_check.json`, `experiment_manifest.json`, `mhc_head_data/mhc_split.json`.
 
-Added in analysis, not by the runner: block-bootstrap CIs, ECE/NLL/coverage from
-the CSVs and NPZ, and the figures. Pooled Spearman is secondary and must be
-labelled as such; per-group values are the headline.
+Added in analysis, not by the runner: block-bootstrap CIs and the figures. RLL
+and coverage are already per group, so they can be read directly from the
+summary. Pooled Spearman is secondary and must be labelled as such; per-group
+values are the headline.
 
 ## Deliverables
 
 1. Four-arm table (A/B reused, C/D new) with per-group n, force/energy accuracy,
-   within-group Spearman + CI, α, risk–coverage.
+   within-group Spearman + Pearson + CI, α, RLL, 1σ/2σ coverage, risk–coverage.
 2. Cost table: training seconds for C and D, versus the Exp 2 committee and
    snapshot runs.
 3. One paragraph answering: does a frozen foundation body plus 4 cheap heads give

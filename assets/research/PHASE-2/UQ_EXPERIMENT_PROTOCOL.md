@@ -116,10 +116,11 @@ Report overall and by group/ensemble/environment:
 - Energy MAE/RMSE (meV/atom); force MAE/RMSE (eV/Å).
 - Ensemble force uncertainty from member disagreement, with the aggregation rule
   fixed in advance (RMS component std across atoms + max per-atom uncertainty).
-- Uncertainty-vs-error rank correlation; error by uncertainty quantile;
-  risk-vs-coverage curves.
-- Calibration on validation; empirical coverage on the locked test. Calibrate
-  scales on validation only.
+- Uncertainty-vs-error **rank correlation (Spearman)** and **linear correlation
+  (Pearson)**; error by uncertainty quantile; risk-vs-coverage curves.
+- Calibration: α scaling fitted on validation only, then **RLL** (Kellner et
+  al.) and **empirical 1σ/2σ coverage** on the locked test, overall and by
+  group.
 - Energy uncertainty as secondary; check energy-reference alignment (shared
   offsets are invisible to disagreement).
 
