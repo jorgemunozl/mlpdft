@@ -150,7 +150,7 @@ the evidence in this report.
 | Expected result | Answered in | Status |
 |---|---|---|
 | Cycle-end snapshots remove the experiment-1 under-training confound | §5.1, §6 | **Answered.** Within-group Spearman 0.271 → 0.834 and member energies converge. The magnitude is confounded by the test-set change (480 → 178 frames). |
-| The snapshot ensemble is the cost-effective calibrator | §3, §4, §5.2 | **Answered on point estimates.** 0.834 vs 0.656 (committee) at ⅓ the cost. No paired test of the difference; per-group CIs overlap. |
+| The snapshot ensemble is the cost-effective calibrator | §3, §4, §5.2, §9 | **Answered with a paired test (pilot).** 0.834 vs 0.656 (committee) at ⅓ the cost; Δ(committee − snapshot) = −0.21, 95% CI [−0.45, −0.07], p = 0.002 on the two resamplable environments. The interface (n = 18) is excluded from the interval. |
 | The committee remains the force-accuracy reference | §2, §5.4 | **Answered, but it is a tie.** 0.0087 vs 0.0089 (multi-head), with no CI on the difference. |
 | Multi-head is competitive in-domain and collapses at the interface | §3, §5.3 | **Partly answered.** In-domain yes. At the interface n = 18, the CI includes zero, and the interface test is a held-out block of the same trajectory, not an independent OOD set. |
 | Reference-energy alignment fixes the energy metric | §2, §5 | **Answered.** 1.5–13 → 0.1–0.5 meV/atom after alignment. |
@@ -166,9 +166,9 @@ the evidence in this report.
   labels-to-target side is deferred to the AL loop.
 - **OOD claims** need the independent `uq_ood.extxyz` split. The interface test
   used here is a held-out time block of the same trajectory.
-- **Statistical separation of the three arms** needs a paired bootstrap of the
-  method differences; the per-group CIs reported here are not a test of the
-  ranking.
+- **Statistical separation of the arms** is now reported in §9 with a paired
+  block bootstrap; the marginal per-group CIs in this report are not a test of
+  the ranking.
 
 **Where the numbers come from:** `outputs/outputs_v3/evaluation/uq_summary.json`
 and the four `*_predictions.csv` files. The headline force RMSE is
@@ -176,3 +176,36 @@ atom-weighted. The risk–coverage table above predates the atom-weighting fix a
 is frame-RMS, so its 100% endpoint is 0.0076 (committee) rather than the 0.0087
 headline; the runner now uses the atom-weighted formula, whose 100% endpoint
 equals the headline. Regenerate that table before quoting it.
+
+---
+
+## 9. Environment-resolved re-analysis (pilot)
+
+The per-group CIs above are marginal intervals, not a test of method
+differences, and the risk–coverage table is pooled over environments. Both gaps
+are addressed by `src/mlpdft/utils/uq_analysis.py`, which resamples contiguous
+20-frame blocks within each environment and uses the *same* blocks for both
+methods in a paired comparison. Artifacts and reproduction commands are in
+[`analysis/`](analysis/README.md).
+
+Findings on the same 178 test frames:
+
+- **Within-environment risk–coverage is much flatter than the pooled curve.**
+  The pooled "steep tail" in §5.2 is partly a group-composition effect: at 10%
+  coverage a method can look good by selecting bulk frames rather than by
+  ranking well inside an environment.
+- **Snapshot > committee on within-environment rank correlation**, on the two
+  environments large enough to resample: Δ(committee − snapshot) = −0.21,
+  95% CI [−0.45, −0.07], p = 0.002. The interface has 18 frames, fewer than one
+  block, so it has no interval and is excluded from the paired test.
+- **Committee ≈ multi-head**: Δ(committee − multi-head) = −0.12, 95% CI
+  [−0.36, +0.21], p = 0.60. The point estimates differ; the data do not separate
+  them.
+- **Every arm is under-scaled.** Median force error / predicted spread is
+  2.7–6.4× for committee and snapshots, and 13.8–66.5× for multi-head. The
+  disagreement ranks errors better than it sizes them; a fitted scale would be
+  needed before quoting calibrated error bars.
+
+These are pilot numbers: 178 test frames, one foundation checkpoint, one seed
+set, and a 214-frame training pool. They will be regenerated on the frozen
+post-generation splits with the same commands.
