@@ -151,6 +151,91 @@ def _checked_configure_model(*args, **kwargs):
         for name, parameter in model.named_parameters():
             if name.split(".")[0] in _DESCRIPTOR_PREFIXES:
                 parameter.requires_grad = False
+        foundation = next(
+            (
+                item
+                for item in args
+                if hasattr(item, "readouts") and hasattr(item, "heads")
+            ),
+            None,
+        )
+        # load_foundations_elements copies the bessel weights and the message
+        # passing blocks but not the Agnesi distance transform.  Without this
+        # the frozen "body" is not the foundation body, and a warm-started
+        # readout still sees different descriptors.
+        if foundation is not None:
+            source_dt = getattr(foundation.radial_embedding, "distance_transform", None)
+            target_dt = getattr(model.radial_embedding, "distance_transform", None)
+            if (
+                source_dt is not None
+                and target_dt is not None
+                and type(source_dt) is type(target_dt)
+            ):
+                missing, unexpected = target_dt.load_state_dict(
+                    source_dt.state_dict(), strict=False
+                )
+                if missing or unexpected:
+                    print(
+                        "[uq_compare] warning: distance transform not fully "
+                        f"copied (missing={missing}, unexpected={unexpected})"
+                    )
+        if getattr(run_args, "_uq_warm_start_readout", False):
+            if foundation is None:
+                raise RuntimeError(
+                    "warm start requested but no foundation model reached "
+                    "configure_model"
+                )
+            if len(model.heads) != 1:
+                raise RuntimeError(
+                    "--warm-start-readout is only valid for the single-head "
+                    f"probe, got {len(model.heads)} heads: {model.heads}"
+                )
+            # ScaleShiftMACE keeps a two-stage readout per head (an atomic
+            # energy linear followed by the interaction readout), so copying
+            # readouts[0] alone leaves the force-producing stage random.
+            if len(foundation.readouts) != len(model.readouts):
+                raise RuntimeError(
+                    "warm start: foundation and probe have different readout "
+                    f"stacks ({len(foundation.readouts)} vs "
+                    f"{len(model.readouts)})"
+                )
+            for index, (source, target) in enumerate(
+                zip(foundation.readouts, model.readouts)
+            ):
+                missing, unexpected = target.load_state_dict(
+                    source.state_dict(), strict=False
+                )
+                if missing or unexpected:
+                    raise RuntimeError(
+                        f"warm-start readout stage {index} does not match the "
+                        f"foundation: missing={missing}, "
+                        f"unexpected={unexpected}"
+                    )
+            if hasattr(model, "scale_shift") and hasattr(foundation, "scale_shift"):
+                # The foundation has one scalar scale/shift; a fresh multi-head
+                # model allocates one entry per head.  Broadcast the scalar.
+                target_state = model.scale_shift.state_dict()
+                for key, value in foundation.scale_shift.state_dict().items():
+                    if key not in target_state:
+                        raise RuntimeError(
+                            f"warm start: unexpected scale_shift key {key!r}"
+                        )
+                    target = target_state[key]
+                    value = value.to(device=target.device, dtype=target.dtype)
+                    if target.shape == value.shape:
+                        target.copy_(value)
+                    elif value.numel() == 1:
+                        target.copy_(value.expand_as(target))
+                    else:
+                        raise RuntimeError(
+                            "warm start: scale_shift shape mismatch for "
+                            f"{key!r}: {tuple(value.shape)} vs "
+                            f"{tuple(target.shape)}"
+                        )
+            print(
+                "[uq_compare] warm-started the single probe readout from the "
+                "foundation model"
+            )
         print(
             f"[uq_compare] frozen body: {len(model.heads)} head(s) "
             f"{model.heads}, descriptors frozen, readouts trainable"
@@ -203,6 +288,15 @@ DEFAULT_SEEDS = (123, 124, 125)
 TARGET_HEADS = ("uq_head_123", "uq_head_124", "uq_head_125")
 MHC_HEAD_TEMPLATE = "mhc_head_{index}"
 FROZEN_BODY_LAYERS = 6
+# Frozen-body readouts start from random weights and must absorb a large
+# cohesive-energy offset, so the 1:1 energy:force objective is energy-dominated
+# and force error grows during training (lif_uq_mhc_001).  The defaults below
+# apply only to the frozen arms; the Exp 2 arms keep 1:1.
+FROZEN_FORCES_WEIGHT = 100.0
+FROZEN_PATIENCE = 50
+SMOKE_LEARNING_DROP = 0.10
+SMOKE_MAX_REGRESSION_FROM_BEST = 0.05
+SMOKE_ALREADY_GOOD_RMSE = 0.05
 
 # Run defaults: the runner needs no flags. The block-split inputs live under
 # ``dataset/xyz_files/uq_splits`` and are auto-downloaded from the HF dataset
@@ -270,6 +364,49 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
     parser.add_argument("--dtype", choices=("float32", "float64"), default="float64")
     parser.add_argument("--epochs", type=int, default=150)
+    parser.add_argument(
+        "--forces-weight",
+        type=float,
+        default=None,
+        help=(
+            "Weight of the force term in the UniversalLoss. Default: 100 for "
+            "the frozen-body arms (MHC and probe), 1.0 otherwise."
+        ),
+    )
+    parser.add_argument(
+        "--energy-weight",
+        type=float,
+        default=1.0,
+        help="Weight of the energy term in the UniversalLoss (default: 1.0)",
+    )
+    parser.add_argument(
+        "--patience",
+        type=int,
+        default=None,
+        help=(
+            "Early-stopping patience on the validation loss. Default: 50 for "
+            "the frozen-body arms, max_epochs + 1 (disabled) otherwise."
+        ),
+    )
+    parser.add_argument(
+        "--warm-start-readout",
+        action="store_true",
+        help=(
+            "Initialise the single frozen-probe head from the foundation "
+            "readout instead of random weights. Probe only; the four MHC heads "
+            "stay random so they can differ."
+        ),
+    )
+    parser.add_argument(
+        "--smoke-epochs",
+        type=int,
+        default=50,
+        help=(
+            "Epochs per frozen arm in --smoke-test (default: 50, about 50 min "
+            "on one A40). The learning gate aborts if validation force RMSE "
+            "does not fall by 10%% or drifts 5%% above its best value."
+        ),
+    )
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--valid-batch-size", type=int, default=1)
     parser.add_argument("--num-workers", type=int, default=0)
@@ -540,6 +677,9 @@ def _make_hyperparams(
     train_file: Path,
     valid_file: Path,
     epochs: int | None = None,
+    forces_weight: float | None = None,
+    energy_weight: float | None = None,
+    patience: int | None = None,
 ):
     max_epochs = epochs or args.epochs
     values: dict[str, Any] = {
@@ -547,12 +687,12 @@ def _make_hyperparams(
         "max_num_epochs": max_epochs,
         "batch_size": args.batch_size,
         "valid_batch_size": args.valid_batch_size,
-        "patience": max_epochs + 1,
+        "patience": patience if patience is not None else max_epochs + 1,
         "eval_interval": 1,
         "valid_frac": 0.1,
         "loss": "universal",
-        "forces_weight": 1.0,
-        "energy_weight": 1.0,
+        "forces_weight": forces_weight if forces_weight is not None else 1.0,
+        "energy_weight": energy_weight if energy_weight is not None else 1.0,
         "swa": False,
         "num_channels": 128,
         "num_cutoff_basis": 5,
@@ -663,6 +803,7 @@ def _run_training(
     foundation_filter_elements: bool | None = None,
     epochs: int | None = None,
     energy_offset: dict[int, float] | None = None,
+    warm_start_readout: bool = False,
 ) -> Path:
     if multihead_files is not None and head_files is not None:
         raise ValueError("Pass either multihead_files (replay) or head_files (MHC)")
@@ -675,7 +816,31 @@ def _run_training(
         )
 
     run_dir.mkdir(parents=True, exist_ok=False)
-    hyperparams = _make_hyperparams(options, train_file, valid_file, epochs=epochs)
+    frozen = freeze is not None
+    force_weight = options.forces_weight
+    if force_weight is None:
+        force_weight = FROZEN_FORCES_WEIGHT if frozen else 1.0
+    patience = options.patience
+    if patience is None:
+        patience = FROZEN_PATIENCE if frozen else None
+    if frozen and patience is not None and patience >= (epochs or options.epochs):
+        print(
+            f"[uq_compare] warning: patience={patience} is not below the epoch "
+            f"budget {epochs or options.epochs}; early stopping will not trigger"
+        )
+    print(
+        f"[uq_compare] {run_name}: forces_weight={force_weight:g}, "
+        f"energy_weight={options.energy_weight:g}, patience={patience}"
+    )
+    hyperparams = _make_hyperparams(
+        options,
+        train_file,
+        valid_file,
+        epochs=epochs,
+        forces_weight=force_weight,
+        energy_weight=options.energy_weight,
+        patience=patience,
+    )
     config = Mace_TrainerConfig(
         model_key=options.model_key,
         device=options.device,
@@ -714,6 +879,7 @@ def _run_training(
         energy_offset=energy_offset,
     )
     mace_args.num_workers = options.num_workers
+    mace_args._uq_warm_start_readout = bool(warm_start_readout)
 
     if multihead_files is not None:
         mace_args.multiheads_finetuning = True
@@ -768,6 +934,10 @@ def _run_training(
                 "pt_train_file": options.pt_train_file
                 if multihead_files is not None
                 else None,
+                "forces_weight": hyperparams.forces_weight,
+                "energy_weight": hyperparams.energy_weight,
+                "patience": hyperparams.patience,
+                "warm_start_readout": bool(warm_start_readout),
             },
             indent=2,
         ),
@@ -1411,6 +1581,124 @@ def _smoke_check_mhc(
     return result
 
 
+
+def _learning_gate(
+    run_dir: Path,
+    run_name: str,
+    min_drop: float = SMOKE_LEARNING_DROP,
+    max_head_worsen: float = 0.10,
+    max_final_rmse: float | None = None,
+) -> dict[str, Any]:
+    """Check that training actually improves validation force RMSE.
+
+    The lif_uq_mhc_001 run passed every structural check and still trained the
+    readouts to be worse than their initialisation: energy fell while force
+    error rose.  A smoke run that only checks head diversity cannot catch that,
+    so this gate reads the per-epoch validation log and aborts if the mean
+    force error does not fall by ``min_drop`` or if any head gets materially
+    worse.
+    """
+
+    matches = sorted((run_dir / "results").glob(f"{run_name}*_train.txt"))
+    if not matches:
+        raise RuntimeError(
+            f"learning gate: no training log matching {run_name}*_train.txt "
+            f"under {run_dir / 'results'}"
+        )
+    path = matches[0]
+    records = [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip().startswith("{")
+    ]
+    evals = [
+        record
+        for record in records
+        if record.get("mode") == "eval"
+        and record.get("head") is not None
+        and "rmse_f" in record
+    ]
+    if not evals:
+        raise RuntimeError(f"learning gate: no eval records with rmse_f in {path}")
+
+    by_head: dict[str, list[dict[str, Any]]] = {}
+    for record in evals:
+        by_head.setdefault(str(record["head"]), []).append(record)
+
+    per_head: dict[str, dict[str, float]] = {}
+    for head, head_records in by_head.items():
+        head_records.sort(
+            key=lambda item: item.get("epoch")
+            if isinstance(item.get("epoch"), int)
+            else -1
+        )
+        forces = [float(item["rmse_f"]) for item in head_records]
+        first, last, best = forces[0], forces[-1], min(forces)
+        per_head[head] = {
+            "first_rmse_f": first,
+            "last_rmse_f": last,
+            "best_rmse_f": best,
+            "relative_drop": (first - last) / first if first > 0 else 0.0,
+            "last_over_best": last / best if best > 0 else float("inf"),
+        }
+
+    drops = [item["relative_drop"] for item in per_head.values()]
+    regressions = [item["last_over_best"] for item in per_head.values()]
+    mean_drop = float(np.mean(drops))
+    worst = float(min(drops))
+    worst_regression = float(max(regressions))
+    start_rmse = float(np.mean([item["first_rmse_f"] for item in per_head.values()]))
+    final_rmse = float(np.mean([item["last_rmse_f"] for item in per_head.values()]))
+    # A warm-started probe can begin at foundation quality; demanding another
+    # 10% there would fail a correct run.  Require the drop only when the arm
+    # starts away from the zero-shot accuracy scale.
+    required_drop = 0.0 if start_rmse <= SMOKE_ALREADY_GOOD_RMSE else min_drop
+    passed = (
+        mean_drop >= required_drop
+        and worst >= -max_head_worsen
+        and worst_regression <= 1.0 + SMOKE_MAX_REGRESSION_FROM_BEST
+        and (max_final_rmse is None or final_rmse <= max_final_rmse)
+    )
+    result = {
+        "run": run_name,
+        "epochs": max(
+            item.get("epoch")
+            for item in evals
+            if isinstance(item.get("epoch"), int)
+        ),
+        "mean_relative_drop": mean_drop,
+        "worst_relative_drop": worst,
+        "worst_last_over_best": worst_regression,
+        "per_head": per_head,
+        "start_force_rmse": start_rmse,
+        "final_force_rmse": final_rmse,
+        "max_final_rmse": max_final_rmse,
+        "required_drop": required_drop,
+        "min_required_drop": min_drop,
+        "max_allowed_head_worsening": max_head_worsen,
+        "max_allowed_regression_from_best": SMOKE_MAX_REGRESSION_FROM_BEST,
+        "passed": passed,
+    }
+    if not passed:
+        raise RuntimeError(
+            f"learning gate failed for {run_name}: validation force RMSE did "
+            f"not improve or drifted above its best value (mean drop "
+            f"{mean_drop:.1%}, worst {worst:.1%}, worst last/best "
+            f"{worst_regression:.2f}; required mean >= {required_drop:.0%}, worst "
+            f">= {-max_head_worsen:.0%}, last/best <= "
+            f"{1.0 + SMOKE_MAX_REGRESSION_FROM_BEST:.2f}, final <= "
+            f"{max_final_rmse if max_final_rmse is not None else 'n/a'}). "
+            f"Per head: "
+            f"{per_head}. Check the force/energy loss weights and early "
+            "stopping."
+        )
+    print(
+        f"[uq_compare] learning gate passed for {run_name}: mean validation "
+        f"force RMSE drop {mean_drop:.1%}, worst head {worst:.1%}"
+    )
+    return result
+
+
 def main() -> None:
     options = parse_args()
     options.seeds = parse_seeds(options.seeds)
@@ -1424,10 +1712,12 @@ def main() -> None:
     if options.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but is not available on this node")
     print(f"UQ run '{options.run_id}': arms = {','.join(arms)}")
+    if options.warm_start_readout and "frozen-probe" not in arms:
+        raise SystemExit("--warm-start-readout requires the frozen-probe arm")
     if options.smoke_test:
         print(
-            "Smoke test: 2 epochs per frozen arm; checks run before evaluation "
-            f"on {options.smoke_frames} test frames"
+            f"Smoke test: {options.smoke_epochs} epochs per frozen arm; checks "
+            f"run before evaluation on {options.smoke_frames} test frames"
         )
 
     train_file = options.train_file.expanduser().resolve()
@@ -1463,8 +1753,10 @@ def main() -> None:
                 "arms (no committee/snapshot comparison will be merged)"
             )
 
-    mhc_epochs = 2 if options.smoke_test else options.mhc_epochs
-    probe_epochs = 2 if options.smoke_test else options.probe_epochs
+    mhc_epochs = options.smoke_epochs if options.smoke_test else options.mhc_epochs
+    probe_epochs = (
+        options.smoke_epochs if options.smoke_test else options.probe_epochs
+    )
     eval_frames = (
         test_frames[: options.smoke_frames] if options.smoke_test else test_frames
     )
@@ -1605,7 +1897,7 @@ def main() -> None:
             }
         )
 
-    smoke_check: dict[str, Any] | None = None
+    smoke_check: dict[str, Any] = {}
     if "mhc" in arms:
         head_names = [
             MHC_HEAD_TEMPLATE.format(index=index)
@@ -1654,8 +1946,11 @@ def main() -> None:
             }
         )
         if options.smoke_test:
-            smoke_check = _smoke_check_mhc(
+            smoke_check["head_check"] = _smoke_check_mhc(
                 mhc_model, head_names, eval_frames, options
+            )
+            smoke_check["learning_gate_mhc"] = _learning_gate(
+                mhc_dir, mhc_name, max_final_rmse=0.10
             )
 
     if "frozen-probe" in arms:
@@ -1674,8 +1969,13 @@ def main() -> None:
             freeze=FROZEN_BODY_LAYERS,
             foundation_filter_elements=False,
             epochs=probe_epochs,
+            warm_start_readout=options.warm_start_readout,
         )
         elapsed = time.perf_counter() - started
+        if options.smoke_test:
+            smoke_check["learning_gate_probe"] = _learning_gate(
+                probe_dir, probe_name, max_final_rmse=0.05
+            )
         _cleanup_checkpoints(probe_dir)
         methods["frozen_probe"] = [(probe_name, probe_model, None)]
         run_records.append(
@@ -1729,7 +2029,7 @@ def main() -> None:
         (evaluation_dir / "uq_summary.json").write_text(
             json.dumps(summaries, indent=2, allow_nan=False), encoding="utf-8"
         )
-        if smoke_check is not None:
+        if smoke_check:
             (evaluation_dir / "smoke_check.json").write_text(
                 json.dumps(smoke_check, indent=2), encoding="utf-8"
             )
