@@ -139,10 +139,13 @@ def _checked_configure_model(*args, **kwargs):
                 f"Frozen-body run expected freeze={FROZEN_BODY_LAYERS}, "
                 f"got {run_args.freeze!r}"
             )
-        if run_args.foundation_filter_elements:
+        if run_args.foundation_filter_elements and not getattr(
+            run_args, "_uq_warm_start_heads", False
+        ):
             raise RuntimeError(
                 "Frozen-body run must set foundation_filter_elements=False so "
-                "the new heads start from random weights"
+                "the new heads start from random weights (use "
+                "--warm-start-heads to opt in)"
             )
         if getattr(run_args, "multiheads_finetuning", False):
             raise RuntimeError(
@@ -395,6 +398,15 @@ def parse_args() -> argparse.Namespace:
             "Initialise the single frozen-probe head from the foundation "
             "readout instead of random weights. Probe only; the four MHC heads "
             "stay random so they can differ."
+        ),
+    )
+    parser.add_argument(
+        "--warm-start-heads",
+        action="store_true",
+        help=(
+            "Initialise every frozen MHC head from the foundation readout "
+            "instead of random weights. Diversity then comes from the disjoint "
+            "data slices, not from head initialisation."
         ),
     )
     parser.add_argument(
@@ -804,6 +816,7 @@ def _run_training(
     epochs: int | None = None,
     energy_offset: dict[int, float] | None = None,
     warm_start_readout: bool = False,
+    warm_start_heads: bool = False,
 ) -> Path:
     if multihead_files is not None and head_files is not None:
         raise ValueError("Pass either multihead_files (replay) or head_files (MHC)")
@@ -880,6 +893,7 @@ def _run_training(
     )
     mace_args.num_workers = options.num_workers
     mace_args._uq_warm_start_readout = bool(warm_start_readout)
+    mace_args._uq_warm_start_heads = bool(warm_start_heads)
 
     if multihead_files is not None:
         mace_args.multiheads_finetuning = True
@@ -1924,8 +1938,9 @@ def main() -> None:
             mhc_epochs,
             head_files=head_files,
             freeze=FROZEN_BODY_LAYERS,
-            foundation_filter_elements=False,
+            foundation_filter_elements=options.warm_start_heads,
             epochs=mhc_epochs,
+            warm_start_heads=options.warm_start_heads,
         )
         elapsed = time.perf_counter() - started
         _cleanup_checkpoints(mhc_dir)
