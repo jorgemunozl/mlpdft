@@ -1,0 +1,6 @@
+overall force: mhc 0.010563  committee 0.008659  ratio 1.220  (limit 1.25) -> True
+rho mean: mhc 0.3025  committee 0.6562  delta -0.3537  (allowed -0.10) -> False
+  LIF64_KJPAW_FINAL: mhc 0.00364 / committee 0.00268 = 1.360 -> False
+  LIFINTERFACE_KJPAW_FINAL: mhc 0.01960 / committee 0.01599 = 1.226 -> True
+  LIWITHF_KJPAW_FINAL: mhc 0.00947 / committee 0.00797 = 1.187 -> True
+GATE PASSED: False

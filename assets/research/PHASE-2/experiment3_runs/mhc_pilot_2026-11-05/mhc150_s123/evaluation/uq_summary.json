@@ -1,0 +1,204 @@
+{
+  "zero_shot": {
+    "method": "zero_shot",
+    "member_count": 1,
+    "prediction_file": "/workspace/runs/mhc150_s123/evaluation/zero_shot_predictions.csv",
+    "overall": {
+      "n_frames": 178,
+      "energy_mae_mev_per_atom": 360745.40710022225,
+      "energy_rmse_mev_per_atom": 385996.383991837,
+      "force_mae_ev_per_angstrom": 0.009963287567025643,
+      "force_rmse_ev_per_angstrom": 0.01604468280583744,
+      "spearman_uncertainty_vs_force_error": null,
+      "pearson_uncertainty_vs_force_error": null,
+      "low_uncertainty_risk_coverage_force_rmse": null
+    },
+    "by_group": {
+      "LIF64_KJPAW_FINAL": {
+        "n_frames": 80,
+        "energy_mae_mev_per_atom": 503242.20802615164,
+        "energy_rmse_mev_per_atom": 503242.2080261534,
+        "force_mae_ev_per_angstrom": 0.005928964957539014,
+        "force_rmse_ev_per_angstrom": 0.007282200611612454,
+        "spearman_uncertainty_vs_force_error": null,
+        "pearson_uncertainty_vs_force_error": null,
+        "low_uncertainty_risk_coverage_force_rmse": null,
+        "atom_level_spearman_uncertainty_vs_force_error": null,
+        "atom_level_pearson_uncertainty_vs_force_error": null
+      },
+      "LIFINTERFACE_KJPAW_FINAL": {
+        "n_frames": 18,
+        "energy_mae_mev_per_atom": 380093.3040395092,
+        "energy_rmse_mev_per_atom": 380093.3040395195,
+        "force_mae_ev_per_angstrom": 0.023293583255490982,
+        "force_rmse_ev_per_angstrom": 0.03218843966039968,
+        "spearman_uncertainty_vs_force_error": null,
+        "pearson_uncertainty_vs_force_error": null,
+        "low_uncertainty_risk_coverage_force_rmse": null,
+        "atom_level_spearman_uncertainty_vs_force_error": null,
+        "atom_level_pearson_uncertainty_vs_force_error": null
+      },
+      "LIWITHF_KJPAW_FINAL": {
+        "n_frames": 80,
+        "energy_mae_mev_per_atom": 213895.32936295314,
+        "energy_rmse_mev_per_atom": 213895.32936299828,
+        "force_mae_ev_per_angstrom": 0.007968473314410284,
+        "force_rmse_ev_per_angstrom": 0.010191397962267937,
+        "spearman_uncertainty_vs_force_error": null,
+        "pearson_uncertainty_vs_force_error": null,
+        "low_uncertainty_risk_coverage_force_rmse": null,
+        "atom_level_spearman_uncertainty_vs_force_error": null,
+        "atom_level_pearson_uncertainty_vs_force_error": null
+      }
+    },
+    "atom_level_spearman_uncertainty_vs_force_error": null,
+    "atom_level_pearson_uncertainty_vs_force_error": null,
+    "calibration": null,
+    "member_accuracy": [
+      {
+        "member": "foundation",
+        "head": null,
+        "energy_rmse_mev_per_atom": 385996.383991837,
+        "force_rmse_ev_per_angstrom": 0.01604468280583744
+      }
+    ],
+    "atom_level_file": "/workspace/runs/mhc150_s123/evaluation/zero_shot_atom_level.npz"
+  },
+  "frozen_mhc": {
+    "method": "frozen_mhc",
+    "member_count": 4,
+    "prediction_file": "/workspace/runs/mhc150_s123/evaluation/frozen_mhc_predictions.csv",
+    "overall": {
+      "n_frames": 178,
+      "energy_mae_mev_per_atom": 2387.502093297231,
+      "energy_rmse_mev_per_atom": 2468.537736830816,
+      "force_mae_ev_per_angstrom": 0.006945096380622826,
+      "force_rmse_ev_per_angstrom": 0.010563352384906287,
+      "spearman_uncertainty_vs_force_error": 0.9172958808590862,
+      "pearson_uncertainty_vs_force_error": 0.9138892770782554,
+      "low_uncertainty_risk_coverage_force_rmse": {
+        "0.1": 0.0033875985306842105,
+        "0.25": 0.00354273043325111,
+        "0.5": 0.004337019389083303,
+        "0.75": 0.006347888408870447,
+        "1.0": 0.010563352384906287
+      },
+      "rll_force": -0.1379186099588131,
+      "coverage_1sigma_force": 0.845250372407471,
+      "coverage_2sigma_force": 0.9582330697834307,
+      "coverage_1sigma_energy": 0.550561797752809,
+      "coverage_2sigma_energy": 1.0
+    },
+    "by_group": {
+      "LIF64_KJPAW_FINAL": {
+        "n_frames": 80,
+        "energy_mae_mev_per_atom": 2763.408701676456,
+        "energy_rmse_mev_per_atom": 2763.408701821771,
+        "force_mae_ev_per_angstrom": 0.0028424565991774986,
+        "force_rmse_ev_per_angstrom": 0.003643256285769026,
+        "spearman_uncertainty_vs_force_error": 0.4965775902484764,
+        "pearson_uncertainty_vs_force_error": 0.5067524486521341,
+        "low_uncertainty_risk_coverage_force_rmse": {
+          "0.1": 0.0033284062999415624,
+          "0.25": 0.003400076582134223,
+          "0.5": 0.0035140949234269735,
+          "0.75": 0.0035728160225914304,
+          "1.0": 0.003643256285769026
+        },
+        "atom_level_spearman_uncertainty_vs_force_error": 0.15598456188023802,
+        "atom_level_pearson_uncertainty_vs_force_error": 0.19191192913729274,
+        "rll_force": -0.846386912809865,
+        "coverage_1sigma_force": 0.9390625,
+        "coverage_2sigma_force": 0.9893229166666667,
+        "coverage_1sigma_energy": 0.0,
+        "coverage_2sigma_energy": 1.0
+      },
+      "LIFINTERFACE_KJPAW_FINAL": {
+        "n_frames": 18,
+        "energy_mae_mev_per_atom": 582.1505843503966,
+        "energy_rmse_mev_per_atom": 582.1505862816571,
+        "force_mae_ev_per_angstrom": 0.015565352209304713,
+        "force_rmse_ev_per_angstrom": 0.019595529442007837,
+        "spearman_uncertainty_vs_force_error": -0.19504643962848298,
+        "pearson_uncertainty_vs_force_error": -0.3014735038426685,
+        "low_uncertainty_risk_coverage_force_rmse": {
+          "0.1": 0.020234009919869303,
+          "0.25": 0.019799663431333676,
+          "0.5": 0.01963483558174006,
+          "0.75": 0.019604075306716772,
+          "1.0": 0.019595529442007837
+        },
+        "atom_level_spearman_uncertainty_vs_force_error": 0.36160000304588574,
+        "atom_level_pearson_uncertainty_vs_force_error": 0.5017467372568126,
+        "rll_force": -1.1067472063632757,
+        "coverage_1sigma_force": 0.7897692774741955,
+        "coverage_2sigma_force": 0.9341226472374013,
+        "coverage_1sigma_energy": 1.0,
+        "coverage_2sigma_energy": 1.0
+      },
+      "LIWITHF_KJPAW_FINAL": {
+        "n_frames": 80,
+        "energy_mae_mev_per_atom": 2417.7995744310447,
+        "energy_rmse_mev_per_atom": 2417.7995770839884,
+        "force_mae_ev_per_angstrom": 0.007425520890163255,
+        "force_rmse_ev_per_angstrom": 0.009467369557793474,
+        "spearman_uncertainty_vs_force_error": 0.605883731833099,
+        "pearson_uncertainty_vs_force_error": 0.4932952894748156,
+        "low_uncertainty_risk_coverage_force_rmse": {
+          "0.1": 0.008769580003758784,
+          "0.25": 0.008855728866762788,
+          "0.5": 0.009205360077021947,
+          "0.75": 0.009410342308558764,
+          "1.0": 0.009467369557793474
+        },
+        "atom_level_spearman_uncertainty_vs_force_error": 0.2082095773610527,
+        "atom_level_pearson_uncertainty_vs_force_error": 0.31350555403622643,
+        "rll_force": -0.638071575648522,
+        "coverage_1sigma_force": 0.7622685185185185,
+        "coverage_2sigma_force": 0.933641975308642,
+        "coverage_1sigma_energy": 1.0,
+        "coverage_2sigma_energy": 1.0
+      }
+    },
+    "atom_level_spearman_uncertainty_vs_force_error": 0.5552854084786853,
+    "atom_level_pearson_uncertainty_vs_force_error": 0.7138188498027438,
+    "calibration": {
+      "n_frames": 53,
+      "alpha_force": 51.64789406801811,
+      "alpha_energy": 174.46860538945202,
+      "definition": "alpha^2 = mean((prediction - reference)^2 / disagreement^2) on the calibration (validation) frames",
+      "rll_force": -0.1379186099588131,
+      "coverage_1sigma_force": 0.845250372407471,
+      "coverage_2sigma_force": 0.9582330697834307,
+      "coverage_1sigma_energy": 0.550561797752809,
+      "coverage_2sigma_energy": 1.0
+    },
+    "member_accuracy": [
+      {
+        "member": "mhc_head_0",
+        "head": "mhc_head_0",
+        "energy_rmse_mev_per_atom": 2482.257733545495,
+        "force_rmse_ev_per_angstrom": 0.010504709108521804
+      },
+      {
+        "member": "mhc_head_1",
+        "head": "mhc_head_1",
+        "energy_rmse_mev_per_atom": 2467.043736563368,
+        "force_rmse_ev_per_angstrom": 0.010384302420361084
+      },
+      {
+        "member": "mhc_head_2",
+        "head": "mhc_head_2",
+        "energy_rmse_mev_per_atom": 2456.770116283449,
+        "force_rmse_ev_per_angstrom": 0.010672236975024604
+      },
+      {
+        "member": "mhc_head_3",
+        "head": "mhc_head_3",
+        "energy_rmse_mev_per_atom": 2468.182352140143,
+        "force_rmse_ev_per_angstrom": 0.010748936473453223
+      }
+    ],
+    "atom_level_file": "/workspace/runs/mhc150_s123/evaluation/frozen_mhc_atom_level.npz"
+  }
+}

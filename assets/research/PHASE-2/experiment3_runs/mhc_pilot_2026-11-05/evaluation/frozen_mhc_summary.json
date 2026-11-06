@@ -1,0 +1,107 @@
+{
+  "method": "frozen_mhc",
+  "member_count": 4,
+  "prediction_file": "/workspace/runs/lif_uq_mhc_002/evaluation/frozen_mhc_predictions.csv",
+  "overall": {
+    "n_frames": 178,
+    "energy_mae_mev_per_atom": 2121.7980144486523,
+    "energy_rmse_mev_per_atom": 2205.0946724552145,
+    "force_mae_ev_per_angstrom": 0.007014338659133556,
+    "force_rmse_ev_per_angstrom": 0.010236720391152566,
+    "spearman_uncertainty_vs_force_error": 0.8579126721273629,
+    "pearson_uncertainty_vs_force_error": 0.8464022320693574,
+    "low_uncertainty_risk_coverage_force_rmse": {
+      "0.1": 0.0038964783801347072,
+      "0.25": 0.0044348868991696145,
+      "0.5": 0.005633360929701178,
+      "0.75": 0.0066667966288708295,
+      "1.0": 0.010236720391152566
+    }
+  },
+  "by_group": {
+    "LIF64_KJPAW_FINAL": {
+      "n_frames": 80,
+      "energy_mae_mev_per_atom": 2264.279077227863,
+      "energy_rmse_mev_per_atom": 2264.2790775213657,
+      "force_mae_ev_per_angstrom": 0.0033801712747079412,
+      "force_rmse_ev_per_angstrom": 0.004394365611336015,
+      "spearman_uncertainty_vs_force_error": 0.5731364275668074,
+      "pearson_uncertainty_vs_force_error": 0.5938770468329415,
+      "low_uncertainty_risk_coverage_force_rmse": {
+        "0.1": 0.003875095039895995,
+        "0.25": 0.003900931130172606,
+        "0.5": 0.004118401067180531,
+        "0.75": 0.004262639914315186,
+        "1.0": 0.004394365611336015
+      },
+      "atom_level_spearman_uncertainty_vs_force_error": 0.18059258169408157,
+      "atom_level_pearson_uncertainty_vs_force_error": 0.2709523996272944
+    },
+    "LIFINTERFACE_KJPAW_FINAL": {
+      "n_frames": 18,
+      "energy_mae_mev_per_atom": 339.4441404206719,
+      "energy_rmse_mev_per_atom": 339.4441422398029,
+      "force_mae_ev_per_angstrom": 0.014601018443725494,
+      "force_rmse_ev_per_angstrom": 0.01827730594116329,
+      "spearman_uncertainty_vs_force_error": 0.08359133126934985,
+      "pearson_uncertainty_vs_force_error": 0.16892157200262078,
+      "low_uncertainty_risk_coverage_force_rmse": {
+        "0.1": 0.018208808943522354,
+        "0.25": 0.01830210313188575,
+        "0.5": 0.018136517646477914,
+        "0.75": 0.018264911974782118,
+        "1.0": 0.01827730594116329
+      },
+      "atom_level_spearman_uncertainty_vs_force_error": 0.17771457036278832,
+      "atom_level_pearson_uncertainty_vs_force_error": 0.17980365268137416
+    },
+    "LIWITHF_KJPAW_FINAL": {
+      "n_frames": 80,
+      "energy_mae_mev_per_atom": 2380.3465733257376,
+      "energy_rmse_mev_per_atom": 2380.3465778237755,
+      "force_mae_ev_per_angstrom": 0.007464937779803754,
+      "force_rmse_ev_per_angstrom": 0.009463337434778325,
+      "spearman_uncertainty_vs_force_error": 0.7132911392405065,
+      "pearson_uncertainty_vs_force_error": 0.6904911302780674,
+      "low_uncertainty_risk_coverage_force_rmse": {
+        "0.1": 0.00902183953276617,
+        "0.25": 0.009112063881904189,
+        "0.5": 0.00919558773677611,
+        "0.75": 0.009263903583283183,
+        "1.0": 0.009463337434778325
+      },
+      "atom_level_spearman_uncertainty_vs_force_error": 0.26189324826055016,
+      "atom_level_pearson_uncertainty_vs_force_error": 0.23076869165324343
+    }
+  },
+  "atom_level_spearman_uncertainty_vs_force_error": 0.4366427195100649,
+  "atom_level_pearson_uncertainty_vs_force_error": 0.6071665260400817,
+  "calibration": null,
+  "member_accuracy": [
+    {
+      "member": "mhc_head_0",
+      "head": "mhc_head_0",
+      "energy_rmse_mev_per_atom": 2221.989575799752,
+      "force_rmse_ev_per_angstrom": 0.01014802067293422
+    },
+    {
+      "member": "mhc_head_1",
+      "head": "mhc_head_1",
+      "energy_rmse_mev_per_atom": 2211.85949721981,
+      "force_rmse_ev_per_angstrom": 0.010158731190005597
+    },
+    {
+      "member": "mhc_head_2",
+      "head": "mhc_head_2",
+      "energy_rmse_mev_per_atom": 2166.538353337364,
+      "force_rmse_ev_per_angstrom": 0.010417623572269441
+    },
+    {
+      "member": "mhc_head_3",
+      "head": "mhc_head_3",
+      "energy_rmse_mev_per_atom": 2220.890185838146,
+      "force_rmse_ev_per_angstrom": 0.0102905349807211
+    }
+  ],
+  "atom_level_file": "/workspace/runs/lif_uq_mhc_002/evaluation/frozen_mhc_atom_level.npz"
+}
