@@ -6,6 +6,12 @@
 **Method:** Beck et al., *Multi-head committees enable direct uncertainty
 prediction for atomistic foundation models*, arXiv:2508.09907.
 
+> **First MHC run superseded.** The first run uses the **4-head, disjoint**
+> design in [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](UQ_MHC_4HEAD_DISJOINT_DESIGN.md),
+> on the 1,000-frame two-environment interim candidate (250 frames/head). The
+> 8-head, 80%-overlapping figures and commands below describe the earlier plan
+> and are retained for the broader protocol, not for this run.
+
 ## Purpose
 
 Experiment 2's `multihead_bootstrap` arm is **not** the paper's MHC. It is the
@@ -14,7 +20,8 @@ body, heads warm-started from the foundation readout, and an MP replay head
 (requested as `pt_train_file='omat'`, which mace-torch 0.3.15 routes to MP) that
 dominates the batch mixture. The paper instead **freezes the atomic
 environment descriptors (AEDs)**, attaches **randomly initialised** heads, and
-trains **only the readouts** on overlapping data subsets.
+trains **only the readouts** on a partition of the training data (disjoint for
+the foundation model; see the design note above).
 
 Because this project is about uncertainty for *foundation* models, the frozen-body
 MHC is the arm that actually tests the claim. Experiment 3 adds it, plus the

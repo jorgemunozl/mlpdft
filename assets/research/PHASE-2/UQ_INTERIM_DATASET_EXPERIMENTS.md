@@ -129,6 +129,14 @@ ensemble gain or lose? A larger spread alone does not demonstrate better UQ.
 
 ## Experiment 3 — Frozen-body multi-head committee
 
+> **Current plan (2026-11-06).** The two-environment candidate has **1,000**
+> training frames (500 bulk + 500 F-doped) and no interface. The first MHC run
+> uses **4 heads, disjoint**, i.e. 250 frames/head, not the eight-head
+> overlapping design described below. Rationale, command and gates:
+> [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](UQ_MHC_4HEAD_DISJOINT_DESIGN.md). The
+> 2,000-frame / 1,600-per-head numbers in this section describe the earlier
+> three-environment plan.
+
 **Why:** test whether diverse readouts on one frozen foundation representation
 can provide useful uncertainty at this label budget. The earlier pilot used
 identical warm-started heads and a mismatched energy reference, so its negative

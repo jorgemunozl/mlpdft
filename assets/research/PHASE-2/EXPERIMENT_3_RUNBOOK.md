@@ -6,6 +6,14 @@ frozen probe, on the 214 / 53 / 178 Li–F split used by Experiment 2.
 **Code:** current `main` (`uq_compare.py` with random-init heads, overlapping
 split, force-focused frozen arms).
 
+> **Superseded for the first MHC run.** This runbook describes the 214-frame
+> pilot split and an 8-head, 80%-overlapping recipe. The first full MHC run
+> uses **4 heads, disjoint**, on the 1,000-frame two-environment interim
+> candidate: see
+> [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](UQ_MHC_4HEAD_DISJOINT_DESIGN.md) for the
+> rationale, exact command and gates. Use that document, not this runbook, to
+> launch the MHC arm.
+
 ---
 
 ## 1. What this run is testing
