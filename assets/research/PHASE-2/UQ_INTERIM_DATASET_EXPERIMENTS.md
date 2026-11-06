@@ -148,14 +148,70 @@ informative.
 
 ## Implementation readiness before the first run
 
-The current [`uq_compare.py`](../../../src/mlpdft/uq_compare.py) accepts
-separate training, validation and test paths, but currently uses validation
-frames for calibration as well. Add and verify an explicit calibration-file
-path before executing this protocol. Also verify that the MHC head sampler
-implements the proposed environment-stratified selection; do not assume the
-existing 80% option guarantees it. The runner's old default paths and imported
-pilot summaries must not be used for these experiments. Training budgets,
-matched loss choices and compute settings remain to be fixed before launch.
+The runner accepts `--calibration-file` for a separate calibration split. Pass
+all four paths explicitly. For backward compatibility, omitting this flag uses
+validation for calibration and emits a warning; that legacy fallback does not
+meet this protocol. The runner checks that the explicit calibration file exists
+and is not byte-identical to another split, and records the path and fallback
+status in its run manifest. This is not a frame-level overlap check; verify the
+dataset manifest separately. The overlapping MHC sampler stratifies by
+`config_type` and records selected indices. Confirm the actual head manifest
+contains 640 / 640 / 320 frames per head before interpreting a full run.
+
+Use fresh output directories so the runner does not automatically import a
+previous pilot summary. Its old default dataset path and dataset download target
+refer to the 214-frame pilot, so download the pinned interim dataset separately
+and verify all four paths before use. Matched loss choices still need to be
+fixed before launch.
+
+## Proposed A40 compute and training budget
+
+Use one NVIDIA A40 per run, CUDA, `float64`, batch size 16 and validation batch
+size 1 as the initial configuration. Confirm memory fit in a short benchmark;
+do not assume that the pilot's batch fits this dataset. Record GPU model, peak
+memory, elapsed time, actual updates, early-stopping epoch, and training and
+evaluation times. These are proposed caps, not established convergence:
+
+| Study | Training jobs per repetition | Maximum epochs | Label budget |
+|---|---:|---:|---:|
+| Independent committee | 3 separate fine-tunes | 150 each | 2,000 unique frames |
+| Snapshots | 1 fine-tune, 3 cycles | 150 total, 50 per cycle | 2,000 |
+| Frozen MHC | 1 eight-head training job | 120 | 2,000 unique; 1,600 per head |
+| Frozen single-head control | 1 training job | 600 | 2,000 |
+| MHC split/budget ablation | 5 additional eight-head jobs | 120 each | 500, 1,000, 2,000; two split schemes |
+
+The ablation has six configurations, but reuses the 2,000-frame overlapping
+MHC from the main study when all settings and seed match, so five jobs are
+additional. One repetition is therefore **11 training jobs**; three repetitions
+would be **33 jobs**, excluding smoke tests and evaluation. The MHC and probe
+use a proposed patience of 50 validation checks; the snapshot run must complete
+its cycles to yield all three checkpoints. Record actual stop points and
+updates; the planned maximum epoch count is not a guarantee of convergence.
+
+**Timing is not yet measured for this dataset.** On the earlier 214-frame
+pilot, one 150-epoch snapshot fine-tune took 4,996 s, the 400-epoch four-head
+disjoint MHC took about 4 h 49 min, and the 150-epoch probe took about 1 h 17
+min. A naive linear scaling of those times by training-frame presentations
+and epoch count gives roughly 13 GPU-hours per 150-epoch fine-tune, 86 hours
+for the 120-epoch eight-head overlapping MHC, and 48 hours for the 600-epoch
+probe. This implies about 186 GPU-hours for the first six jobs and roughly
+275 GPU-hours for all 11 jobs per repetition, **before** separate evaluation,
+startup, failed runs or the longer validation sets. Three repetitions would be
+roughly 825 GPU-hours by the same crude arithmetic. These are planning-scale
+extrapolations, not quotes or reliable upper bounds: model, head, atom-count,
+validation, batch, early-stopping and I/O costs can alter them substantially.
+No hourly rental price is assumed; multiply measured GPU-hours by the actual
+A40 hourly rate for cost.
+
+Before committing to those budgets, run a short, tracked A40 benchmark for a
+fine-tune, MHC and probe using the full dataset and intended validation setup.
+Measure startup and steady-state epoch/update time separately, peak memory and
+evaluation time; then revise the full and ablation estimates. For the benchmark,
+use validation as the runner's test input and skip final-test evaluation: MACE
+receives the `--test-file` during training as well as the later evaluation.
+References: [pilot gate](experiment3_runs/mhc_pilot_2026-11-05/GATE.md),
+[probe training log](experiment3_runs/mhc_pilot_2026-11-05/probe150/train.log),
+and [Experiment 2 cost](UQ_EXPERIMENT_2_RESULTS.md).
 
 ## Minimum remaining campaign and transition to active learning
 

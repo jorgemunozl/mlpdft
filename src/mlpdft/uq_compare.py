@@ -61,6 +61,7 @@ from mlpdft.constants import (
     PREFIX_HF,
     XYZ_DIR,
 )
+from mlpdft.uq_calibration import resolve_calibration_file
 
 _original_scheduler_init = _LRScheduler.__init__
 _original_scheduler_step = _LRScheduler.step
@@ -373,6 +374,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--valid-file", type=Path, default=DEFAULT_SPLIT_DIR / "uq_valid.extxyz"
+    )
+    parser.add_argument(
+        "--calibration-file", type=Path, default=None,
+        help="Separate calibration split; omit only to reuse validation as in legacy runs.",
     )
     parser.add_argument(
         "--test-file", type=Path, default=DEFAULT_SPLIT_DIR / "uq_test.extxyz"
@@ -1491,7 +1496,7 @@ def _evaluate_method(
             "alpha_energy": alpha_energy,
             "definition": (
                 "alpha^2 = mean((prediction - reference)^2 / disagreement^2) "
-                "on the calibration (validation) frames"
+                "on the calibration frames"
             ),
         }
     member_metrics = []
@@ -1896,9 +1901,16 @@ def main() -> None:
     valid_file = options.valid_file.expanduser().resolve()
     test_file = options.test_file.expanduser().resolve()
     _ensure_split_files([train_file, valid_file, test_file])
+    calibration_file, calibration_uses_validation = resolve_calibration_file(
+        options.calibration_file, train_file, valid_file, test_file
+    )
     train_frames = _read_frames(train_file)
     valid_frames = _read_frames(valid_file)
     test_frames = _read_frames(test_file)
+    calibration_input_frames = (
+        valid_frames if calibration_uses_validation else _read_frames(calibration_file)
+    )
+    print(f"Calibration split: {calibration_file} ({len(calibration_input_frames)} frames)")
 
     base_dir = options.output_dir.expanduser().resolve()
     run_root = base_dir / options.run_id
@@ -1933,9 +1945,9 @@ def main() -> None:
         test_frames[: options.smoke_frames] if options.smoke_test else test_frames
     )
     calibration_frames = (
-        valid_frames[: options.smoke_frames]
+        calibration_input_frames[: options.smoke_frames]
         if options.smoke_test
-        else valid_frames
+        else calibration_input_frames
     )
 
     run_records: list[dict[str, Any]] = []
@@ -2228,6 +2240,8 @@ def main() -> None:
         "smoke_test": options.smoke_test,
         "train_file": str(train_file),
         "valid_file": str(valid_file),
+        "calibration_file": str(calibration_file),
+        "calibration_uses_validation": calibration_uses_validation,
         "test_file": str(test_file),
         "model_key": options.model_key,
         "device": options.device,
