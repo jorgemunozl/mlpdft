@@ -36,30 +36,31 @@ If `uv` picks the wrong interpreter, run `uv python pin 3.11` first.
 uv run --locked python -m mlpdft.uq_compare
 ```
 
-With no flags this runs the current experiment: the frozen-body multi-head
-committee (`mhc`) plus its point-estimate control (`frozen-probe`), 4 heads,
-400 epochs each. It writes to
-`src/mlpdft/outputs/uq_diffusion_comparison/lif_uq_mhc_001`.
+With no flags this runs the corrected experiment: the frozen-body multi-head
+committee (`mhc`) plus its point-estimate control (`frozen-probe`), 8
+random-init heads on 80% overlapping data, force-only loss, 120 MHC epochs and
+600 probe epochs. It writes to
+`src/mlpdft/outputs/uq_diffusion_comparison/lif_uq_mhc_003`.
 
 If the previous run directory `lif_uq_001` is still present, the committee and
 snapshot results are merged into the new summary automatically; if it is absent
 the run still completes with the two new arms plus a fresh zero-shot evaluation.
 
-Optional 2-epoch smoke test before the production run (this one needs flags):
+Optional smoke test before the production run (this one needs flags):
 
 ```bash
 uv run --locked python -m mlpdft.uq_compare \
   --smoke-test --run-id lif_uq_mhc_smoke --overwrite
 ```
 
-Delete or rename `lif_uq_mhc_001` before rerunning, otherwise the runner stops
+Delete or rename `lif_uq_mhc_003` before rerunning, otherwise the runner stops
 with a clear "run directory already exists" error.
 
 ## 4. Give me the results
 
 ```bash
 tar czf uq_mhc_output.tar.gz \
-  -C src/mlpdft/outputs/uq_diffusion_comparison lif_uq_mhc_001
+  -C src/mlpdft/outputs/uq_diffusion_comparison lif_uq_mhc_003
 ```
 
 Send me `uq_mhc_output.tar.gz`.

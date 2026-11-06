@@ -2,8 +2,9 @@
 
 **Scope:** the frozen-body multi-head committee (MHC) and the single-head
 frozen probe, on the 214 / 53 / 178 Li–F split used by Experiment 2.
-**Status:** pilot recipe frozen; the full `lif_uq_mhc_002` run is executing.
-**Code:** `src/mlpdft/uq_compare.py` at `962a5db` or later.
+**Status:** pilot recipe corrected after `DIAGNOSIS.md`; no production run yet.
+**Code:** current `main` (`uq_compare.py` with random-init heads, overlapping
+split, force-focused frozen arms).
 
 ---
 
@@ -14,11 +15,15 @@ frozen probe, on the 214 / 53 / 178 Li–F split used by Experiment 2.
 | Independent committee (Exp 2) | 3 fine-tunes | 1 per model | all 214, bootstrapped |
 | Warm snapshots (Exp 2) | 1 fine-tune | 3 cycle-end checkpoints | all 214 |
 | MH-FT (Exp 2) | fine-tuned + replay | 3 bootstrap heads | all 214 |
-| **Frozen MHC (this run)** | **frozen** | **4 heads** | **disjoint 54/54/53/53** |
+| **Frozen MHC (this run)** | **frozen** | **8 heads** | **overlapping 80% (~172/head)** |
 | **Frozen probe (this run)** | **frozen** | **1 head** | **all 214** |
 
 `C − D` (MHC − probe) measures the cost of splitting labels across heads.
 `D − A` (probe − committee) measures the cost of freezing the body.
+
+The heads are **randomly initialised**, as in Beck et al. The earlier pilot
+warm-started all heads from the same foundation readout; that collapsed the
+committee (α ≈ 52) and is removed from the paper path.
 
 ## 2. Data — the 214 split, not the 8,313 pool
 
@@ -34,82 +39,88 @@ for f in uq_train uq_valid uq_test; do grep -c '^Lattice' dataset/xyz_files/uq_s
 
 ## 3. Commands
 
-### 3.1 Warm-start check (2 min)
-
-```bash
-uv run --locked python -m mlpdft.uq_compare \
-  --arms frozen-probe --output-dir /workspace/runs --run-id warmcheck \
-  --device cuda --dtype float64 --probe-epochs 1 --patience 1 \
-  --warm-start-readout --skip-evaluation --overwrite
-```
-
-The **first** validation line must be ≈15 meV/Å. If it is ≈190 meV/Å, the
-warm start did not copy the full readout; do not launch the full run.
-
-### 3.2 Smoke gate (50 min)
+### 3.1 Smoke gate (~1 h)
 
 ```bash
 uv run --locked python -m mlpdft.uq_compare \
   --smoke-test --output-dir /workspace/runs --run-id smoke1 \
-  --device cuda --dtype float64 --warm-start-readout --warm-start-heads --overwrite
+  --device cuda --dtype float64 --overwrite
 ```
 
-The learning gate aborts unless validation force RMSE improves by 10% (or the
-arm starts at ≤0.05 eV/Å and does not drift >5% above its best), and the final
-force RMSE is ≤0.05 eV/Å (probe) or ≤0.10 eV/Å (MHC).
+The smoke run uses 20 epochs, 8 heads, overlapping data, `energy_weight=0`,
+`lr=1e-3`. It must report:
 
-### 3.3 Full run, detached
+- `frozen-body check passed` with no trainable descriptor tensors;
+- `distance transform copied from the foundation`;
+- `smoke check passed: heads differ` over all 8 heads;
+- the learning gate passes (validation force RMSE falls, or starts ≤0.05 eV/Å
+  and stays within 5% of its best).
+
+If any check fails, stop.
+
+### 3.2 Full run
 
 ```bash
-tmux new-session -d -s exp3 "bash /workspace/run_exp3.sh"
+uv run --locked python -m mlpdft.uq_compare \
+  --output-dir /workspace/runs --run-id lif_uq_mhc_003 \
+  --device cuda --dtype float64 \
+  --mhc-heads 8 --mhc-split overlapping --mhc-overlap 0.8 \
+  --mhc-epochs 120 --probe-epochs 600 \
+  --energy-weight 0 --learning-rate 1e-3 --patience 50
 ```
 
-`run_exp3.sh` trains `lif_uq_mhc_002` and then runs `uq_analysis.py` over all
-six methods, writing `/workspace/runs/lif_uq_mhc_002/analysis/`.
+`--mhc-epochs 120` is one pass over 8 × 80% of 214 frames per epoch
+(≈10k gradient updates). The probe sees all 214 frames per epoch and uses 600
+epochs. Expect roughly 7–10 h per arm on an A40.
 
-```bash
-# status
-cat /workspace/runs/exp3.status
-tmux ls
-tail -f /workspace/runs/full.log
-```
+The no-flag default is the same recipe with `--output-dir
+src/mlpdft/outputs/uq_diffusion_comparison` and run id `lif_uq_mhc_003`; use the
+explicit command above for the corrected run.
 
-### 3.4 Gate and attribution report
+### 3.3 Gate and attribution report
 
 ```bash
 uv run --locked python src/mlpdft/utils/experiment3_report.py \
-  --summary /workspace/runs/lif_uq_mhc_002/evaluation/uq_summary.json \
-  --outdir  /workspace/runs/lif_uq_mhc_002/analysis
+  --summary /workspace/runs/lif_uq_mhc_003/evaluation/uq_summary.json \
+  --outdir  /workspace/runs/lif_uq_mhc_003/analysis
 ```
 
 Writes `experiment3_report.md` and `.json`: the per-arm table, the per-group
-MHC/committee ratio, the gate verdict, and the C−D / D−A deltas.
+MHC/committee ratio, the gate verdict, and the C−D / D−A deltas. The rank gate
+uses only groups with n ≥ 40 (bulk and F-doped); the 18-frame interface is
+reported separately.
 
-## 4. Why the warm start
+## 4. Why random init and overlapping heads
 
-`ScaleShiftMACE` has a **two-stage readout** per head (`readouts[0]` for the
-atomic energy, `readouts[1]` for the interaction/force path). Copying only
-`readouts[0]` leaves the force path random and the probe sits at ~190 meV/Å.
-MACE's `load_foundations_elements` also does not copy the **Agnesi distance
-transform**, which changes the descriptors even with identical body weights.
+- **Random init is the paper's recipe.** Beck et al. attach new heads with
+  random weights; the frozen AEDs provide the representation and the heads
+  provide diversity. Warm-starting every head from the same readout makes them
+  identical and collapses the disagreement.
+- **The E0 reference differs between MACE-MP-0 and the QE Li–F data** (Li
+  −205.72 eV, F −795.42 eV). A warm-started readout inherits the foundation
+  reference and produces a multi-eV/atom offset. With random heads and
+  `energy_weight=0`, the arms are trained on forces only; energy predictions are
+  not part of this gate.
+- **80% overlap is necessary at 214 frames.** Disjoint 8-way gives 27
+  frames/head; the paper's Fig. 3 warns that disjoint heads degrade when the
+  per-head subset is small. Overlapping gives ~172 frames/head.
+- **Distance transform.** `load_foundations_elements` does not copy the Agnesi
+  distance transform; `_checked_configure_model` copies and asserts it, and the
+  log must show `distance transform copied from the foundation`.
 
-`--warm-start-readout` copies both readout stages and the distance transform for
-the single-head probe. `--warm-start-heads` uses MACE's readout transfer for all
-four MHC heads, so every head starts at foundation accuracy and diversity comes
-from the disjoint data slices.
-
-**Random-head MHC fails at this scale.** At 53 frames/head the random readout
-must absorb a ~5 eV/atom cohesive-energy offset; even with 100:1 force weighting,
-50 epochs leaves it at ~150–190 meV/Å. That is data starvation, not a
-representation result.
+`--warm-start-readout` remains only as a single-head ablation and requires
+`--energy-weight 0`. `--warm-start-heads` has been removed.
 
 ## 5. Gotchas
 
+- **Energy metrics are not meaningful for the frozen arms** with
+  `energy_weight=0`; compare forces and rank/calibration only. The committee's
+  energy remains the reference.
 - **GPU memory:** batch 16 / float64 on the 8,313-frame pool used ~41.5 GB.
   A 24 GB RTX 4090 will OOM there; an A40 48 GB works. On the 214 split memory
   is lower (~29–36 GB) but still above 24 GB at batch 16.
-- **`patience`** defaults to 50 for frozen arms; the best validation checkpoint
-  is the one MACE saves and reloads, so early stopping gives the best-loss model.
+- **`patience`** defaults to 50 for frozen arms; with `energy_weight=0` the
+  validation loss is force-only, so the saved checkpoint is the force-best one.
 - **Group names:** the evaluation CSV groups are exactly
   `LIF64_KJPAW_FINAL`, `LIWITHF_KJPAW_FINAL`, `LIFINTERFACE_KJPAW_FINAL`.
 - **Analysis alignment:** `uq_analysis.py` asserts identical `(group,

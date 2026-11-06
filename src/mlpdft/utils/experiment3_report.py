@@ -44,13 +44,33 @@ def _groups(summary: dict[str, Any], key: str) -> dict[str, dict[str, Any]]:
     return summary[key]["by_group"]
 
 
-def _rho_mean(summary: dict[str, Any], key: str) -> float | None:
+def _rho_mean(
+    summary: dict[str, Any], key: str, min_frames: int = 40
+) -> float | None:
+    """Mean within-group Spearman over groups large enough to be stable.
+
+    The interface group has 18 test frames, less than one bootstrap block; its
+    point estimate flips sign between runs and must not drive the gate.  Groups
+    below ``min_frames`` are reported separately in the per-group table.
+    """
     values = [
         float(group["spearman_uncertainty_vs_force_error"])
         for group in _groups(summary, key).values()
         if group.get("spearman_uncertainty_vs_force_error") is not None
+        and int(group.get("n_frames", 0)) >= min_frames
     ]
     return sum(values) / len(values) if values else None
+
+
+def _rho_groups(
+    summary: dict[str, Any], key: str, min_frames: int = 40
+) -> list[str]:
+    return [
+        group
+        for group, values in _groups(summary, key).items()
+        if values.get("spearman_uncertainty_vs_force_error") is not None
+        and int(values.get("n_frames", 0)) >= min_frames
+    ]
 
 
 def _fmt(value: float | None, digits: int = 4) -> str:
@@ -65,6 +85,7 @@ def build_report(
     mhft_key: str | None,
     gate_ratio: float,
     gate_rho_slack: float,
+    rank_min_frames: int = 40,
 ) -> dict[str, Any]:
     arms = [
         key
@@ -82,7 +103,12 @@ def build_report(
             "spearman_pooled": _overall(summary, key)[
                 "spearman_uncertainty_vs_force_error"
             ],
-            "spearman_within_group_mean": _rho_mean(summary, key),
+            "spearman_within_group_mean": _rho_mean(
+                summary, key, min_frames=rank_min_frames
+            ),
+            "spearman_groups": _rho_groups(
+                summary, key, min_frames=rank_min_frames
+            ),
             "n_frames": _overall(summary, key)["n_frames"],
         }
         for key in arms
@@ -118,8 +144,14 @@ def build_report(
         and rho_committee is not None
         and rho_mhc >= rho_committee - gate_rho_slack
     )
+    gate_groups = [
+        group
+        for group in table[mhc_key]["spearman_groups"]
+        if group in per_group
+    ]
+    gate_items = {group: per_group[group] for group in gate_groups}
     group_ok = all(
-        item["mhc_over_committee"] <= gate_ratio for item in per_group.values()
+        item["mhc_over_committee"] <= gate_ratio for item in gate_items.values()
     )
     passed = bool(overall_ratio <= gate_ratio and group_ok and rho_ok)
 
@@ -128,12 +160,15 @@ def build_report(
         "gate": {
             "overall_ratio": overall_ratio,
             "max_group_ratio": max(
-                item["mhc_over_committee"] for item in per_group.values()
+                item["mhc_over_committee"] for item in gate_items.values()
             ),
+            "force_groups": gate_groups,
             "ratio_limit": gate_ratio,
             "rho_mhc": rho_mhc,
             "rho_committee": rho_committee,
             "rho_slack": gate_rho_slack,
+            "rho_groups": table[mhc_key]["spearman_groups"],
+            "rank_min_frames": rank_min_frames,
             "rho_ok": rho_ok,
             "passed": passed,
         },
@@ -166,10 +201,14 @@ def write_markdown(report: dict[str, Any], path: Path) -> None:
         "",
         f"- Overall MHC / committee force ratio: **{gate['overall_ratio']:.2f}** "
         f"(limit {gate['ratio_limit']:.2f})",
-        f"- Worst environment ratio: **{gate['max_group_ratio']:.2f}**",
+        f"- Worst environment ratio: **{gate['max_group_ratio']:.2f}** "
+        f"over {', '.join(gate['force_groups'])}",
         f"- Within-group ρ: MHC {_fmt(gate['rho_mhc'], 2)} vs committee "
         f"{_fmt(gate['rho_committee'], 2)} "
-        f"(allowed slack {gate['rho_slack']:.2f})",
+        f"(allowed slack {gate['rho_slack']:.2f}; groups with n ≥ "
+        f"{gate['rank_min_frames']}: {', '.join(gate['rho_groups'])})",
+        "- Small groups excluded from the gate are reported in the per-group "
+        "table.",
         f"- **Verdict: {'PASS' if gate['passed'] else 'FAIL'}**",
         "",
         "## Per environment",
@@ -207,6 +246,12 @@ def main() -> None:
     )
     parser.add_argument("--gate-ratio", type=float, default=GATE_RATIO)
     parser.add_argument("--gate-rho-slack", type=float, default=GATE_RHO_SLACK)
+    parser.add_argument(
+        "--rank-min-frames",
+        type=int,
+        default=40,
+        help="Only groups with at least this many test frames enter the ρ mean",
+    )
     args = parser.parse_args()
 
     summary = json.loads(args.summary.read_text(encoding="utf-8"))
@@ -218,6 +263,7 @@ def main() -> None:
         args.mhft_key or None,
         args.gate_ratio,
         args.gate_rho_slack,
+        rank_min_frames=args.rank_min_frames,
     )
     args.outdir.mkdir(parents=True, exist_ok=True)
     (args.outdir / "experiment3_report.json").write_text(

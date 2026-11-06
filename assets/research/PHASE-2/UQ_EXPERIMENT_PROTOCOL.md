@@ -95,11 +95,12 @@ test set is excluded from all training, scheduler selection, and calibration.
 | Independent committee | 3 fine-tunes, seeds 123/124/125, single cosine decay | Standard committee-UQ baseline |
 | Warm-snapshot committee | 1 fine-tune, cosine warm restarts; 3 cycle-minimum checkpoints | Candidate low-cost UQ |
 | Multi-head fine-tuning with replay (MH-FT) | Trainable shared body, 3 bootstrap heads + MP replay head (`pt_train_file='omat'` is routed to MP by mace 0.3.15) | Experiment 2 arm; report correlation and the replay cost separately |
-| Frozen-body multi-head committee (MHC) | Frozen AEDs, 4 randomly initialised heads on disjoint splits, no replay | Experiment 3 arm; the paper's method |
+| Frozen-body multi-head committee (MHC) | Frozen AEDs, 8 randomly initialised heads on 80% overlapping subsets, no replay, force-only loss | Experiment 3 arm; the paper's method |
 
 `uq_compare.py` defaults changed with Experiment 3: the no-flag run is now the
-MHC arm (`--arms mhc,frozen-probe`, 4 heads, 400 epochs) and merges the
-Experiment 2 committee/snapshot summary when it is present. Reproduce Experiment
+MHC arm (`--arms mhc,frozen-probe`, 8 overlapping heads, 120 MHC epochs,
+force-only loss) and merges the Experiment 2 committee/snapshot summary when it
+is present. Reproduce Experiment
 2 explicitly with
 `--arms committee,snapshots,multihead-bootstrap --epochs 150 --pt-train-file omat --pt-samples 1000`
 and a fresh `--run-id`. Snapshot checkpoints are the cycle ends 49/99/149 under

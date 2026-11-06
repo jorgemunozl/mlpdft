@@ -153,14 +153,20 @@ until both arms use random initialisation and a consistent E0 reference.
 
 ## Minimum fair test
 
-1. Random-init four heads, `foundation_filter_elements=False`.
+1. Random-init heads, `foundation_filter_elements=False`.
 2. QE E0s from the data; no warm-start; or explicit residual-bias correction.
-3. Overlapping block-bootstrap heads, all 214 frames per head, or accept that
-   disjoint 54-frame heads are not viable at this scale.
-4. Force-focused run (`energy_weight=0`), 1,000+ epochs, readout LR ~1e-3,
-   early stopping on validation force RMSE, evaluate the force-best checkpoint.
+3. Overlapping heads (80% each), or accept that disjoint 54-frame heads are not
+   viable at this scale.
+4. Force-focused run (`energy_weight=0`), readout LR 1e-3, early stopping on
+   validation force RMSE, evaluate the force-best checkpoint.
 5. Clean random-init frozen probe with the same recipe.
 6. Gate on bulk + F-doped force and rank; interface n = 18 reported separately.
+
+These are now the runner defaults: 8 random-init heads, 80% overlap, force-only
+loss, lr 1e-3, 120 MHC epochs / 600 probe epochs, with the distance-transform
+copy asserted and the gate rank mean restricted to groups with n ≥ 40.
+`--warm-start-heads` has been removed; `--warm-start-readout` remains only as a
+force-only single-head ablation.
 
 ## Decision rule
 

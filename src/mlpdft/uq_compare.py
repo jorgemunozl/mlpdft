@@ -9,8 +9,8 @@ errors and uncertainty-ranking metrics.
 
 The MHC arm freezes the atomic-environment descriptors (embedding, interaction
 and product blocks) and trains only randomly initialised readout heads on
-disjoint slices of the training set. Select it with ``--arms mhc``; it does not
-use the released ``multiheads_finetuning`` replay path.
+overlapping subsets of the training set. Select it with ``--arms mhc``; it does
+not use the released ``multiheads_finetuning`` replay path.
 """
 
 from __future__ import annotations
@@ -139,13 +139,10 @@ def _checked_configure_model(*args, **kwargs):
                 f"Frozen-body run expected freeze={FROZEN_BODY_LAYERS}, "
                 f"got {run_args.freeze!r}"
             )
-        if run_args.foundation_filter_elements and not getattr(
-            run_args, "_uq_warm_start_heads", False
-        ):
+        if run_args.foundation_filter_elements:
             raise RuntimeError(
                 "Frozen-body run must set foundation_filter_elements=False so "
-                "the new heads start from random weights (use "
-                "--warm-start-heads to opt in)"
+                "the new heads start from random weights"
             )
         if getattr(run_args, "multiheads_finetuning", False):
             raise RuntimeError(
@@ -162,26 +159,51 @@ def _checked_configure_model(*args, **kwargs):
             ),
             None,
         )
-        # load_foundations_elements copies the bessel weights and the message
+        # load_foundations_elements copies the Bessel weights and the message
         # passing blocks but not the Agnesi distance transform.  Without this
-        # the frozen "body" is not the foundation body, and a warm-started
-        # readout still sees different descriptors.
+        # the frozen "body" is not the foundation body.
         if foundation is not None:
-            source_dt = getattr(foundation.radial_embedding, "distance_transform", None)
+            source_dt = getattr(
+                foundation.radial_embedding, "distance_transform", None
+            )
             target_dt = getattr(model.radial_embedding, "distance_transform", None)
-            if (
-                source_dt is not None
-                and target_dt is not None
-                and type(source_dt) is type(target_dt)
-            ):
+            if (source_dt is None) != (target_dt is None):
+                raise RuntimeError(
+                    "Frozen-body copy: the distance transform exists on only one "
+                    "of the foundation and the new model"
+                )
+            if source_dt is not None:
+                if type(source_dt) is not type(target_dt):
+                    raise RuntimeError(
+                        "Frozen-body copy: distance-transform types differ "
+                        f"({type(source_dt).__name__} vs {type(target_dt).__name__})"
+                    )
                 missing, unexpected = target_dt.load_state_dict(
                     source_dt.state_dict(), strict=False
                 )
                 if missing or unexpected:
-                    print(
-                        "[uq_compare] warning: distance transform not fully "
-                        f"copied (missing={missing}, unexpected={unexpected})"
+                    raise RuntimeError(
+                        "Frozen-body copy: distance transform not fully copied "
+                        f"(missing={missing}, unexpected={unexpected})"
                     )
+                target_state = target_dt.state_dict()
+                for key, value in source_dt.state_dict().items():
+                    target_value = target_state.get(key)
+                    if target_value is None:
+                        raise RuntimeError(
+                            f"Frozen-body copy: missing distance-transform key {key!r}"
+                        )
+                    converted = value.to(
+                        device=target_value.device, dtype=target_value.dtype
+                    )
+                    if target_value.shape != converted.shape or not torch.equal(
+                        target_value, converted
+                    ):
+                        raise RuntimeError(
+                            "Frozen-body copy: distance-transform tensor "
+                            f"{key!r} does not match the foundation"
+                        )
+                print("[uq_compare] distance transform copied from the foundation")
         if getattr(run_args, "_uq_warm_start_readout", False):
             if foundation is None:
                 raise RuntimeError(
@@ -296,6 +318,8 @@ FROZEN_BODY_LAYERS = 6
 # and force error grows during training (lif_uq_mhc_001).  The defaults below
 # apply only to the frozen arms; the Exp 2 arms keep 1:1.
 FROZEN_FORCES_WEIGHT = 100.0
+FROZEN_ENERGY_WEIGHT = 0.0
+FROZEN_LEARNING_RATE = 1e-3
 FROZEN_PATIENCE = 50
 SMOKE_LEARNING_DROP = 0.10
 SMOKE_MAX_REGRESSION_FROM_BEST = 0.05
@@ -307,7 +331,7 @@ SMOKE_ALREADY_GOOD_RMSE = 0.05
 # frozen-body MHC plus its point-estimate control. Previous-result merging is
 # automatic when the Exp 2 run directory is present.
 DEFAULT_SPLIT_DIR = DATA_DIR / XYZ_DIR / "uq_splits"
-DEFAULT_RUN_ID = "lif_uq_mhc_001"
+DEFAULT_RUN_ID = "lif_uq_mhc_003"
 PREVIOUS_RUN_ID = "lif_uq_001"
 
 UQ_DATASET_REPO = f"{PREFIX_HF}/li_f_uq_splits_v2"
@@ -379,8 +403,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--energy-weight",
         type=float,
-        default=1.0,
-        help="Weight of the energy term in the UniversalLoss (default: 1.0)",
+        default=None,
+        help=(
+            "Weight of the energy term. Default: 0 for the frozen-body arms "
+            "(force-focused; the E0 offset otherwise dominates) and 1.0 "
+            "otherwise."
+        ),
     )
     parser.add_argument(
         "--patience",
@@ -395,35 +423,41 @@ def parse_args() -> argparse.Namespace:
         "--warm-start-readout",
         action="store_true",
         help=(
-            "Initialise the single frozen-probe head from the foundation "
-            "readout instead of random weights. Probe only; the four MHC heads "
-            "stay random so they can differ."
-        ),
-    )
-    parser.add_argument(
-        "--warm-start-heads",
-        action="store_true",
-        help=(
-            "Initialise every frozen MHC head from the foundation readout "
-            "instead of random weights. Diversity then comes from the disjoint "
-            "data slices, not from head initialisation."
+            "ABLATION, not the paper's recipe: initialise the single frozen "
+            "probe head from the foundation readout. Requires --energy-weight 0 "
+            "because the foundation E0 reference differs from the QE one."
         ),
     )
     parser.add_argument(
         "--smoke-epochs",
         type=int,
-        default=50,
+        default=20,
         help=(
-            "Epochs per frozen arm in --smoke-test (default: 50, about 50 min "
-            "on one A40). The learning gate aborts if validation force RMSE "
-            "does not fall by 10%% or drifts 5%% above its best value."
+            "Epochs per frozen arm in --smoke-test (default: 20). The learning "
+            "gate aborts if validation force RMSE does not fall by 10%% or "
+            "drifts 5%% above its best value."
         ),
     )
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--valid-batch-size", type=int, default=1)
     parser.add_argument("--num-workers", type=int, default=0)
-    parser.add_argument("--learning-rate", type=float, default=5e-4)
-    parser.add_argument("--seeds", default=",".join(map(str, DEFAULT_SEEDS)))
+    parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=None,
+        help=(
+            "Learning rate. Default: 1e-3 for the frozen-body arms (readouts "
+            "only), 5e-4 otherwise."
+        ),
+    )
+    parser.add_argument(
+        "--seeds",
+        default=",".join(map(str, DEFAULT_SEEDS)),
+        help=(
+            "1-3 unique seeds. The committee and multihead-bootstrap arms "
+            "require three; the MHC and probe use the first."
+        ),
+    )
     parser.add_argument("--snapshot-count", type=int, default=3)
     parser.add_argument("--bootstrap-block-size", type=int, default=5)
     parser.add_argument(
@@ -447,31 +481,51 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mhc-heads",
         type=int,
-        default=4,
-        help="Number of frozen-body committee heads (default: 4)",
+        default=8,
+        help="Number of frozen-body committee heads (default: 8, as in the paper)",
+    )
+    parser.add_argument(
+        "--mhc-split",
+        choices=("overlapping", "disjoint"),
+        default="overlapping",
+        help=(
+            "How to split training data across MHC heads. Overlapping samples "
+            "a fraction of the frames per head (default); disjoint gives each "
+            "head a unique slice, which is data-starved at 214 frames."
+        ),
+    )
+    parser.add_argument(
+        "--mhc-overlap",
+        type=float,
+        default=0.8,
+        help="Fraction of frames per head for --mhc-split overlapping (default: 0.8)",
     )
     parser.add_argument(
         "--mhc-epochs",
         type=int,
-        default=400,
-        help="Epoch budget for the frozen-body multi-head committee",
+        default=120,
+        help=(
+            "Epoch budget for the frozen-body MHC. An epoch is one pass over "
+            "the concatenated head sets; with the default 8 heads x 80%% this "
+            "is about 10k gradient updates."
+        ),
     )
     parser.add_argument(
         "--probe-epochs",
         type=int,
-        default=400,
+        default=600,
         help="Epoch budget for the frozen-body single-head point estimate",
     )
     parser.add_argument(
         "--split-seed",
         type=int,
         default=20251027,
-        help="Seed for the disjoint MHC head split",
+        help="Seed for the MHC head split",
     )
     parser.add_argument(
         "--smoke-test",
         action="store_true",
-        help="Run a 2-epoch MHC + probe check before any full run",
+        help="Run a short MHC + probe check before any full run",
     )
     parser.add_argument(
         "--smoke-frames",
@@ -530,8 +584,8 @@ def parse_seeds(value: str) -> list[int]:
         raise argparse.ArgumentTypeError(
             "Seeds must be comma-separated integers"
         ) from exc
-    if len(seeds) != 3 or len(set(seeds)) != 3:
-        raise ValueError("Provide exactly three unique committee seeds")
+    if not 1 <= len(seeds) <= 3 or len(set(seeds)) != len(seeds):
+        raise ValueError("Provide 1 to 3 unique seeds")
     return seeds
 
 
@@ -618,9 +672,9 @@ def _make_disjoint_head_files(
 
     Every frame is assigned to exactly one head, and the assignment is
     stratified by ``config_type`` so each environment appears in every head.
-    At the project's scale (214 frames) four heads give ~53 frames per head;
-    the paper used 1,000 frames per head, so this is a reduced-scale disjoint
-    MHC and must be reported as such.
+    At the project's scale (214 frames) eight heads give ~27 frames per head;
+    use the default overlapping split instead. This remains available for the
+    reduced-scale comparison.
     """
     if n_heads < 2:
         raise ValueError("The multi-head committee needs at least two heads")
@@ -684,6 +738,80 @@ def _make_disjoint_head_files(
     return paths, split_record
 
 
+def _make_overlapping_head_files(
+    train_frames: list[Atoms],
+    output_dir: Path,
+    n_heads: int,
+    seed: int,
+    fraction: float = 0.8,
+    names: list[str] | None = None,
+) -> tuple[dict[str, Path], dict[str, Any]]:
+    """Give each head an independent random subset of the full training set.
+
+    This is the paper's "overlapping" split.  At 214 frames, disjoint heads see
+    ~27-54 frames each; overlapping heads see ~80% (~170) and remain trainable.
+    The train/valid/test split is untouched; only the head assignment changes.
+    """
+    if n_heads < 2:
+        raise ValueError("The multi-head committee needs at least two heads")
+    if not 0.0 < fraction <= 1.0:
+        raise ValueError("--mhc-overlap must be in (0, 1]")
+    if len(train_frames) < n_heads:
+        raise ValueError(
+            f"Cannot split {len(train_frames)} training frames into {n_heads} heads"
+        )
+
+    names = names or [MHC_HEAD_TEMPLATE.format(index=index) for index in range(n_heads)]
+    if len(names) != n_heads or len(set(names)) != n_heads:
+        raise ValueError("Head names must be unique and match --mhc-heads")
+
+    by_group: dict[str, list[int]] = defaultdict(list)
+    for index, atoms in enumerate(train_frames):
+        by_group[str(atoms.info.get("config_type", "all"))].append(index)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    paths: dict[str, Path] = {}
+    split_record: dict[str, Any] = {
+        "split": "overlapping",
+        "fraction": fraction,
+        "seed": seed,
+        "n_heads": n_heads,
+        "n_frames_total": len(train_frames),
+        "heads": {},
+    }
+    for head_index, name in enumerate(names):
+        rng = np.random.default_rng(seed + head_index)
+        selected: list[int] = []
+        for group in sorted(by_group):
+            indices = np.asarray(by_group[group], dtype=int)
+            take = max(1, int(round(len(indices) * fraction)))
+            take = min(take, len(indices))
+            chosen = rng.choice(len(indices), size=take, replace=False)
+            selected.extend(int(indices[position]) for position in chosen)
+        selected.sort()
+        path = output_dir / f"{name}_train.extxyz"
+        write(path, [train_frames[index] for index in selected], format="extxyz")
+        paths[name] = path
+        group_counts: dict[str, int] = defaultdict(int)
+        for index in selected:
+            group_counts[str(train_frames[index].info.get("config_type", "all"))] += 1
+        split_record["heads"][name] = {
+            "n_frames": len(selected),
+            "frame_indices": selected,
+            "by_group": dict(sorted(group_counts.items())),
+        }
+
+    split_path = output_dir / "mhc_split.json"
+    split_path.write_text(json.dumps(split_record, indent=2), encoding="utf-8")
+    counts = {name: split_record["heads"][name]["n_frames"] for name in names}
+    print(
+        f"Overlapping MHC head split ({len(train_frames)} frames, "
+        f"fraction {fraction:g}): {counts}"
+    )
+    print(f"Split manifest: {split_path}")
+    return paths, split_record
+
+
 def _make_hyperparams(
     args: argparse.Namespace,
     train_file: Path,
@@ -692,6 +820,7 @@ def _make_hyperparams(
     forces_weight: float | None = None,
     energy_weight: float | None = None,
     patience: int | None = None,
+    lr: float | None = None,
 ):
     max_epochs = epochs or args.epochs
     values: dict[str, Any] = {
@@ -715,7 +844,9 @@ def _make_hyperparams(
         "num_radial_basis": 8,
         "lora": False,
         "ema": False,
-        "lr": args.learning_rate,
+        "lr": lr
+        if lr is not None
+        else (args.learning_rate if args.learning_rate is not None else 5e-4),
         "train_file": str(train_file),
         "valid_file": str(valid_file),
     }
@@ -816,7 +947,6 @@ def _run_training(
     epochs: int | None = None,
     energy_offset: dict[int, float] | None = None,
     warm_start_readout: bool = False,
-    warm_start_heads: bool = False,
 ) -> Path:
     if multihead_files is not None and head_files is not None:
         raise ValueError("Pass either multihead_files (replay) or head_files (MHC)")
@@ -830,12 +960,22 @@ def _run_training(
 
     run_dir.mkdir(parents=True, exist_ok=False)
     frozen = freeze is not None
-    force_weight = options.forces_weight
+    force_weight = getattr(options, "forces_weight", None)
     if force_weight is None:
         force_weight = FROZEN_FORCES_WEIGHT if frozen else 1.0
-    patience = options.patience
+    energy_weight = getattr(options, "energy_weight", None)
+    if energy_weight is None:
+        energy_weight = FROZEN_ENERGY_WEIGHT if frozen else 1.0
+    learning_rate = getattr(options, "learning_rate", None)
+    if learning_rate is None:
+        learning_rate = FROZEN_LEARNING_RATE if frozen else 5e-4
+    patience = getattr(options, "patience", None)
     if patience is None:
         patience = FROZEN_PATIENCE if frozen else None
+    if warm_start_readout and energy_weight != 0.0:
+        raise RuntimeError(
+            "warm-start readout is force-only; pass --energy-weight 0"
+        )
     if frozen and patience is not None and patience >= (epochs or options.epochs):
         print(
             f"[uq_compare] warning: patience={patience} is not below the epoch "
@@ -843,7 +983,8 @@ def _run_training(
         )
     print(
         f"[uq_compare] {run_name}: forces_weight={force_weight:g}, "
-        f"energy_weight={options.energy_weight:g}, patience={patience}"
+        f"energy_weight={energy_weight:g}, lr={learning_rate:g}, "
+        f"patience={patience}"
     )
     hyperparams = _make_hyperparams(
         options,
@@ -851,8 +992,9 @@ def _run_training(
         valid_file,
         epochs=epochs,
         forces_weight=force_weight,
-        energy_weight=options.energy_weight,
+        energy_weight=energy_weight,
         patience=patience,
+        lr=learning_rate,
     )
     config = Mace_TrainerConfig(
         model_key=options.model_key,
@@ -893,7 +1035,6 @@ def _run_training(
     )
     mace_args.num_workers = options.num_workers
     mace_args._uq_warm_start_readout = bool(warm_start_readout)
-    mace_args._uq_warm_start_heads = bool(warm_start_heads)
 
     if multihead_files is not None:
         mace_args.multiheads_finetuning = True
@@ -1728,6 +1869,23 @@ def main() -> None:
     print(f"UQ run '{options.run_id}': arms = {','.join(arms)}")
     if options.warm_start_readout and "frozen-probe" not in arms:
         raise SystemExit("--warm-start-readout requires the frozen-probe arm")
+    if options.warm_start_readout and options.energy_weight not in (None, 0.0):
+        raise SystemExit(
+            "--warm-start-readout is force-only: pass --energy-weight 0. The "
+            "foundation readout uses a different E0 reference from the QE data."
+        )
+    if "committee" in arms and len(options.seeds) != 3:
+        raise SystemExit("The committee arm requires exactly three --seeds")
+    if (
+        "multihead-bootstrap" in arms
+        and not options.skip_multihead
+        and len(options.seeds) < 3
+    ):
+        raise SystemExit("The multihead-bootstrap arm requires three --seeds")
+    if options.mhc_heads < 2:
+        raise SystemExit("--mhc-heads must be at least 2")
+    if not 0.0 < options.mhc_overlap <= 1.0:
+        raise SystemExit("--mhc-overlap must be in (0, 1]")
     if options.smoke_test:
         print(
             f"Smoke test: {options.smoke_epochs} epochs per frozen arm; checks "
@@ -1917,13 +2075,29 @@ def main() -> None:
             MHC_HEAD_TEMPLATE.format(index=index)
             for index in range(options.mhc_heads)
         ]
-        head_files, split_record = _make_disjoint_head_files(
-            train_frames,
-            run_root / "mhc_head_data",
-            options.mhc_heads,
-            options.split_seed,
-            names=head_names,
-        )
+        if options.mhc_split == "overlapping":
+            head_files, split_record = _make_overlapping_head_files(
+                train_frames,
+                run_root / "mhc_head_data",
+                options.mhc_heads,
+                options.split_seed,
+                fraction=options.mhc_overlap,
+                names=head_names,
+            )
+        else:
+            if len(train_frames) // options.mhc_heads < 100:
+                print(
+                    "[uq_compare] warning: disjoint MHC split gives "
+                    f"{len(train_frames) // options.mhc_heads} frames/head; "
+                    "overlapping is the appropriate split at this data scale"
+                )
+            head_files, split_record = _make_disjoint_head_files(
+                train_frames,
+                run_root / "mhc_head_data",
+                options.mhc_heads,
+                options.split_seed,
+                names=head_names,
+            )
         mhc_name = "mhc_frozen_readouts"
         mhc_dir = run_root / mhc_name
         started = time.perf_counter()
@@ -1938,9 +2112,8 @@ def main() -> None:
             mhc_epochs,
             head_files=head_files,
             freeze=FROZEN_BODY_LAYERS,
-            foundation_filter_elements=options.warm_start_heads,
+            foundation_filter_elements=False,
             epochs=mhc_epochs,
-            warm_start_heads=options.warm_start_heads,
         )
         elapsed = time.perf_counter() - started
         _cleanup_checkpoints(mhc_dir)
@@ -1965,7 +2138,7 @@ def main() -> None:
                 mhc_model, head_names, eval_frames, options
             )
             smoke_check["learning_gate_mhc"] = _learning_gate(
-                mhc_dir, mhc_name, max_final_rmse=0.10
+                mhc_dir, mhc_name
             )
 
     if "frozen-probe" in arms:
@@ -1989,7 +2162,7 @@ def main() -> None:
         elapsed = time.perf_counter() - started
         if options.smoke_test:
             smoke_check["learning_gate_probe"] = _learning_gate(
-                probe_dir, probe_name, max_final_rmse=0.05
+                probe_dir, probe_name
             )
         _cleanup_checkpoints(probe_dir)
         methods["frozen_probe"] = [(probe_name, probe_model, None)]

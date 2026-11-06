@@ -14,7 +14,7 @@ body, heads warm-started from the foundation readout, and an MP replay head
 (requested as `pt_train_file='omat'`, which mace-torch 0.3.15 routes to MP) that
 dominates the batch mixture. The paper instead **freezes the atomic
 environment descriptors (AEDs)**, attaches **randomly initialised** heads, and
-trains **only the readouts** on disjoint data slices.
+trains **only the readouts** on overlapping data subsets.
 
 Because this project is about uncertainty for *foundation* models, the frozen-body
 MHC is the arm that actually tests the claim. Experiment 3 adds it, plus the
@@ -30,19 +30,20 @@ and must be labelled **"multi-head fine-tuning with replay"** in the paper, neve
 |---|---|---|---|---|
 | A. Independent committee | fine-tuned | 3, independent seeds | bootstrap of 214 | reused from Exp 2 |
 | B. Warm snapshots | fine-tuned | 3 cycle-end checkpoints | 214 | reused from Exp 2 |
-| **C. Frozen MHC** | **frozen AEDs** | **4, random init** | **disjoint 54/54/53/53** | new |
+| **C. Frozen MHC** | **frozen AEDs** | **8, random init** | **overlapping 80% (~172/head)** | new |
 | **D. Frozen probe** | **frozen AEDs** | **1, random init** | **all 214** | new — control |
 
 Arm D separates the two things C changes at once: *freezing the body* (D vs A)
 and *splitting the data across heads* (C vs D). Without D, a poor C cannot be
 attributed.
 
-**Heads:** 4, not 8. The paper used 8 heads × 1,000 frames; 214 frames would give
-27 frames/head, which the paper itself identifies as too sparse
-(Fig. 3 discussion). Four heads give 54/54/53/53 frames overall, stratified by
-`config_type` so each environment appears in every head; the exact per-group
-counts are written to `mhc_head_data/mhc_split.json`. This is a reduced-scale
-disjoint MHC and must be described as such.
+**Heads:** 8, as in the paper, with the **overlapping** split: each head gets an
+independent 80% of the frames (~172 of 214), so every head is trainable. A
+disjoint split at this scale would give 27 frames/head; the paper itself warns
+that disjoint heads degrade when the per-head subset is small (Fig. 3
+discussion). The exact frame indices are written to
+`mhc_head_data/mhc_split.json`. `--mhc-split disjoint` remains available for the
+reduced-scale comparison, but it is not the default.
 
 **Frozen set:** `node_embedding`, `interactions`, `products`, the radial Bessel
 weights, and the (parameter-free) spherical harmonics. Trainable: the readout
@@ -57,14 +58,17 @@ still trainable when the optimizer is created.
 ## Configuration
 
 - Foundation checkpoint, dtype, split files, valid/test sets: identical to Exp 2.
-- MHC: `--mhc-heads 4`, `--mhc-epochs 400`, batch 16, lr 5e-4, one cosine decay.
-- Probe: `--probe-epochs 400`, same hyperparameters.
+- MHC: `--mhc-heads 8`, `--mhc-split overlapping --mhc-overlap 0.8`,
+  `--mhc-epochs 120` (~10k updates over the concatenated heads), batch 16,
+  lr 1e-3, `--energy-weight 0`, `--patience 50`, one cosine decay.
+- Probe: `--probe-epochs 600`, same force-only loss and lr, random-init head.
 - Split seed `20251027`, recorded in `mhc_head_data/mhc_split.json` with the
   exact frame indices per head.
 - Evaluation is on the multi-head model directly with `head=<name>` — **not** via
   `remove_pt_head` export, which applies a $1/\sqrt{M}$ rescaling.
-- Validation (53 frames) is never used for early stopping (`patience > epochs`),
-  SWA, or EMA, so the α fitted there is on untouched frames.
+- Early stopping (patience 50) selects the best validation **force** checkpoint,
+  because the frozen arms are trained with `energy_weight=0`; the α fitted on the
+  53 validation frames is therefore on frames not used to fit the readout.
 - Checkpoints are not retained: warm-restart runs write only the three cycle-end
   states and delete them after exporting `snapshot_models/`; every other run's
   checkpoint directory is removed once training finishes.
@@ -89,7 +93,7 @@ Fixed before seeing Arm C/D test results.
    three models); ≤ 50% is reported as strong efficiency. At ≥ 100%, drop the
    claim.
 4. **Attribution (H4).** Report D vs A (cost of freezing) and C vs D (cost of
-   disjoint head splitting) separately. Whichever gap dominates is the
+   splitting the labels across heads) separately. Whichever gap dominates is the
    explanation to state.
 5. **Diversity (H5).** Report pairwise head force RMS differences and the ratio
    of interface to in-distribution mean head σ. A near-zero spread invalidates
@@ -113,8 +117,10 @@ Pass criteria, all printed or written to `evaluation/smoke_check.json`:
 - no `trainable descriptor tensors` error;
 - `smoke check passed: heads differ` — minimum pairwise head force RMS
   difference > 0;
-- 4 heads listed as available and selected by name;
+- 8 heads listed as available and selected by name;
 - finite predictions, no NaN in forces.
+- `learning gate` passes: validation force RMSE falls (or starts ≤0.05 eV/Å and
+  stays within 5% of its best).
 
 If any check fails, stop. Do not run the full experiment against a broken arm.
 
@@ -126,17 +132,20 @@ The runner's no-flag default **is** this experiment:
 uv run --locked python -m mlpdft.uq_compare
 ```
 
-It expands to `--arms mhc,frozen-probe --mhc-heads 4 --mhc-epochs 400
---probe-epochs 400 --run-id lif_uq_mhc_001`, and it automatically merges
-`lif_uq_001/evaluation/uq_summary.json` when that directory exists. The explicit
-equivalent, for a different output directory or run id:
+It expands to `--arms mhc,frozen-probe --mhc-heads 8 --mhc-split overlapping
+--mhc-overlap 0.8 --mhc-epochs 120 --probe-epochs 600 --energy-weight 0
+--learning-rate 1e-3 --patience 50 --run-id lif_uq_mhc_003`, and it automatically
+merges `lif_uq_001/evaluation/uq_summary.json` when that directory exists. The
+explicit equivalent, for a different output directory or run id:
 
 ```bash
 uv run --locked python -m mlpdft.uq_compare \
   --output-dir src/mlpdft/outputs/uq_diffusion_comparison \
-  --run-id lif_uq_mhc_001 \
+  --run-id lif_uq_mhc_003 \
   --arms mhc,frozen-probe \
-  --mhc-heads 4 --mhc-epochs 400 --probe-epochs 400 \
+  --mhc-heads 8 --mhc-split overlapping --mhc-overlap 0.8 \
+  --mhc-epochs 120 --probe-epochs 600 \
+  --energy-weight 0 --learning-rate 1e-3 --patience 50 \
   --include-summary src/mlpdft/outputs/uq_diffusion_comparison/lif_uq_001/evaluation/uq_summary.json
 ```
 
@@ -164,6 +173,11 @@ Emitted by the runner into `evaluation/`:
   calibration curves.
 - `smoke_check.json`, `experiment_manifest.json`, `mhc_head_data/mhc_split.json`.
 
+**Energy caveat:** the frozen arms use `energy_weight=0` because the QE and
+foundation E0 references differ. Their energy MAE/RMSE in the summary is a
+by-product, not a calibrated prediction; report force accuracy and UQ, and use
+the committee's energy as the reference.
+
 Added in analysis, not by the runner: block-bootstrap CIs and the figures. RLL
 and coverage are already per group, so they can be read directly from the
 summary. Pooled Spearman is secondary and must be labelled as such; per-group
@@ -181,21 +195,22 @@ ranking comparison is unaffected.
    within-group Spearman + Pearson + CI, α, RLL, 1σ/2σ coverage, risk–coverage.
 2. Cost table: training seconds for C and D, versus the Exp 2 committee and
    snapshot runs.
-3. One paragraph answering: does a frozen foundation body plus 4 cheap heads give
+3. One paragraph answering: does a frozen foundation body plus 8 cheap heads give
    committee-quality uncertainty at this data scale?
 
 ## Negative-result branch
 
 If C's σ is flat (risk–coverage curve as flat as Exp 2's multi-head arm) or its
-accuracy exceeds the 1.25× bound, the paper reports: *at 53 frames/head, a
-frozen-body MHC does not reproduce committee-quality UQ on this Li–F testbed*,
-with the D-vs-A and C-vs-D gaps as the explanation. That is a valid result and
-does not require another architecture.
+accuracy exceeds the 1.25× bound, the paper reports: *at ~172 frames/head
+(80% overlapping), a frozen-body MHC does not reproduce committee-quality UQ on
+this Li–F testbed*, with the D-vs-A and C-vs-D gaps as the explanation. That is
+a valid result and does not require another architecture.
 
 ## Limitations to state
 
-- 4 heads and ~53 frames/head, not the paper's 8 × 1,000.
-- 400 epochs, not 800k optimisation steps.
+- 8 heads at ~172 frames/head (80% overlapping), not the paper's 8 × 1,000
+  disjoint frames.
+- 10k gradient updates, not 800k.
 - One MHC training run (heads are not independent seeds); head spread is
   readout-init plus data-split variance only.
 - LIFINTERFACE has 18 test frames; its correlations are case-study evidence.
