@@ -156,3 +156,61 @@ implements the proposed environment-stratified selection; do not assume the
 existing 80% option guarantees it. The runner's old default paths and imported
 pilot summaries must not be used for these experiments. Training budgets,
 matched loss choices and compute settings remain to be fixed before launch.
+
+## Minimum remaining campaign and transition to active learning
+
+The recommended last campaign on this interim dataset is **three main method
+experiments plus one targeted MHC ablation**. An experiment here is a research
+comparison, not one training run: the committee alone has three members, and
+repeat seeds or budgets require additional runs. Treat this as an upper bound on
+the planned questions, not a promise that one seed can establish a robust win.
+
+1. **Independent committee:** establish the 2,000-label reference; evaluate the
+   zero-shot foundation and individual fine-tunes as accuracy controls.
+2. **Snapshots:** compare three cycle-end checkpoints with that reference on
+   the same splits and report both accuracy/UQ and actual cost.
+3. **Frozen MHC:** compare eight random heads on 80% overlapping subsets with
+   the reference, alongside the all-data frozen-head probe and the head
+   diversity/initialization checks described above.
+4. **MHC data-split and budget ablation:** on the same nested, environment-
+   stratified 500 / 1,000 / 2,000-frame training subsets, compare overlapping
+   and disjoint heads with the same head count, frozen foundation, loss and
+   stopping policy. Use the common validation and calibration splits; keep the
+   test untouched until the analysis and settings are frozen. Record subset
+   manifests and actual optimizer updates. This asks whether data per head and
+   overlap explain performance; it is not an isolated proof of either cause,
+   because the schemes also change membership and correlations between heads.
+
+For each comparison repeat independent training/split seeds when affordable,
+using at least three recorded repetitions as the target. Report variability
+across repetitions and account for correlated trajectory blocks. If compute
+limits repetitions, label the study exploratory rather than treating the heads
+or adjacent frames as independent experimental replicates. Match the held-out
+data and label budgets across methods; report differences in model count,
+optimization updates and compute. A negative or inconclusive result is a valid
+outcome and does not mandate a new method sweep.
+
+Before the final long train, freeze the method, configuration, dataset
+revision, reference energies, calibration rules and evaluation plan based on
+the development evidence. Build and audit the separately planned final dataset;
+its new interface trajectories are planned, not existing data. A model trained
+on all its training pool is a **full-pool reference**, not proof that an
+acquisition strategy works or a guaranteed accuracy ceiling.
+
+The later retrospective active-learning study is a distinct experiment:
+compare uncertainty acquisition with a random-selection control, paired initial
+seeds, equal label budgets, matching environment quotas and diversity rules,
+and the same retraining recipe and held-out data. Report error versus labels,
+uncertainty discrimination, and cumulative training/inference compute over
+multiple acquisition seeds. An uncertainty–error correlation alone does not
+establish an AL benefit. If environment quotas are fixed, they cannot support
+a claim that one method naturally acquires interface structures earlier;
+answer that question with a separately specified unstratified diagnostic.
+An actual DFT acquisition round, if later undertaken, is a separate prospective
+validation rather than part of the retrospective result.
+
+The older [active-learning protocol](../PHASE-3/ACTIVE_LEARNING_PROTOCOL.md)
+contains preliminary assumptions about four disjoint MHC heads, split
+attribution and interface/OOD status. Reconcile it with the selected method and
+the eventual final dataset before pre-registering the AL study; do not treat its
+existing thresholds or proposed frame counts as verified outcomes.
