@@ -26,6 +26,9 @@ pinned to revision `0014d10c5f6355e84c596fbcf25a6eadad6c81fc`. Verify the
 downloaded files against `SHA256SUMS` and record the revision and file hashes in
 every run manifest.
 
+Curation audit, composition checks, temporal-dependence caveats and acceptance
+gates: [`UQ_INTERIM_DATASET_CURATION.md`](UQ_INTERIM_DATASET_CURATION.md).
+
 | Environment | Train | Validation | Calibration | Test | Source stride (MD steps) | Audit thermalization cutoff (steps) |
 |---|---:|---:|---:|---:|---|---:|
 | Bulk LiF, NPT | 800 | 100 | 100 | 100 | 3 or 15 | 3 |
