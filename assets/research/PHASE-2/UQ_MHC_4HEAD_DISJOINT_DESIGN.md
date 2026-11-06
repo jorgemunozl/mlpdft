@@ -213,7 +213,9 @@ Fixed before seeing the test results.
    not write "preserves accuracy".
 2. **H2 — ranking.** Compare within-group frame-level Spearman `ρ` between
    `σ` and force RMSE, with block-bootstrap confidence intervals. "Comparable
-   to the committee" requires overlapping intervals in **both** groups.
+   to the committee" requires overlapping intervals in **both** groups. When
+   the autocorrelation estimate hits its lag limit, treat the comparison as
+   descriptive rather than a significance test.
 3. **H3 — calibration.** Report `α`, 1σ/2σ empirical coverage and RLL after
    `α` scaling. `α` is a scale diagnostic, not a pass/fail: a large `α` with
    nominal coverage means the raw spread is small but the rescaling works. The
@@ -270,6 +272,9 @@ Notes:
 - **Uncertainty:** block bootstrap over time blocks, with block length at least
   the estimated autocorrelation time. Report effective sample size. Do not
   compute i.i.d. frame-level intervals; the frames are temporally correlated.
+  If the autocorrelation estimate hits the lag limit — as it does for the
+  F-doped windows — the block bootstrap is not trustworthy either: report the
+  interval as a lower bound and do not use it to claim superiority.
 - **Committee decomposition:** report per-head RMSE, ensemble RMSE, and the gap
   between the ensemble and the best member. A negligible gap is expected for a
   shared-body committee; it is not a failure.
