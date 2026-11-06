@@ -1,2 +1,0 @@
-# 12 MB MACE checkpoint: kept on the pod and in the local working copy, not in git.
-*.model
