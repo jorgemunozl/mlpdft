@@ -8,6 +8,13 @@ arm could be evaluated immediately; **no probe model exists for this report**.
 the 178-frame test set with `training/eval_mhc_saved.py`, then the standard
 within-environment analysis in `analysis/uq_analysis.json`.
 
+> **Superseding interpretation.** This gate is a fail for *this recipe*, but
+> [`DIAGNOSIS.md`](DIAGNOSIS.md) shows the recipe is not a fair test of the
+> paper’s MHC: all four heads were warm-started from the same readout (head
+> collapse, α = 51.6), the QE E0s mismatch the warm-started readout, and
+> 54 frames/head is far below the paper’s 1,000. The robust part is the bulk
+> force failure; do not cite this as evidence against the published MHC.
+
 ## Verdict: FAIL
 
 | Gate criterion | MHC | Committee | Result |

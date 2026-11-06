@@ -3,8 +3,19 @@
 **Runs:** `mhc150_s123` (MHC, 150 epochs, standard loss), `probe150` (frozen
 probe, 150 epochs, standard loss), on the 214 / 53 / 178 split.
 **Date:** 2026-11-06.
-**Companion:** `GATE.md` is the 400-epoch run; this file is the shorter-budget
-rerun and the C/D/A attribution.
+**Companion:** `GATE.md` is the 400-epoch run; `DIAGNOSIS.md` is the
+**superseding diagnosis** of why the pilot is not a fair test of the paper’s MHC.
+
+> **Superseding diagnosis (2026-11-06).** `DIAGNOSIS.md` shows that all four
+> heads were warm-started from the same foundation readout
+> (`foundation_filter_elements: true`), so they start identical and collapse
+> (α = 51.6, RLL = −0.14, ensemble ≈ average member). The QE E0s are also
+> inconsistent with the warm-started readout, and 54 frames/head plus ~2–5k
+> updates are far below the paper (8 random heads, 1,000 frames/head, 800k
+> updates). **The C−D / D−A attribution below is therefore provisional:** both
+> C and D share causes 1–3. The robust result is the bulk-force failure; the
+> rank failure is interface-driven and unstable. Do not cite this pilot as
+> evidence against the published MHC.
 
 ## TL;DR
 
@@ -13,12 +24,14 @@ rerun and the C/D/A attribution.
 - Cutting 400 → 150 epochs **did not rescue the gate**. It improved bulk force
   (1.64× → 1.36×) but made rank worse (0.46 → 0.30); the interface rank inverted
   from +0.08 to −0.20.
-- The probe answers the attribution: **freezing the body is the bottleneck**,
-  not splitting labels across heads. Freezing costs +17% overall and +53% in
-  bulk; splitting costs +4% overall and actually helps in bulk.
+- The probe *appears* to attribute the cost to **freezing the body** (+17%
+  overall, +53% bulk) rather than label splitting (+4% overall, −11% bulk), but
+  this is **not clean**: both C and D are warm-started, share the QE/MP E0
+  mismatch, and have identical heads. `DIAGNOSIS.md` is the superseding
+  interpretation; treat this attribution as provisional.
 - Both frozen arms are still trained under an energy-dominated loss
   (2.4–2.5 eV/atom); the force-focused ablation is running to test that
-  confound.
+  confound, but it does **not** remove the warm-start head collapse.
 
 ## 150 vs 400 epochs
 
@@ -80,32 +93,37 @@ Reading:
 - The frozen-body multi-head committee does not clear the pilot gate at either
   150 or 400 epochs. The failure is not an artifact of over-training; the
   150-epoch model is worse on rank and better on bulk force.
-- The attribution points at the **frozen representation**, not at the label
-  split. A four-head committee cannot recover the committee's bulk accuracy
-  because the shared body is the limiting factor.
+- Under this recipe the probe points at the **frozen representation**, but
+  `DIAGNOSIS.md` shows both arms share the warm-start head collapse and the E0
+  mismatch. A clean attribution needs random-init heads and a consistent E0
+  reference before “freezing is the bottleneck” can be claimed.
 - The pooled/within-group inversion is the cleanest demonstration yet of the
   paper's methodological point: 150-epoch MHC pooled ρ = 0.917 (nearly the
   committee's 0.943) while within-group ρ = 0.302.
 - The energy offset is a real confound. Both C and D spend their loss on a
-  2.4–2.5 eV/atom offset; the force-focused ablation (`mhc150_ef0`,
-  `energy_weight=0`) and its matched probe are running to see whether the
-  freezing conclusion survives a force-focused loss.
+  2.4–2.5 eV/atom offset; the force-focused ablation (`mhc150_ef0`) was launched,
+  then stopped once `DIAGNOSIS.md` landed.
 
-## Corrected overnight batch (running)
+## Overnight batch: stopped after DIAGNOSIS.md
 
 The first overnight script died immediately because `parse_seeds` requires
 exactly three seeds: `--seeds 124` raised `ValueError`, so `mhc150_ef0`,
 `mhc150_s124`, `mhc150_s125`, `mhc150_s126` all failed before training. The
-probe had already finished successfully.
+`probe150` run had already finished.
 
-The corrected batch (`overnight2`) is running:
+The corrected batch (`overnight2`) was then launched, but it was **stopped**
+after `DIAGNOSIS.md` was committed: every run in it still used
+`--warm-start-heads` / `--warm-start-readout`, so it repeated the head-collapse
+cause and could not test the paper’s MHC. Its only completed work was
+`mhc150_ef0` up to epoch 42 (force ~10.5 meV/Å) — not a result.
 
-| Run | Seeds (first used) | Loss | Purpose | ETA |
-|---|---|---|---|---|
-| `mhc150_ef0` | 123 | energy 0 | does the energy confound explain the gate? | 01:58 UTC |
-| `probe150_ef0` | 123 | energy 0 | matched C/D attribution under force-focused loss | 03:14 UTC |
-| `mhc150_s124` | 124 | energy 1 | standard-recipe seed robustness | 05:02 UTC |
-| `mhc150_s125` | 125 | energy 1 | standard-recipe seed robustness | 06:50 UTC |
+A 2-epoch **random-init, force-only** MHC smoke on the same disjoint
+54/54/53/53 split gives 185–200 meV/Å at epoch 0 and 186.2 meV/Å for head 0 at
+epoch 1 (`randsmoke_2ep.log`). That is the data-starvation regime
+`DIAGNOSIS.md` predicts: random heads at 54 frames/head are not viable. The
+fair test needs random-initialised heads, a consistent E0 reference,
+overlapping/all-214 head data, and a much longer budget — not an A40-overnight
+job. The pod is idle.
 
 ## Files
 
@@ -118,6 +136,7 @@ The corrected batch (`overnight2`) is running:
 | `probe150/evaluation/uq_summary.json` | probe force, overall and per group |
 | `probe150/evaluation/frozen_probe_predictions.csv` | per-frame probe predictions |
 | `probe150/train.log` | probe training log |
+| `randsmoke_2ep.log` | 2-epoch random-init force-only smoke (data-starvation check) |
 
 ## Caveats
 

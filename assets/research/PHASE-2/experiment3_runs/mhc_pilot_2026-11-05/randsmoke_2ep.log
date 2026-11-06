@@ -1,0 +1,170 @@
+cuequivariance or cuequivariance_torch is not available. Cuequivariance acceleration will be disabled.
+UQ run 'randsmoke': arms = mhc
+No previous uq_summary.json found; evaluating only this run's arms (no committee/snapshot comparison will be merged)
+Disjoint MHC head split (214 frames): {'mhc_head_0': 54, 'mhc_head_1': 54, 'mhc_head_2': 53, 'mhc_head_3': 53}
+Split manifest: /workspace/runs/randsmoke/mhc_head_data/mhc_split.json
+[uq_compare] warning: patience=2 is not below the epoch budget 2; early stopping will not trigger
+[uq_compare] mhc_frozen_readouts: forces_weight=100, energy_weight=0, patience=2
+
+Training mhc_frozen_readouts on /workspace/mlpdft/dataset/xyz_files/uq_splits/uq_train.extxyz
+2026-11-06 00:45:08.989 INFO: ===========VERIFYING SETTINGS===========
+2026-11-06 00:45:08.990 INFO: MACE version: 0.3.15
+2026-11-06 00:45:09.037 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 00:45:09.476 INFO: Using foundation model /workspace/mlpdft/src/mlpdft/outputs/mace_omat_medium/mace_omat_medium.model as initial checkpoint.
+2026-11-06 00:45:09.479 INFO: ===========LOADING INPUT DATA===========
+2026-11-06 00:45:09.479 INFO: Using heads: ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+2026-11-06 00:45:09.479 INFO: Using the key specifications to parse data:
+2026-11-06 00:45:09.479 INFO: mhc_head_0: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 00:45:09.479 INFO: mhc_head_1: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 00:45:09.479 INFO: mhc_head_2: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 00:45:09.479 INFO: mhc_head_3: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 00:45:09.479 INFO: =============    Processing head mhc_head_0     ===========
+2026-11-06 00:45:09.512 INFO: Training set 1/1 [energy: 54, stress: 0, virials: 0, dipole components: 0, head: 54, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 54, charges: 0]
+2026-11-06 00:45:09.512 INFO: Total Training set [energy: 54, stress: 0, virials: 0, dipole components: 0, head: 54, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 54, charges: 0]
+2026-11-06 00:45:09.544 INFO: Validation set 1/1 [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.545 INFO: Total Validation set [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.621 INFO: Test set 1/1 [energy: 178, stress: 0, virials: 0, dipole components: 0, head: 178, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 178, charges: 0]
+2026-11-06 00:45:09.622 INFO: Total Test set [energy: 178, stress: 0, virials: 0, dipole components: 0, head: 178, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 178, charges: 0]
+2026-11-06 00:45:09.622 INFO: Total number of configurations: train=54, valid=53, tests=[LIF64_KJPAW_FINAL_mhc_head_0: 80, LIWITHF_KJPAW_FINAL_mhc_head_0: 80, LIFINTERFACE_KJPAW_FINAL_mhc_head_0: 18],
+2026-11-06 00:45:09.622 INFO: =============    Processing head mhc_head_1     ===========
+2026-11-06 00:45:09.654 INFO: Training set 1/1 [energy: 54, stress: 0, virials: 0, dipole components: 0, head: 54, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 54, charges: 0]
+2026-11-06 00:45:09.654 INFO: Total Training set [energy: 54, stress: 0, virials: 0, dipole components: 0, head: 54, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 54, charges: 0]
+2026-11-06 00:45:09.685 INFO: Validation set 1/1 [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.686 INFO: Total Validation set [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.762 INFO: Test set 1/1 [energy: 178, stress: 0, virials: 0, dipole components: 0, head: 178, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 178, charges: 0]
+2026-11-06 00:45:09.763 INFO: Total Test set [energy: 178, stress: 0, virials: 0, dipole components: 0, head: 178, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 178, charges: 0]
+2026-11-06 00:45:09.763 INFO: Total number of configurations: train=54, valid=53, tests=[LIF64_KJPAW_FINAL_mhc_head_1: 80, LIWITHF_KJPAW_FINAL_mhc_head_1: 80, LIFINTERFACE_KJPAW_FINAL_mhc_head_1: 18],
+2026-11-06 00:45:09.763 INFO: =============    Processing head mhc_head_2     ===========
+2026-11-06 00:45:09.795 INFO: Training set 1/1 [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.795 INFO: Total Training set [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.827 INFO: Validation set 1/1 [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.827 INFO: Total Validation set [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.903 INFO: Test set 1/1 [energy: 178, stress: 0, virials: 0, dipole components: 0, head: 178, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 178, charges: 0]
+2026-11-06 00:45:09.904 INFO: Total Test set [energy: 178, stress: 0, virials: 0, dipole components: 0, head: 178, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 178, charges: 0]
+2026-11-06 00:45:09.904 INFO: Total number of configurations: train=53, valid=53, tests=[LIF64_KJPAW_FINAL_mhc_head_2: 80, LIWITHF_KJPAW_FINAL_mhc_head_2: 80, LIFINTERFACE_KJPAW_FINAL_mhc_head_2: 18],
+2026-11-06 00:45:09.904 INFO: =============    Processing head mhc_head_3     ===========
+2026-11-06 00:45:09.936 INFO: Training set 1/1 [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.936 INFO: Total Training set [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.968 INFO: Validation set 1/1 [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:09.968 INFO: Total Validation set [energy: 53, stress: 0, virials: 0, dipole components: 0, head: 53, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 53, charges: 0]
+2026-11-06 00:45:10.044 INFO: Test set 1/1 [energy: 178, stress: 0, virials: 0, dipole components: 0, head: 178, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 178, charges: 0]
+2026-11-06 00:45:10.045 INFO: Total Test set [energy: 178, stress: 0, virials: 0, dipole components: 0, head: 178, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 178, charges: 0]
+2026-11-06 00:45:10.045 INFO: Total number of configurations: train=53, valid=53, tests=[LIF64_KJPAW_FINAL_mhc_head_3: 80, LIWITHF_KJPAW_FINAL_mhc_head_3: 80, LIFINTERFACE_KJPAW_FINAL_mhc_head_3: 18],
+2026-11-06 00:45:10.049 INFO: Atomic Numbers used: [np.int64(3), np.int64(9)]
+2026-11-06 00:45:10.049 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 00:45:10.049 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 00:45:10.049 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 00:45:10.049 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 00:45:10.049 INFO: Atomic Energies used (z: eV) for head mhc_head_0: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 00:45:10.049 INFO: Atomic Energies used (z: eV) for head mhc_head_1: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 00:45:10.049 INFO: Atomic Energies used (z: eV) for head mhc_head_2: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 00:45:10.049 INFO: Atomic Energies used (z: eV) for head mhc_head_3: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 00:45:10.049 INFO: Processing datasets for head 'mhc_head_0'
+2026-11-06 00:45:10.227 INFO: Combining 1 list datasets for head 'mhc_head_0'
+2026-11-06 00:45:10.399 INFO: Combining 1 list datasets for head 'mhc_head_0_valid'
+2026-11-06 00:45:10.399 INFO: Combined validation datasets for mhc_head_0
+2026-11-06 00:45:10.399 INFO: Head 'mhc_head_0' training dataset size: 54
+2026-11-06 00:45:10.400 INFO: Processing datasets for head 'mhc_head_1'
+2026-11-06 00:45:10.578 INFO: Combining 1 list datasets for head 'mhc_head_1'
+2026-11-06 00:45:10.752 INFO: Combining 1 list datasets for head 'mhc_head_1_valid'
+2026-11-06 00:45:10.752 INFO: Combined validation datasets for mhc_head_1
+2026-11-06 00:45:10.752 INFO: Head 'mhc_head_1' training dataset size: 54
+2026-11-06 00:45:10.752 INFO: Processing datasets for head 'mhc_head_2'
+2026-11-06 00:45:10.925 INFO: Combining 1 list datasets for head 'mhc_head_2'
+2026-11-06 00:45:11.098 INFO: Combining 1 list datasets for head 'mhc_head_2_valid'
+2026-11-06 00:45:11.098 INFO: Combined validation datasets for mhc_head_2
+2026-11-06 00:45:11.098 INFO: Head 'mhc_head_2' training dataset size: 53
+2026-11-06 00:45:11.098 INFO: Processing datasets for head 'mhc_head_3'
+2026-11-06 00:45:11.273 INFO: Combining 1 list datasets for head 'mhc_head_3'
+2026-11-06 00:45:11.445 INFO: Combining 1 list datasets for head 'mhc_head_3_valid'
+2026-11-06 00:45:11.445 INFO: Combined validation datasets for mhc_head_3
+2026-11-06 00:45:11.446 INFO: Head 'mhc_head_3' training dataset size: 53
+2026-11-06 00:45:11.446 INFO: Computing average number of neighbors
+2026-11-06 00:45:12.062 INFO: Average number of neighbors: 70.60058823529411
+2026-11-06 00:45:12.062 INFO: During training the following quantities will be reported: energy, forces, stress
+2026-11-06 00:45:12.063 INFO: ===========MODEL DETAILS===========
+2026-11-06 00:45:12.200 INFO: Loading FOUNDATION model
+2026-11-06 00:45:12.200 INFO: Using filtered elements: [np.int64(3), np.int64(9)]
+2026-11-06 00:45:12.200 INFO: Model configuration extracted from foundation model
+2026-11-06 00:45:12.200 INFO: Using universal loss function for fine-tuning
+2026-11-06 00:45:12.201 INFO: Message passing with hidden irreps 128x0e+128x1o)
+2026-11-06 00:45:12.201 INFO: 2 layers, each with correlation order: 3 (body order: 4) and spherical harmonics up to: l=3
+2026-11-06 00:45:12.201 INFO: Radial cutoff: 6.0 A (total receptive field for each atom: 12.0 A)
+2026-11-06 00:45:12.201 INFO: Distance transform for radial basis functions: Agnesi
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/workspace/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+[uq_compare] frozen body: 4 head(s) ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3'], descriptors frozen, readouts trainable
+2026-11-06 00:45:20.826 INFO: ===========OPTIMIZER INFORMATION===========
+2026-11-06 00:45:20.826 INFO: Using ADAM as parameter optimizer
+2026-11-06 00:45:20.826 INFO: Batch size: 16
+2026-11-06 00:45:20.827 INFO: Number of gradient updates: 26
+2026-11-06 00:45:20.827 INFO: Learning rate: 0.0005, weight decay: 5e-07
+2026-11-06 00:45:20.827 INFO: UniversalLoss(energy_weight=0.000, forces_weight=100.000, stress_weight=1.000)
+2026-11-06 00:45:20.827 INFO: Freezing product weights
+2026-11-06 00:45:20.827 INFO: Freezing interaction linear weights
+2026-11-06 00:45:20.827 INFO: Freezing embedding weights
+[uq_compare] frozen-body check passed: 8,960 trainable of 662,302 parameters (1.35%)
+2026-11-06 00:45:20.829 INFO: === Layer's learning rates ===
+2026-11-06 00:45:20.829 INFO: Param group 0: lr = 0.0
+2026-11-06 00:45:20.829 INFO: Param group 1: lr = 0.0
+2026-11-06 00:45:20.829 INFO: Param group 2: lr = 0.0
+2026-11-06 00:45:20.829 INFO: Param group 3: lr = 0.0
+2026-11-06 00:45:20.829 INFO: Param group 4: lr = 0.0005
+2026-11-06 00:45:20.829 INFO: Using gradient clipping with tolerance=10.000
+2026-11-06 00:45:20.829 INFO: 
+2026-11-06 00:45:20.830 INFO: ===========TRAINING===========
+2026-11-06 00:45:20.830 INFO: Started training, reporting errors on validation set
+2026-11-06 00:45:20.830 INFO: Loss metrics on validation set
+2026-11-06 00:45:27.995 INFO: Initial: head: mhc_head_0, loss=0.12985185, RMSE_E_per_atom= 5168.97 meV, RMSE_F=  187.56 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:45:32.181 INFO: Initial: head: mhc_head_1, loss=0.13849749, RMSE_E_per_atom= 5294.81 meV, RMSE_F=  198.63 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:45:36.577 INFO: Initial: head: mhc_head_2, loss=0.12885244, RMSE_E_per_atom= 5276.90 meV, RMSE_F=  186.47 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:45:40.850 INFO: Initial: head: mhc_head_3, loss=0.14002775, RMSE_E_per_atom= 5012.06 meV, RMSE_F=  200.64 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:46:15.107 INFO: Epoch 0: head: mhc_head_0, loss=0.12918430, RMSE_E_per_atom= 5164.42 meV, RMSE_F=  186.64 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:46:19.155 INFO: Epoch 0: head: mhc_head_1, loss=0.13776557, RMSE_E_per_atom= 5287.40 meV, RMSE_F=  197.61 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:46:23.274 INFO: Epoch 0: head: mhc_head_2, loss=0.12807416, RMSE_E_per_atom= 5270.71 meV, RMSE_F=  185.41 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:46:27.556 INFO: Epoch 0: head: mhc_head_3, loss=0.13951861, RMSE_E_per_atom= 5007.71 meV, RMSE_F=  199.96 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:46:58.648 INFO: Epoch 1: head: mhc_head_0, loss=0.12885301, RMSE_E_per_atom= 5161.98 meV, RMSE_F=  186.19 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:47:02.765 INFO: Epoch 1: head: mhc_head_1, loss=0.13739614, RMSE_E_per_atom= 5283.78 meV, RMSE_F=  197.10 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:47:06.811 INFO: Epoch 1: head: mhc_head_2, loss=0.12770274, RMSE_E_per_atom= 5267.68 meV, RMSE_F=  184.90 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:47:10.886 INFO: Epoch 1: head: mhc_head_3, loss=0.13926012, RMSE_E_per_atom= 5005.43 meV, RMSE_F=  199.61 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 00:47:10.903 INFO: Training complete
+2026-11-06 00:47:10.903 INFO: 
+2026-11-06 00:47:10.903 INFO: ===========RESULTS===========
+2026-11-06 00:47:11.497 INFO: Loading checkpoint: /workspace/runs/randsmoke/mhc_frozen_readouts/checkpoints/mhc_frozen_readouts_run-123_epoch-1.pt
+2026-11-06 00:47:11.519 INFO: Loaded Stage one model from epoch 1 for evaluation
+2026-11-06 00:47:11.520 INFO: Saving model to /workspace/runs/randsmoke/mhc_frozen_readouts/checkpoints/mhc_frozen_readouts_run-123.model
+2026-11-06 00:47:11.716 INFO: Compiling model, saving metadata to /workspace/runs/randsmoke/mhc_frozen_readouts/models/mhc_frozen_readouts_compiled.model
+2026-11-06 00:47:12.534 INFO: Computing metrics for training, validation, and test sets
+2026-11-06 00:47:12.535 INFO: Skipping evaluation for heads: ['pt_head']
+2026-11-06 00:47:12.535 INFO: Evaluating train_mhc_head_0 ...
+2026-11-06 00:47:14.970 INFO: Evaluating train_mhc_head_1 ...
+2026-11-06 00:47:17.400 INFO: Evaluating train_mhc_head_2 ...
+2026-11-06 00:47:19.844 INFO: Evaluating train_mhc_head_3 ...
+2026-11-06 00:47:22.299 INFO: Evaluating valid_mhc_head_0 ...
+2026-11-06 00:47:26.187 INFO: Evaluating valid_mhc_head_1 ...
