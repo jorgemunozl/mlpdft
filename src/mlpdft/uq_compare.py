@@ -131,6 +131,44 @@ _DESCRIPTOR_PREFIXES = (
 )
 
 
+def _check_foundation_and_initial_heads(model, foundation):
+    """Verify element-remapped embedding and shape-stable learned descriptor weights."""
+    def equal(label, actual, expected):
+        expected = expected.detach().to(device=actual.device, dtype=actual.dtype)
+        if actual.shape != expected.shape or not torch.allclose(actual.detach(), expected, rtol=1e-6, atol=1e-8):
+            raise RuntimeError(f"Frozen-body foundation mismatch: {label}")
+
+    old_numbers = [int(z) for z in foundation.atomic_numbers]
+    new_numbers = [int(z) for z in model.atomic_numbers]
+    indices = [old_numbers.index(z) for z in new_numbers]
+    embed = foundation.node_embedding.linear.weight.detach().reshape(len(old_numbers), -1)
+    embed = embed[indices].flatten() / (len(old_numbers) / len(new_numbers)) ** 0.5
+    equal("node_embedding (element-remapped)", model.node_embedding.linear.weight, embed)
+    equal("radial basis", model.radial_embedding.bessel_fn.bessel_weights,
+          foundation.radial_embedding.bessel_fn.bessel_weights)
+    if len(model.interactions) != len(foundation.interactions) or len(model.products) != len(foundation.products):
+        raise RuntimeError("Frozen-body foundation layer count mismatch")
+    for index, (target, source) in enumerate(zip(model.interactions, foundation.interactions)):
+        equal(f"interaction {index} linear_up", target.linear_up.weight, source.linear_up.weight)
+        source_params = dict(source.conv_tp_weights.named_parameters())
+        for name, param in target.conv_tp_weights.named_parameters():
+            if name not in source_params:
+                raise RuntimeError(f"Missing foundation interaction parameter: {name}")
+            if param.shape == source_params[name].shape:
+                equal(f"interaction {index} conv {name}", param, source_params[name])
+    for index, (target, source) in enumerate(zip(model.products, foundation.products)):
+        equal(f"product {index} linear", target.linear.weight, source.linear.weight)
+    if len(model.heads) > 1:
+        linear = model.readouts[0].linear.weight.detach()
+        n_heads = len(model.heads)
+        if linear.numel() % n_heads:
+            raise RuntimeError("Cannot verify initial head readout layout")
+        weights = linear.reshape(-1, n_heads)
+        if any(torch.equal(weights[:, i], weights[:, j]) for i in range(n_heads) for j in range(i)):
+            raise RuntimeError("Frozen-body heads have identical initial linear readout weights")
+        print("[uq_compare] element-mapped foundation weights and distinct initial head readouts verified")
+
+
 def _checked_configure_model(*args, **kwargs):
     model, output_args = _original_configure_model(*args, **kwargs)
     run_args = args[0] if args else kwargs.get("args")
@@ -160,6 +198,8 @@ def _checked_configure_model(*args, **kwargs):
             ),
             None,
         )
+        if foundation is None:
+            raise RuntimeError("Frozen-body run did not receive a foundation model")
         # load_foundations_elements copies the Bessel weights and the message
         # passing blocks but not the Agnesi distance transform.  Without this
         # the frozen "body" is not the foundation body.
@@ -205,6 +245,7 @@ def _checked_configure_model(*args, **kwargs):
                             f"{key!r} does not match the foundation"
                         )
                 print("[uq_compare] distance transform copied from the foundation")
+        _check_foundation_and_initial_heads(model, foundation)
         if getattr(run_args, "_uq_warm_start_readout", False):
             if foundation is None:
                 raise RuntimeError(
@@ -544,6 +585,10 @@ def parse_args() -> argparse.Namespace:
         action="append",
         default=[],
         help="Merge methods from a previous uq_summary.json (repeatable)",
+    )
+    parser.add_argument(
+        "--reference-mhc-model", type=Path, default=None,
+        help="Evaluate a saved four-head pilot MHC on this run's calibration and test frames.",
     )
     parser.add_argument(
         "--overwrite",
@@ -1479,6 +1524,7 @@ def _evaluate_method(
             np.sqrt(np.mean(cal_energy_error**2 / (cal_energy_std**2 + 1e-12)))
         )
         force_ratio_sum = 0.0
+        force_square_sum = 0.0
         component_count = 0
         for frame_index, atoms in enumerate(calibration_frames):
             stack = np.stack(
@@ -1489,10 +1535,13 @@ def _evaluate_method(
                 atoms.arrays[FORCE_KEY], dtype=float
             )
             force_ratio_sum += float(np.sum(error**2 / (sigma**2 + 1e-12)))
+            force_square_sum += float(np.sum(error**2))
             component_count += error.size
+        calibration_force_rmse = float(np.sqrt(force_square_sum / component_count))
         calibration = {
             "n_frames": len(calibration_frames),
             "alpha_force": float(np.sqrt(force_ratio_sum / component_count)),
+            "baseline_force_rmse_ev_per_angstrom": calibration_force_rmse,
             "alpha_energy": alpha_energy,
             "definition": (
                 "alpha^2 = mean((prediction - reference)^2 / disagreement^2) "
@@ -1570,7 +1619,7 @@ def _evaluate_method(
             subset["rll_force"] = _relative_log_likelihood(
                 signed_errors,
                 scaled_sigmas,
-                subset["force_rmse_ev_per_angstrom"],
+                calibration_force_rmse,
             )
             subset["coverage_1sigma_force"] = _coverage(
                 signed_errors, scaled_sigmas, 1.0
@@ -1702,7 +1751,7 @@ def _smoke_check_mhc(
         if options.device == "cuda":
             torch.cuda.empty_cache()
 
-    if not np.isfinite(np.concatenate([f.ravel() for f in forces[head_names[0]]])).all():
+    if not all(np.isfinite(frame).all() for frames in forces.values() for frame in frames):
         raise RuntimeError("Frozen-head predictions contain non-finite forces")
 
     spreads = {}
@@ -2191,6 +2240,14 @@ def main() -> None:
         )
 
     if not options.skip_evaluation:
+        if options.reference_mhc_model is not None:
+            reference_model = options.reference_mhc_model.expanduser().resolve()
+            if not reference_model.is_file():
+                raise FileNotFoundError(f"Reference MHC model not found: {reference_model}")
+            reference_heads = [MHC_HEAD_TEMPLATE.format(index=i) for i in range(4)]
+            methods["previous_frozen_mhc"] = [
+                (name, reference_model, name) for name in reference_heads
+            ]
         foundation_config = Mace_TrainerConfig(
             model_key=options.model_key,
             device=options.device,
@@ -2242,6 +2299,7 @@ def main() -> None:
         "valid_file": str(valid_file),
         "calibration_file": str(calibration_file),
         "calibration_uses_validation": calibration_uses_validation,
+        "reference_mhc_model": str(options.reference_mhc_model.resolve()) if options.reference_mhc_model else None,
         "test_file": str(test_file),
         "model_key": options.model_key,
         "device": options.device,
