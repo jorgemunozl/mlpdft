@@ -2,6 +2,14 @@
 
 **Status:** planning only. No experiment on this dataset has been launched.
 
+**Dataset superseded for current planning:** the user requested removal of the
+interface. A two-environment curation candidate is recorded in
+[`UQ_TWO_ENVIRONMENT_CURATION.md`](UQ_TWO_ENVIRONMENT_CURATION.md); it is not
+yet cleared for production comparisons because F-doped burn-in and temporal
+dependence remain unresolved. The three-environment dataset, quotas, budgets and
+head allocations below describe the earlier plan and must be revised before
+launching on the new candidate.
+
 ## Research question
 
 At the same DFT label budget, how do an independent committee, warm-restart
