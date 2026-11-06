@@ -3,6 +3,8 @@
 **Date:** 2026-11-04
 **Scope:** fill the interface gap for the frozen UQ + AL dataset. F-doped is
 recovered from the existing NPT run; only the interface needs new DFT.
+**Status:** plan only — the two decks are ready, but no run has been submitted
+and no compute has been allocated.
 
 ---
 
