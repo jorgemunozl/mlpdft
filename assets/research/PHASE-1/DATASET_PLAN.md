@@ -4,6 +4,10 @@
 decks live in [`audit/`](AUDIT.md) and [`generation/`](generation/README.md);
 this file is the plan and the status.
 
+> **Status (2026-11-05): plan only.** No DFT has been submitted. The two
+> interface decks are ready, but the 3,000 frames do not exist. Every
+> "after generation" count below is a target conditional on approval.
+
 ---
 
 ## 1. The issue
@@ -33,10 +37,10 @@ pre-transition expanded frames are excluded; the recovered frames stay labelled
 `interface_npt` (1,230 → 1,620). They are a labelled sub-environment, not mixed
 into the new NVT trajectories.
 
-## 3. What is being generated
+## 3. What is planned (not started)
 
-Two independent NVT interface trajectories, same 122-atom cell as the existing
-data, started from equilibrated frames:
+Two independent NVT interface trajectories are planned, using the same 122-atom
+cell as the existing data and starting from equilibrated frames:
 
 | ID | Start | Production frames | Role |
 |---|---|---:|---|
@@ -50,9 +54,10 @@ Settings match `LIFINTERFACE_KJPAW_V2`: PBE + KJPAW, 40/320 Ry, 3×3×3 k-points
 Decks: [`LIFINTERFACE_AL_V1.in`](generation/LIFINTERFACE_AL_V1.in),
 [`LIFINTERFACE_AL_V2.in`](generation/LIFINTERFACE_AL_V2.in).
 
-**Cost:** 2–4 days per trajectory on one CPU node, about one week total.
+**Cost if approved:** 2–4 days per trajectory on one CPU node, about one week
+total.
 
-**After generation:** interface 1,620 + 3,000 = **4,620**; total pool
+**If approved and completed:** interface 1,620 + 3,000 = **4,620**; total pool
 **14,306**.
 
 ## 4. Post-generation QC
@@ -97,18 +102,21 @@ generate AL_V1/V2  →  per-frame QC  →  extend manifest  →  rebuild + freez
 ```
 
 The frozen-MHC pilot on the 214-frame split is independent of this and is
-already running; it locks the recipe, not the dataset.
+run separately; it locks the recipe, not the dataset.
 
 ## 7. Fallback
 
-If the generation slips, the interface stays at ~1,620 clean frames and is
-reported as a **reduced-size environment / case study**, not silently
-reweighted. That weakens the balanced three-environment claim, so it is the
-last resort.
+If generation is not approved, or slips, the interface stays at ~1,620 clean
+frames and is reported as a **reduced-size environment / case study**, not
+silently reweighted. That weakens the balanced three-environment claim, so it is
+the last resort.
 
 ## 8. Status
 
-- F-doped recovery: **done** (2,603 + 390 interface frames).
-- Interface generation: **not started**; decks ready.
-- Split rebuild: **pending generation**.
-- Current pod runs use the 214-frame Experiment 3 split, not this pool.
+- F-doped recovery: **done** (2,603 + 390 interface frames) — the only part
+  already realized.
+- Interface generation: **not started; plan only**. Decks are ready, nothing
+  has been submitted, and no compute has been allocated for it.
+- Split rebuild: **pending**, and conditional on generation.
+- The Experiment 3 pilot uses the 214-frame split and is independent of this
+  plan.
