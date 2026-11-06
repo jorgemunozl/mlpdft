@@ -1,0 +1,158 @@
+# Three UQ experiments on the interim Li–F dataset
+
+**Status:** planning only. No experiment on this dataset has been launched.
+
+## Research question
+
+At the same DFT label budget, how do an independent committee, warm-restart
+snapshots, and a frozen-body multi-head committee compare in force accuracy,
+uncertainty quality, and computational cost across three Li–F environments?
+The independent committee is the reference, snapshots test a cheaper ensemble,
+and the multi-head committee tests uncertainty from multiple readouts sharing a
+frozen foundation representation. A single frozen readout is a control for the
+multi-head experiment.
+
+These are new experiments on a new dataset. Historical results and the 214 /
+53 / 178 pilot belong to different splits and must not be merged into this
+comparison. See [Experiment 2 results](UQ_EXPERIMENT_2_RESULTS.md) and the
+[MHC pilot diagnosis](experiment3_runs/mhc_pilot_2026-11-05/DIAGNOSIS.md) for
+their background and limitations.
+
+## Shared dataset
+
+Use the private Hugging Face dataset
+[`jorgemunozl/li-f-uq-interim-2900`](https://huggingface.co/datasets/jorgemunozl/li-f-uq-interim-2900),
+pinned to revision `0014d10c5f6355e84c596fbcf25a6eadad6c81fc`. Verify the
+downloaded files against `SHA256SUMS` and record the revision and file hashes in
+every run manifest.
+
+| Environment | Train | Validation | Calibration | Test | Source stride (MD steps) | Audit thermalization cutoff (steps) |
+|---|---:|---:|---:|---:|---|---:|
+| Bulk LiF, NPT | 800 | 100 | 100 | 100 | 3 or 15 | 3 |
+| F-doped Li, NVT | 800 | 100 | 100 | 100 | 3 or 5 | 0 |
+| LiF/Li thin-film interface, NVT | 400 | 100 | 100 | 100 | 1 | 586 |
+| **Total** | **2,000** | **300** | **300** | **300** | — | — |
+
+Use `uq_train.extxyz` to fit models, `uq_valid.extxyz` for checkpoint and
+hyperparameter selection, `uq_calibration.extxyz` to fit uncertainty scaling,
+and `uq_test.extxyz` for final evaluation. Each training arm uses only the
+2,000 unique training frames; bootstrap and head subsets do not increase the
+number of unique DFT labels. `REF_energy` is in eV and `REF_forces` in eV/Å.
+
+Selection is time-blocked, with 16 source-timestep buffers at split boundaries
+and irregular output spacing. In particular, the interface validation and
+calibration blocks include consecutive frames. The buffers have not been shown
+to exceed the correlation time, and the audit's zero cutoff for F-doped Li is
+not proof of equilibration. All splits contain related trajectory segments, so
+frame counts are not independent sample counts. No split should be called an
+independent-trajectory or OOD benchmark. The interface is represented in
+training and is not an unseen-environment test.
+
+The earlier pilot test shares 3, 4 and 8 rounded-structure hashes with the new
+validation, calibration and test sets respectively. The new test is therefore
+**previously observed**, not a blind final benchmark. Avoid using it to select
+models or tune settings for these experiments; validate the final paper claims
+on a later independent dataset. The dataset card and manifests document the
+source logs, SCF checks, frame selection, exact split hashes, and limitations.
+
+## Common protocol
+
+- Start all methods from the same recorded foundation checkpoint and model
+  version; `mace_omat_medium` is the proposed default because it was used in the
+  earlier comparison. Record its checkpoint hash, dtype, device and software
+  environment. The published Beck et al. foundation demonstration used
+  MACE-MP-0b, so this is an adaptation, not an exact reproduction of that
+  experiment. [Beck et al.](https://www.alphaxiv.org/pdf/2508.09907)
+- Primary outcome: force accuracy and force uncertainty. Fix the force
+  aggregation, loss weights, checkpoint rules, calibration rule, seeds and
+  training budgets before runs. If methods use different losses or budgets,
+  report them explicitly and do not attribute the whole difference to the
+  architecture. A force-only setting makes the frozen heads unsuitable for
+  energy-accuracy claims; if energy is evaluated, first verify reference-energy
+  consistency.
+- Report per-environment force RMSE, uncertainty–error Spearman and Pearson
+  correlations, risk–coverage, calibration scale, RLL, and empirical 1σ / 2σ
+  coverage. Fit calibration on the separate calibration split only. Report
+  pooled metrics as secondary, and use paired time-block resampling where
+  defensible, reporting the block length and uncertainty. Do not equate
+  overlapping confidence intervals with proof of equivalence.
+- Record actual training and inference cost, hardware, number of optimizer
+  updates, head count and wall time. Compare at equal label budget; additionally
+  report member-count and compute-budget differences. Three independent models
+  and eight MHC heads are not a matched-member comparison.
+- Before full training, verify dataset hashes and split usage; run a small smoke
+  test for finite forces, loss reduction and working checkpoint selection. Do
+  not use the held-out test to adjust a smoke test or training settings.
+
+## Experiment 1 — Independent committee
+
+**Why:** establish the reference for force prediction and disagreement-based
+uncertainty using independently trained, fine-tuned models.
+
+**Design:** train three models from the same foundation checkpoint with seeds
+123, 124 and 125. Use the same 2,000-frame pool, with recorded time-block
+bootstrap samples if bootstrapping is enabled. Obtain the prediction from the
+member mean and uncertainty from their force disagreement. Evaluate every
+member and the ensemble. Fix optimizer, loss and stopping rules on validation
+before training; fit the uncertainty scale only on the calibration split.
+
+**Question:** how well does the reference committee rank and calibrate force
+errors within each environment, and what does it cost to train and evaluate?
+Its new results provide the baseline for Experiments 2 and 3.
+
+## Experiment 2 — Warm-restart snapshot ensemble
+
+**Why:** test whether checkpoints from one fine-tuning run provide useful UQ at
+lower training cost than independently training three models.
+
+**Design:** train one model on the same 2,000-frame pool with a recorded
+three-cycle warm-restart schedule. Retain one checkpoint at the end of each
+cycle, immediately before the next restart, and form a three-member ensemble.
+Verify the scheduler and checkpoint epochs from actual logs; the earlier
+boundary-selection problem must not recur. Use the same validation,
+calibration and test roles as Experiment 1.
+
+**Question:** relative to the newly trained independent committee, how much
+accuracy, ranking, calibration and inference/training cost does the snapshot
+ensemble gain or lose? A larger spread alone does not demonstrate better UQ.
+
+## Experiment 3 — Frozen-body multi-head committee
+
+**Why:** test whether diverse readouts on one frozen foundation representation
+can provide useful uncertainty at this label budget. The earlier pilot used
+identical warm-started heads and a mismatched energy reference, so its negative
+result does not answer this question.
+
+**Design:** preserve and verify all foundation descriptor tensors, freeze the
+body and original head, and train eight newly **randomly initialized** readout
+heads. Start with independently sampled, environment-stratified 80% overlapping
+training subsets: 640 bulk + 640 F-doped + 320 interface frames per head,
+1,600 per head. Save each head's exact frame indices and seed. The ensemble
+uses the eight new heads, not the original foundation head. Test a disjoint
+split as a separate ablation if resources permit: 250 frames per head at this
+budget. Overlapping subsets are an adaptation to this data; the paper's
+foundation-model demonstration used disjoint subsets and a larger budget.
+
+Train a **single random-initialized frozen-head probe** on all 2,000 training
+frames, using the same frozen body and a comparable force-focused recipe. The
+probe versus the fine-tuned committee and MHC versus probe comparisons are
+diagnostic, but change more than one factor, including ensemble averaging and
+training subsets. They do not by themselves isolate the causal cost of freezing
+or splitting. Additional matched controls are needed for causal attribution.
+
+**Question:** can the frozen multi-head committee achieve useful force accuracy
+and uncertainty ranking on this dataset, and how does its cost compare with the
+other methods? Check pairwise head force differences and initialization before
+full training; use calibration and test outcomes to assess whether diversity is
+informative.
+
+## Implementation readiness before the first run
+
+The current [`uq_compare.py`](../../../src/mlpdft/uq_compare.py) accepts
+separate training, validation and test paths, but currently uses validation
+frames for calibration as well. Add and verify an explicit calibration-file
+path before executing this protocol. Also verify that the MHC head sampler
+implements the proposed environment-stratified selection; do not assume the
+existing 80% option guarantees it. The runner's old default paths and imported
+pilot summaries must not be used for these experiments. Training budgets,
+matched loss choices and compute settings remain to be fixed before launch.
