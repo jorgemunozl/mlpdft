@@ -1,8 +1,10 @@
 # Four-head disjoint MHC: A40 development run
 
-**Status:** prepared; no A40 run or scientific result yet. This document applies
-the design in [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](UQ_MHC_4HEAD_DISJOINT_DESIGN.md)
-to the user's approximately eight-hour compute budget.
+**Status:** completed 2026-11-07 (run `mhc4d_a40_001`); results in
+[`experiment3_runs/mhc_4d_2026-11-06/README.md`](experiment3_runs/mhc_4d_2026-11-06/README.md).
+This document applies the design in
+[`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](UQ_MHC_4HEAD_DISJOINT_DESIGN.md) to the
+user's approximately eight-hour compute budget.
 
 ## Objective and scope
 
@@ -83,6 +85,21 @@ effects. A 3-member committee or frozen probe comparison additionally needs
 those models evaluated on the same frames; this run alone cannot establish
 superiority over them.
 
+## Result (2026-11-07)
+
+Run `mhc4d_a40_001` completed 90/90 epochs. On the 200-frame test split, force
+RMSE is **33.25 meV/Å** overall (bulk 39.75, F-doped 23.30). Same-frame
+descriptive baselines: archived pilot 58.69, zero-shot 48.20. The pooled
+Spearman is 0.837, but within-group it is 0.589 (bulk) and 0.106 (F-doped); the
+pooled value is a between-environment artifact. Global `α` is 12.84, 1σ/2σ
+coverage 0.782/0.937, and RLL is −0.394 (negative in both groups). The ensemble
+is slightly worse than its best member (33.25 vs 32.72).
+
+Full analysis:
+[`analysis/report.md`](experiment3_runs/mhc_4d_2026-11-06/analysis/report.md).
+Run metadata and contents:
+[`README.md`](experiment3_runs/mhc_4d_2026-11-06/README.md).
+
 ## Launch contract
 
 [`scripts/run_mhc_4d.sh`](../../../scripts/run_mhc_4d.sh) is the fixed run
@@ -91,5 +108,5 @@ staged at the pinned locations before preflight. It produces `preflight.json`,
 head manifests, smoke and full run outputs, and prints the final UQ summary.
 Use a fresh output directory. Capture outputs before the remote run directory
 is cleaned up. Host setup, GPU visibility, authentication, time and storage
-must be checked after the user provides the SSH entry. No compute was launched
-while preparing this document.
+must be checked after the user provides the SSH entry. The run was launched on
+2026-11-06 and completed on 2026-11-07.

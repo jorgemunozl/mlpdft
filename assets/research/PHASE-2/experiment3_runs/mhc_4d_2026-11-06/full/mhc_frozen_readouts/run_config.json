@@ -1,0 +1,22 @@
+{
+  "run_name": "mhc_frozen_readouts",
+  "seed": 123,
+  "scheduler_t0": 90,
+  "train_file": "/root/mlpdft/dataset/xyz_files/uq_interim_two_env/uq_train.extxyz",
+  "valid_file": "/root/mlpdft/dataset/xyz_files/uq_interim_two_env/uq_valid.extxyz",
+  "test_file": "/root/mlpdft/dataset/xyz_files/uq_interim_two_env/uq_test.extxyz",
+  "multihead_heads": [],
+  "disjoint_heads": [
+    "mhc_head_0",
+    "mhc_head_1",
+    "mhc_head_2",
+    "mhc_head_3"
+  ],
+  "freeze": 6,
+  "foundation_filter_elements": false,
+  "pt_train_file": null,
+  "forces_weight": 100.0,
+  "energy_weight": 0.0,
+  "patience": 50,
+  "warm_start_readout": false
+}

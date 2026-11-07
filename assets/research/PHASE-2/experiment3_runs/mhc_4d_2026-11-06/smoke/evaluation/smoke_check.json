@@ -1,0 +1,66 @@
+{
+  "head_check": {
+    "heads": [
+      "mhc_head_0",
+      "mhc_head_1",
+      "mhc_head_2",
+      "mhc_head_3"
+    ],
+    "n_frames": 8,
+    "pairwise_force_rms_difference": {
+      "mhc_head_0|mhc_head_1": 0.029974402946087914,
+      "mhc_head_0|mhc_head_2": 0.019803634481384308,
+      "mhc_head_0|mhc_head_3": 0.042053619181820434,
+      "mhc_head_1|mhc_head_2": 0.017407010822719136,
+      "mhc_head_1|mhc_head_3": 0.05757937588872718,
+      "mhc_head_2|mhc_head_3": 0.05546336382963846
+    },
+    "min_pairwise_force_rms_difference": 0.017407010822719136,
+    "relative_to_rms_force": 0.06879458755978929
+  },
+  "learning_gate_mhc": {
+    "run": "mhc_frozen_readouts",
+    "epochs": 19,
+    "mean_relative_drop": 0.8396428228977434,
+    "worst_relative_drop": 0.777082263123857,
+    "worst_last_over_best": 1.0,
+    "per_head": {
+      "mhc_head_0": {
+        "first_rmse_f": 0.3825094588988711,
+        "last_rmse_f": 0.057717192519974946,
+        "best_rmse_f": 0.057717192519974946,
+        "relative_drop": 0.849109110435791,
+        "last_over_best": 1.0
+      },
+      "mhc_head_1": {
+        "first_rmse_f": 0.3976888157773878,
+        "last_rmse_f": 0.055334383867868,
+        "best_rmse_f": 0.055334383867868,
+        "relative_drop": 0.8608600954500008,
+        "last_over_best": 1.0
+      },
+      "mhc_head_2": {
+        "first_rmse_f": 0.38523940539147233,
+        "last_rmse_f": 0.04949562715336126,
+        "best_rmse_f": 0.04949562715336126,
+        "relative_drop": 0.8715198225813249,
+        "last_over_best": 1.0
+      },
+      "mhc_head_3": {
+        "first_rmse_f": 0.40230091171957477,
+        "last_rmse_f": 0.08968000878373661,
+        "best_rmse_f": 0.08968000878373661,
+        "relative_drop": 0.777082263123857,
+        "last_over_best": 1.0
+      }
+    },
+    "start_force_rmse": 0.39193464794682653,
+    "final_force_rmse": 0.06305680308123521,
+    "max_final_rmse": null,
+    "required_drop": 0.1,
+    "min_required_drop": 0.1,
+    "max_allowed_head_worsening": 0.1,
+    "max_allowed_regression_from_best": 0.05,
+    "passed": true
+  }
+}

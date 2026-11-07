@@ -1,0 +1,170 @@
+{
+  "zero_shot": {
+    "method": "zero_shot",
+    "member_count": 1,
+    "prediction_file": "/root/mlpdft/run_outputs/mhc4d_a40_001/smoke/evaluation/zero_shot_predictions.csv",
+    "overall": {
+      "n_frames": 8,
+      "energy_mae_mev_per_atom": 358364.3314665909,
+      "energy_rmse_mev_per_atom": 386455.5044333166,
+      "force_mae_ev_per_angstrom": 0.04473754342099178,
+      "force_rmse_ev_per_angstrom": 0.06309225465787631,
+      "spearman_uncertainty_vs_force_error": null,
+      "pearson_uncertainty_vs_force_error": null,
+      "low_uncertainty_risk_coverage_force_rmse": null
+    },
+    "by_group": {
+      "F_doped_Li": {
+        "n_frames": 4,
+        "energy_mae_mev_per_atom": 213716.9607950593,
+        "energy_rmse_mev_per_atom": 213716.96079506216,
+        "force_mae_ev_per_angstrom": 0.01956592319510685,
+        "force_rmse_ev_per_angstrom": 0.03413568248847115,
+        "spearman_uncertainty_vs_force_error": null,
+        "pearson_uncertainty_vs_force_error": null,
+        "low_uncertainty_risk_coverage_force_rmse": null,
+        "atom_level_spearman_uncertainty_vs_force_error": null,
+        "atom_level_pearson_uncertainty_vs_force_error": null
+      },
+      "bulk_LiF": {
+        "n_frames": 4,
+        "energy_mae_mev_per_atom": 503011.70213812264,
+        "energy_rmse_mev_per_atom": 503011.70412043127,
+        "force_mae_ev_per_angstrom": 0.06597609798658219,
+        "force_rmse_ev_per_angstrom": 0.07972525344097656,
+        "spearman_uncertainty_vs_force_error": null,
+        "pearson_uncertainty_vs_force_error": null,
+        "low_uncertainty_risk_coverage_force_rmse": null,
+        "atom_level_spearman_uncertainty_vs_force_error": null,
+        "atom_level_pearson_uncertainty_vs_force_error": null
+      }
+    },
+    "atom_level_spearman_uncertainty_vs_force_error": null,
+    "atom_level_pearson_uncertainty_vs_force_error": null,
+    "calibration": null,
+    "member_accuracy": [
+      {
+        "member": "foundation",
+        "head": null,
+        "energy_rmse_mev_per_atom": 386455.5044333166,
+        "force_rmse_ev_per_angstrom": 0.06309225465787631
+      }
+    ],
+    "atom_level_file": "/root/mlpdft/run_outputs/mhc4d_a40_001/smoke/evaluation/zero_shot_atom_level.npz"
+  },
+  "frozen_mhc": {
+    "method": "frozen_mhc",
+    "member_count": 4,
+    "prediction_file": "/root/mlpdft/run_outputs/mhc4d_a40_001/smoke/evaluation/frozen_mhc_predictions.csv",
+    "overall": {
+      "n_frames": 8,
+      "energy_mae_mev_per_atom": 3363.5768925494203,
+      "energy_rmse_mev_per_atom": 4170.487167305122,
+      "force_mae_ev_per_angstrom": 0.05033181866322484,
+      "force_rmse_ev_per_angstrom": 0.06397770546232824,
+      "spearman_uncertainty_vs_force_error": 0.7857142857142858,
+      "pearson_uncertainty_vs_force_error": 0.9209490672355332,
+      "low_uncertainty_risk_coverage_force_rmse": {
+        "0.1": 0.047651876188294175,
+        "0.25": 0.047694109210647526,
+        "0.5": 0.04811848062630026,
+        "0.75": 0.060218398341128375,
+        "1.0": 0.06397770546232824
+      },
+      "rll_force": 0.12179383093134229,
+      "coverage_1sigma_force": 0.7556497175141242,
+      "coverage_2sigma_force": 0.9597457627118644,
+      "coverage_1sigma_energy": 0.625,
+      "coverage_2sigma_energy": 1.0
+    },
+    "by_group": {
+      "F_doped_Li": {
+        "n_frames": 4,
+        "energy_mae_mev_per_atom": 898.2380435484511,
+        "energy_rmse_mev_per_atom": 898.2380439309114,
+        "force_mae_ev_per_angstrom": 0.03771079810492794,
+        "force_rmse_ev_per_angstrom": 0.04811848062630027,
+        "spearman_uncertainty_vs_force_error": 1.0,
+        "pearson_uncertainty_vs_force_error": 0.9352872735675077,
+        "low_uncertainty_risk_coverage_force_rmse": {
+          "0.1": 0.047651876188294175,
+          "0.25": 0.047651876188294175,
+          "0.5": 0.047694109210647526,
+          "0.75": 0.04787765075958416,
+          "1.0": 0.04811848062630026
+        },
+        "atom_level_spearman_uncertainty_vs_force_error": 0.6577394348587147,
+        "atom_level_pearson_uncertainty_vs_force_error": 0.5389934124474458,
+        "rll_force": 0.33311927083239323,
+        "coverage_1sigma_force": 0.6604938271604939,
+        "coverage_2sigma_force": 0.9614197530864198,
+        "coverage_1sigma_energy": 1.0,
+        "coverage_2sigma_energy": 1.0
+      },
+      "bulk_LiF": {
+        "n_frames": 4,
+        "energy_mae_mev_per_atom": 5828.91574155039,
+        "energy_rmse_mev_per_atom": 5829.159016680586,
+        "force_mae_ev_per_angstrom": 0.060980804759287834,
+        "force_rmse_ev_per_angstrom": 0.07478723574604053,
+        "spearman_uncertainty_vs_force_error": -0.7999999999999999,
+        "pearson_uncertainty_vs_force_error": -0.871338979289362,
+        "low_uncertainty_risk_coverage_force_rmse": {
+          "0.1": 0.07632491720344932,
+          "0.25": 0.07632491720344932,
+          "0.5": 0.07640905772836541,
+          "0.75": 0.0760118192585666,
+          "1.0": 0.07478723574604053
+        },
+        "atom_level_spearman_uncertainty_vs_force_error": 0.5099701018539711,
+        "atom_level_pearson_uncertainty_vs_force_error": 0.4730263434609436,
+        "rll_force": -0.13830970549525817,
+        "coverage_1sigma_force": 0.8359375,
+        "coverage_2sigma_force": 0.9583333333333334,
+        "coverage_1sigma_energy": 0.25,
+        "coverage_2sigma_energy": 1.0
+      }
+    },
+    "atom_level_spearman_uncertainty_vs_force_error": 0.6800022093399849,
+    "atom_level_pearson_uncertainty_vs_force_error": 0.6272022488476587,
+    "calibration": {
+      "n_frames": 8,
+      "alpha_force": 4.500196701830625,
+      "baseline_force_rmse_ev_per_angstrom": 0.08152406665126288,
+      "alpha_energy": 23.748959221016026,
+      "definition": "alpha^2 = mean((prediction - reference)^2 / disagreement^2) on the calibration frames",
+      "rll_force": 0.12179383093134229,
+      "coverage_1sigma_force": 0.7556497175141242,
+      "coverage_2sigma_force": 0.9597457627118644,
+      "coverage_1sigma_energy": 0.625,
+      "coverage_2sigma_energy": 1.0
+    },
+    "member_accuracy": [
+      {
+        "member": "mhc_head_0",
+        "head": "mhc_head_0",
+        "energy_rmse_mev_per_atom": 4284.182655571836,
+        "force_rmse_ev_per_angstrom": 0.05945525200219414
+      },
+      {
+        "member": "mhc_head_1",
+        "head": "mhc_head_1",
+        "energy_rmse_mev_per_atom": 3973.5611925364,
+        "force_rmse_ev_per_angstrom": 0.0539566791422481
+      },
+      {
+        "member": "mhc_head_2",
+        "head": "mhc_head_2",
+        "energy_rmse_mev_per_atom": 4083.504179980097,
+        "force_rmse_ev_per_angstrom": 0.050913844369313795
+      },
+      {
+        "member": "mhc_head_3",
+        "head": "mhc_head_3",
+        "energy_rmse_mev_per_atom": 4351.737140578609,
+        "force_rmse_ev_per_angstrom": 0.10153593212603279
+      }
+    ],
+    "atom_level_file": "/root/mlpdft/run_outputs/mhc4d_a40_001/smoke/evaluation/frozen_mhc_atom_level.npz"
+  }
+}

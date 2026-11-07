@@ -1,0 +1,1147 @@
+Budget: 8h including setup, smoke, training and evaluation; run mhc4d_a40_001
+Using CPython 3.11.18 interpreter at: /usr/bin/python3.11
+Creating virtual environment at: .venv
+Resolved 185 packages in 3ms
+   Building mlpdft @ file:///root/mlpdft
+Downloading h5py (4.8MiB)
+Downloading babel (9.7MiB)
+Downloading networkx (2.0MiB)
+Downloading pygments (1.2MiB)
+Downloading widgetsnbextension (2.1MiB)
+Downloading pydantic-core (2.0MiB)
+Downloading scipy (33.7MiB)
+Downloading numpy (16.1MiB)
+Downloading pillow (6.8MiB)
+Downloading notebook (5.3MiB)
+Downloading pandas (10.7MiB)
+Downloading ase (2.8MiB)
+Downloading nvidia-nvjitlink-cu12 (20.1MiB)
+Downloading nvidia-cufft-cu12 (201.7MiB)
+Downloading nvidia-cudnn-cu12 (634.0MiB)
+Downloading nvidia-cublas-cu12 (346.6MiB)
+Downloading nvidia-cusparse-cu12 (197.8MiB)
+Downloading nvidia-nccl-cu12 (179.9MiB)
+Downloading sympy (5.9MiB)
+Downloading nvidia-cusolver-cu12 (122.0MiB)
+Downloading jupyterlab (16.4MiB)
+Downloading nvidia-cuda-nvrtc-cu12 (23.5MiB)
+Downloading nvidia-cuda-cupti-cu12 (13.2MiB)
+Downloading hf-xet (4.3MiB)
+Downloading triton (241.4MiB)
+Downloading wandb (24.9MiB)
+Downloading fonttools (4.8MiB)
+Downloading matplotlib (8.4MiB)
+Downloading jedi (4.7MiB)
+Downloading kiwisolver (1.4MiB)
+Downloading debugpy (2.9MiB)
+Downloading nvidia-cusparselt-cu12 (143.1MiB)
+Downloading torch (732.9MiB)
+Downloading nvidia-curand-cu12 (53.7MiB)
+ Downloaded kiwisolver
+ Downloaded pygments
+ Downloaded networkx
+ Downloaded pydantic-core
+ Downloaded widgetsnbextension
+   Building python-hostlist==2.3.0
+ Downloaded debugpy
+ Downloaded ase
+ Downloaded hf-xet
+ Downloaded fonttools
+ Downloaded h5py
+ Downloaded notebook
+ Downloaded sympy
+ Downloaded pillow
+ Downloaded matplotlib
+ Downloaded babel
+ Downloaded jedi
+ Downloaded pandas
+ Downloaded nvidia-cuda-cupti-cu12
+ Downloaded numpy
+ Downloaded jupyterlab
+ Downloaded nvidia-nvjitlink-cu12
+      Built python-hostlist==2.3.0
+ Downloaded nvidia-cuda-nvrtc-cu12
+      Built mlpdft @ file:///root/mlpdft
+ Downloaded wandb
+ Downloaded scipy
+ Downloaded nvidia-curand-cu12
+ Downloaded nvidia-cusolver-cu12
+ Downloaded nvidia-cusparselt-cu12
+ Downloaded nvidia-nccl-cu12
+ Downloaded nvidia-cusparse-cu12
+ Downloaded nvidia-cufft-cu12
+ Downloaded triton
+ Downloaded nvidia-cublas-cu12
+ Downloaded torch
+ Downloaded nvidia-cudnn-cu12
+Prepared 171 packages in 10.59s
+Installed 171 packages in 985ms
+ + annotated-doc==0.0.4
+ + annotated-types==0.8.0
+ + anyio==4.13.0
+ + argon2-cffi==25.1.0
+ + argon2-cffi-bindings==25.1.0
+ + arrow==1.4.0
+ + ase==3.28.0
+ + asttokens==3.0.2
+ + async-lru==2.3.0
+ + attrs==26.1.0
+ + babel==2.18.0
+ + beautifulsoup4==4.15.0
+ + bleach==6.4.0
+ + certifi==2026.5.20
+ + cffi==2.1.0
+ + charset-normalizer==3.4.9
+ + click==8.4.1
+ + comm==0.2.3
+ + configargparse==1.7.5
+ + contourpy==1.3.3
+ + cycler==0.12.1
+ + debugpy==1.8.21
+ + decorator==5.3.1
+ + defusedxml==0.7.1
+ + e3nn==0.4.4
+ + executing==2.2.1
+ + fastjsonschema==2.21.2
+ + filelock==3.29.0
+ + fonttools==4.62.1
+ + fqdn==1.5.1
+ + fsspec==2026.3.0
+ + gitdb==4.0.12
+ + gitpython==3.1.47
+ + googleapis-common-protos==1.75.3
+ + h11==0.16.0
+ + h5py==3.16.0
+ + hf-xet==1.5.1
+ + httpcore==1.0.9
+ + httpx==0.28.1
+ + huggingface-hub==1.19.0
+ + idna==3.18
+ + ipykernel==7.3.0
+ + ipython==9.15.0
+ + ipython-pygments-lexers==1.1.1
+ + ipywidgets==8.1.8
+ + isoduration==20.11.0
+ + jedi==0.20.0
+ + jinja2==3.1.6
+ + json5==0.15.0
+ + jsonpointer==3.1.1
+ + jsonschema==4.26.0
+ + jsonschema-specifications==2025.9.1
+ + jupyter==1.1.1
+ + jupyter-builder==1.1.1
+ + jupyter-client==8.9.1
+ + jupyter-console==6.6.3
+ + jupyter-core==5.9.1
+ + jupyter-events==0.12.1
+ + jupyter-lsp==2.3.1
+ + jupyter-server==2.20.0
+ + jupyter-server-terminals==0.5.4
+ + jupyterlab==4.6.2
+ + jupyterlab-pygments==0.3.0
+ + jupyterlab-server==2.28.0
+ + jupyterlab-widgets==3.0.16
+ + kiwisolver==1.5.0
+ + lark==1.3.1
+ + lightning-utilities==0.15.3
+ + lmdb==2.2.0
+ + mace-torch==0.3.15
+ + markdown-it-py==4.2.0
+ + markupsafe==3.0.3
+ + matplotlib==3.10.9
+ + matplotlib-inline==0.2.2
+ + matscipy==1.2.0
+ + mdurl==0.1.2
+ + mistune==3.3.3
+ + mlpdft==0.0.0 (from file:///root/mlpdft)
+ + mpmath==1.3.0
+ + nbclient==0.11.0
+ + nbconvert==7.17.1
+ + nbformat==5.10.4
+ + nest-asyncio2==1.7.2
+ + networkx==3.6.1
+ + notebook==7.6.0
+ + notebook-shim==0.2.4
+ + numpy==2.4.4
+ + nvidia-cublas-cu12==12.4.5.8
+ + nvidia-cuda-cupti-cu12==12.4.127
+ + nvidia-cuda-nvrtc-cu12==12.4.127
+ + nvidia-cuda-runtime-cu12==12.4.127
+ + nvidia-cudnn-cu12==9.1.0.70
+ + nvidia-cufft-cu12==11.2.1.3
+ + nvidia-curand-cu12==10.3.5.147
+ + nvidia-cusolver-cu12==11.6.1.9
+ + nvidia-cusparse-cu12==12.3.1.170
+ + nvidia-cusparselt-cu12==0.6.2
+ + nvidia-nccl-cu12==2.21.5
+ + nvidia-nvjitlink-cu12==12.4.127
+ + nvidia-nvtx-cu12==12.4.127
+ + opentelemetry-api==1.44.0
+ + opentelemetry-exporter-otlp-proto-common==1.44.0
+ + opentelemetry-exporter-otlp-proto-http==1.44.0
+ + opentelemetry-proto==1.44.0
+ + opentelemetry-sdk==1.44.0
+ + opentelemetry-semantic-conventions==0.65b0
+ + opt-einsum==3.4.0
+ + opt-einsum-fx==0.1.4
+ + orjson==3.11.8
+ + overrides==7.7.0
+ + packaging==26.2
+ + pandas==3.0.2
+ + pandocfilters==1.5.1
+ + parso==0.8.7
+ + pexpect==4.9.0
+ + pillow==12.2.0
+ + platformdirs==4.11.0
+ + prettytable==3.17.0
+ + prometheus-client==0.25.0
+ + prompt-toolkit==3.0.52
+ + protobuf==7.36.1
+ + psutil==7.2.2
+ + ptyprocess==0.7.0
+ + pure-eval==0.2.3
+ + pycparser==3.0
+ + pydantic==2.13.5
+ + pydantic-core==2.46.5
+ + pygments==2.20.0
+ + pyparsing==3.3.2
+ + python-dateutil==2.9.0.post0
+ + python-hostlist==2.3.0
+ + python-json-logger==4.1.0
+ + pyyaml==6.0.3
+ + pyzmq==27.1.0
+ + referencing==0.37.0
+ + requests==2.34.2
+ + rfc3339-validator==0.1.4
+ + rfc3986-validator==0.1.1
+ + rfc3987-syntax==1.1.0
+ + rich==15.0.0
+ + rpds-py==2026.6.3
+ + scipy==1.17.1
+ + send2trash==2.1.0
+ + shellingham==1.5.4
+ + six==1.17.0
+ + smmap==5.0.3
+ + soupsieve==2.9
+ + stack-data==0.6.3
+ + sympy==1.13.1
+ + terminado==0.18.1
+ + tinycss2==1.5.1
+ + torch==2.6.0+cu124
+ + torch-ema==0.3
+ + torchmetrics==1.9.0
+ + tornado==6.5.7
+ + tqdm==4.67.3
+ + traitlets==5.15.1
+ + triton==3.2.0
+ + typer==0.25.1
+ + typing-extensions==4.15.0
+ + typing-inspection==0.4.4
+ + tzdata==2026.2
+ + uri-template==1.3.0
+ + urllib3==2.7.0
+ + wandb==0.30.0
+ + wcwidth==0.6.0
+ + webcolors==25.10.0
+ + webencodings==0.5.1
+ + websocket-client==1.9.0
+ + widgetsnbextension==4.0.15
+ + xxhash==4.0.1
+cuequivariance or cuequivariance_torch is not available. Cuequivariance acceleration will be disabled.
+test_rll_reference_comes_from_calibration_not_test (test_mhc_evaluation.EvaluationTests.test_rll_reference_comes_from_calibration_not_test) ... Evaluated test member head_0
+Evaluated test member head_1
+ok
+test_smoke_checks_every_head_for_nonfinite_forces (test_mhc_evaluation.EvaluationTests.test_smoke_checks_every_head_for_nonfinite_forces) ... ok
+test_explicit_separate_calibration (test_uq_calibration.CalibrationSplitTests.test_explicit_separate_calibration) ... ok
+test_legacy_fallback_warns (test_uq_calibration.CalibrationSplitTests.test_legacy_fallback_warns) ... ok
+test_missing_calibration_fails (test_uq_calibration.CalibrationSplitTests.test_missing_calibration_fails) ... ok
+test_rejects_split_path_or_identical_copy (test_uq_calibration.CalibrationSplitTests.test_rejects_split_path_or_identical_copy) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.008s
+
+OK
+cuequivariance or cuequivariance_torch is not available. Cuequivariance acceleration will be disabled.
+Disjoint MHC head split (1000 frames): {'mhc_head_0': 250, 'mhc_head_1': 250, 'mhc_head_2': 250, 'mhc_head_3': 250}
+Split manifest: /tmp/tmpgxlwqhmq/mhc_split.json
+Preflight passed: pinned model and data, four disjoint 125/125 heads, NVIDIA A40
+Starting 20-epoch smoke on validation frames only.
+cuequivariance or cuequivariance_torch is not available. Cuequivariance acceleration will be disabled.
+UQ run 'smoke': arms = mhc
+Smoke test: 20 epochs per frozen arm; checks run before evaluation on 8 test frames
+Calibration split: /root/mlpdft/dataset/xyz_files/uq_interim_two_env/uq_calibration.extxyz (200 frames)
+No previous uq_summary.json found; evaluating only this run's arms (no committee/snapshot comparison will be merged)
+Disjoint MHC head split (1000 frames): {'mhc_head_0': 250, 'mhc_head_1': 250, 'mhc_head_2': 250, 'mhc_head_3': 250}
+Split manifest: /root/mlpdft/run_outputs/mhc4d_a40_001/smoke/mhc_head_data/mhc_split.json
+[uq_compare] warning: patience=50 is not below the epoch budget 20; early stopping will not trigger
+[uq_compare] mhc_frozen_readouts: forces_weight=100, energy_weight=0, lr=0.001, patience=50
+
+Training mhc_frozen_readouts on /root/mlpdft/dataset/xyz_files/uq_interim_two_env/uq_train.extxyz
+2026-11-06 18:49:46.636 INFO: ===========VERIFYING SETTINGS===========
+2026-11-06 18:49:46.636 INFO: MACE version: 0.3.15
+2026-11-06 18:49:46.677 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 18:49:47.290 INFO: Using foundation model /root/mlpdft/src/mlpdft/outputs/mace_omat_medium/mace_omat_medium.model as initial checkpoint.
+2026-11-06 18:49:47.292 INFO: ===========LOADING INPUT DATA===========
+2026-11-06 18:49:47.292 INFO: Using heads: ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+2026-11-06 18:49:47.292 INFO: Using the key specifications to parse data:
+2026-11-06 18:49:47.292 INFO: mhc_head_0: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 18:49:47.292 INFO: mhc_head_1: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 18:49:47.292 INFO: mhc_head_2: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 18:49:47.292 INFO: mhc_head_3: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 18:49:47.292 INFO: =============    Processing head mhc_head_0     ===========
+2026-11-06 18:49:47.401 INFO: Training set 1/1 [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 18:49:47.402 INFO: Total Training set [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 18:49:47.489 INFO: Validation set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 18:49:47.490 INFO: Total Validation set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 18:49:47.505 INFO: Test set 1/1 [energy: 8, stress: 0, virials: 0, dipole components: 0, head: 8, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 8, charges: 0]
+2026-11-06 18:49:47.506 INFO: Total Test set [energy: 8, stress: 0, virials: 0, dipole components: 0, head: 8, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 8, charges: 0]
+2026-11-06 18:49:47.506 INFO: Total number of configurations: train=250, valid=200, tests=[bulk_LiF_mhc_head_0: 4, F_doped_Li_mhc_head_0: 4],
+2026-11-06 18:49:47.506 INFO: =============    Processing head mhc_head_1     ===========
+2026-11-06 18:49:47.614 INFO: Training set 1/1 [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 18:49:47.615 INFO: Total Training set [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 18:49:47.701 INFO: Validation set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 18:49:47.702 INFO: Total Validation set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 18:49:47.718 INFO: Test set 1/1 [energy: 8, stress: 0, virials: 0, dipole components: 0, head: 8, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 8, charges: 0]
+2026-11-06 18:49:47.719 INFO: Total Test set [energy: 8, stress: 0, virials: 0, dipole components: 0, head: 8, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 8, charges: 0]
+2026-11-06 18:49:47.719 INFO: Total number of configurations: train=250, valid=200, tests=[bulk_LiF_mhc_head_1: 4, F_doped_Li_mhc_head_1: 4],
+2026-11-06 18:49:47.719 INFO: =============    Processing head mhc_head_2     ===========
+2026-11-06 18:49:47.834 INFO: Training set 1/1 [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 18:49:47.835 INFO: Total Training set [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 18:49:47.929 INFO: Validation set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 18:49:47.930 INFO: Total Validation set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 18:49:47.948 INFO: Test set 1/1 [energy: 8, stress: 0, virials: 0, dipole components: 0, head: 8, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 8, charges: 0]
+2026-11-06 18:49:47.948 INFO: Total Test set [energy: 8, stress: 0, virials: 0, dipole components: 0, head: 8, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 8, charges: 0]
+2026-11-06 18:49:47.948 INFO: Total number of configurations: train=250, valid=200, tests=[bulk_LiF_mhc_head_2: 4, F_doped_Li_mhc_head_2: 4],
+2026-11-06 18:49:47.948 INFO: =============    Processing head mhc_head_3     ===========
+2026-11-06 18:49:48.059 INFO: Training set 1/1 [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 18:49:48.060 INFO: Total Training set [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 18:49:48.150 INFO: Validation set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 18:49:48.151 INFO: Total Validation set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 18:49:48.167 INFO: Test set 1/1 [energy: 8, stress: 0, virials: 0, dipole components: 0, head: 8, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 8, charges: 0]
+2026-11-06 18:49:48.167 INFO: Total Test set [energy: 8, stress: 0, virials: 0, dipole components: 0, head: 8, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 8, charges: 0]
+2026-11-06 18:49:48.167 INFO: Total number of configurations: train=250, valid=200, tests=[bulk_LiF_mhc_head_3: 4, F_doped_Li_mhc_head_3: 4],
+2026-11-06 18:49:48.180 INFO: Atomic Numbers used: [np.int64(3), np.int64(9)]
+2026-11-06 18:49:48.181 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 18:49:48.181 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 18:49:48.181 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 18:49:48.181 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 18:49:48.181 INFO: Atomic Energies used (z: eV) for head mhc_head_0: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 18:49:48.181 INFO: Atomic Energies used (z: eV) for head mhc_head_1: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 18:49:48.181 INFO: Atomic Energies used (z: eV) for head mhc_head_2: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 18:49:48.181 INFO: Atomic Energies used (z: eV) for head mhc_head_3: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 18:49:48.181 INFO: Processing datasets for head 'mhc_head_0'
+2026-11-06 18:49:49.065 INFO: Combining 1 list datasets for head 'mhc_head_0'
+2026-11-06 18:49:49.743 INFO: Combining 1 list datasets for head 'mhc_head_0_valid'
+2026-11-06 18:49:49.743 INFO: Combined validation datasets for mhc_head_0
+2026-11-06 18:49:49.743 INFO: Head 'mhc_head_0' training dataset size: 250
+2026-11-06 18:49:49.743 INFO: Processing datasets for head 'mhc_head_1'
+2026-11-06 18:49:50.813 INFO: Combining 1 list datasets for head 'mhc_head_1'
+2026-11-06 18:49:51.453 INFO: Combining 1 list datasets for head 'mhc_head_1_valid'
+2026-11-06 18:49:51.453 INFO: Combined validation datasets for mhc_head_1
+2026-11-06 18:49:51.453 INFO: Head 'mhc_head_1' training dataset size: 250
+2026-11-06 18:49:51.453 INFO: Processing datasets for head 'mhc_head_2'
+2026-11-06 18:49:52.161 INFO: Combining 1 list datasets for head 'mhc_head_2'
+2026-11-06 18:49:52.737 INFO: Combining 1 list datasets for head 'mhc_head_2_valid'
+2026-11-06 18:49:52.737 INFO: Combined validation datasets for mhc_head_2
+2026-11-06 18:49:52.737 INFO: Head 'mhc_head_2' training dataset size: 250
+2026-11-06 18:49:52.737 INFO: Processing datasets for head 'mhc_head_3'
+2026-11-06 18:49:53.450 INFO: Combining 1 list datasets for head 'mhc_head_3'
+2026-11-06 18:49:54.026 INFO: Combining 1 list datasets for head 'mhc_head_3_valid'
+2026-11-06 18:49:54.026 INFO: Combined validation datasets for mhc_head_3
+2026-11-06 18:49:54.026 INFO: Head 'mhc_head_3' training dataset size: 250
+2026-11-06 18:49:54.026 INFO: Computing average number of neighbors
+2026-11-06 18:49:59.723 INFO: Average number of neighbors: 92.37470109995218
+2026-11-06 18:49:59.723 INFO: During training the following quantities will be reported: energy, forces, stress
+2026-11-06 18:49:59.723 INFO: ===========MODEL DETAILS===========
+2026-11-06 18:50:00.057 INFO: Loading FOUNDATION model
+2026-11-06 18:50:00.058 INFO: Using filtered elements: [np.int64(3), np.int64(9)]
+2026-11-06 18:50:00.058 INFO: Model configuration extracted from foundation model
+2026-11-06 18:50:00.059 INFO: Using universal loss function for fine-tuning
+2026-11-06 18:50:00.059 INFO: Message passing with hidden irreps 128x0e+128x1o)
+2026-11-06 18:50:00.059 INFO: 2 layers, each with correlation order: 3 (body order: 4) and spherical harmonics up to: l=3
+2026-11-06 18:50:00.059 INFO: Radial cutoff: 6.0 A (total receptive field for each atom: 12.0 A)
+2026-11-06 18:50:00.059 INFO: Distance transform for radial basis functions: Agnesi
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+[uq_compare] distance transform copied from the foundation
+[uq_compare] element-mapped foundation weights and distinct initial head readouts verified
+[uq_compare] frozen body: 4 head(s) ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3'], descriptors frozen, readouts trainable
+2026-11-06 18:50:12.355 INFO: ===========OPTIMIZER INFORMATION===========
+2026-11-06 18:50:12.355 INFO: Using ADAM as parameter optimizer
+2026-11-06 18:50:12.355 INFO: Batch size: 16
+2026-11-06 18:50:12.355 INFO: Number of gradient updates: 1250
+2026-11-06 18:50:12.355 INFO: Learning rate: 0.001, weight decay: 5e-07
+2026-11-06 18:50:12.355 INFO: UniversalLoss(energy_weight=0.000, forces_weight=100.000, stress_weight=1.000)
+2026-11-06 18:50:12.355 INFO: Freezing product weights
+2026-11-06 18:50:12.355 INFO: Freezing interaction linear weights
+2026-11-06 18:50:12.356 INFO: Freezing embedding weights
+[uq_compare] frozen-body check passed: 8,960 trainable of 662,302 parameters (1.35%)
+2026-11-06 18:50:12.357 INFO: === Layer's learning rates ===
+2026-11-06 18:50:12.357 INFO: Param group 0: lr = 0.0
+2026-11-06 18:50:12.357 INFO: Param group 1: lr = 0.0
+2026-11-06 18:50:12.357 INFO: Param group 2: lr = 0.0
+2026-11-06 18:50:12.357 INFO: Param group 3: lr = 0.0
+2026-11-06 18:50:12.357 INFO: Param group 4: lr = 0.001
+2026-11-06 18:50:12.357 INFO: Using gradient clipping with tolerance=10.000
+2026-11-06 18:50:12.357 INFO: 
+2026-11-06 18:50:12.357 INFO: ===========TRAINING===========
+2026-11-06 18:50:12.357 INFO: Started training, reporting errors on validation set
+2026-11-06 18:50:12.357 INFO: Loss metrics on validation set
+2026-11-06 18:50:34.222 INFO: Initial: head: mhc_head_0, loss=0.23572618, RMSE_E_per_atom= 5126.66 meV, RMSE_F=  382.51 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:50:51.960 INFO: Initial: head: mhc_head_1, loss=0.24837373, RMSE_E_per_atom= 5237.97 meV, RMSE_F=  397.69 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:51:09.803 INFO: Initial: head: mhc_head_2, loss=0.23687060, RMSE_E_per_atom= 5210.07 meV, RMSE_F=  385.24 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:51:27.978 INFO: Initial: head: mhc_head_3, loss=0.25133144, RMSE_E_per_atom= 4936.30 meV, RMSE_F=  402.30 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:54:17.689 INFO: Epoch 0: head: mhc_head_0, loss=0.22411245, RMSE_E_per_atom= 5079.69 meV, RMSE_F=  363.66 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:54:35.361 INFO: Epoch 0: head: mhc_head_1, loss=0.23742225, RMSE_E_per_atom= 5184.61 meV, RMSE_F=  380.08 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:54:53.004 INFO: Epoch 0: head: mhc_head_2, loss=0.22611522, RMSE_E_per_atom= 5165.03 meV, RMSE_F=  367.67 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:55:10.507 INFO: Epoch 0: head: mhc_head_3, loss=0.24396142, RMSE_E_per_atom= 4901.82 meV, RMSE_F=  390.89 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:57:56.473 INFO: Epoch 1: head: mhc_head_0, loss=0.21151557, RMSE_E_per_atom= 5032.13 meV, RMSE_F=  343.13 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:58:13.969 INFO: Epoch 1: head: mhc_head_1, loss=0.22541844, RMSE_E_per_atom= 5122.73 meV, RMSE_F=  360.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:58:31.617 INFO: Epoch 1: head: mhc_head_2, loss=0.21400725, RMSE_E_per_atom= 5109.25 meV, RMSE_F=  347.80 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 18:58:49.538 INFO: Epoch 1: head: mhc_head_3, loss=0.23553924, RMSE_E_per_atom= 4868.25 meV, RMSE_F=  377.57 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:01:34.887 INFO: Epoch 2: head: mhc_head_0, loss=0.19694020, RMSE_E_per_atom= 4982.45 meV, RMSE_F=  319.04 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:01:53.164 INFO: Epoch 2: head: mhc_head_1, loss=0.21166854, RMSE_E_per_atom= 5049.10 meV, RMSE_F=  337.49 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:02:10.964 INFO: Epoch 2: head: mhc_head_2, loss=0.19993522, RMSE_E_per_atom= 5044.16 meV, RMSE_F=  324.36 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:02:28.609 INFO: Epoch 2: head: mhc_head_3, loss=0.22565320, RMSE_E_per_atom= 4833.74 meV, RMSE_F=  361.63 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:05:13.641 INFO: Epoch 3: head: mhc_head_0, loss=0.18031812, RMSE_E_per_atom= 4929.91 meV, RMSE_F=  291.23 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:05:31.517 INFO: Epoch 3: head: mhc_head_1, loss=0.19517136, RMSE_E_per_atom= 4958.89 meV, RMSE_F=  309.56 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:05:49.391 INFO: Epoch 3: head: mhc_head_2, loss=0.18348645, RMSE_E_per_atom= 4965.87 meV, RMSE_F=  296.61 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:06:06.847 INFO: Epoch 3: head: mhc_head_3, loss=0.21377097, RMSE_E_per_atom= 4796.95 meV, RMSE_F=  342.06 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:08:54.279 INFO: Epoch 4: head: mhc_head_0, loss=0.16170567, RMSE_E_per_atom= 4874.11 meV, RMSE_F=  259.88 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:09:13.410 INFO: Epoch 4: head: mhc_head_1, loss=0.17672520, RMSE_E_per_atom= 4859.88 meV, RMSE_F=  278.03 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:09:32.733 INFO: Epoch 4: head: mhc_head_2, loss=0.16414591, RMSE_E_per_atom= 4878.33 meV, RMSE_F=  263.60 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:09:51.773 INFO: Epoch 4: head: mhc_head_3, loss=0.19914304, RMSE_E_per_atom= 4756.54 meV, RMSE_F=  317.51 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:12:35.903 INFO: Epoch 5: head: mhc_head_0, loss=0.14132641, RMSE_E_per_atom= 4815.49 meV, RMSE_F=  225.47 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:12:53.127 INFO: Epoch 5: head: mhc_head_1, loss=0.15514424, RMSE_E_per_atom= 4745.54 meV, RMSE_F=  240.87 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:13:10.306 INFO: Epoch 5: head: mhc_head_2, loss=0.14328379, RMSE_E_per_atom= 4782.28 meV, RMSE_F=  227.84 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:13:27.500 INFO: Epoch 5: head: mhc_head_3, loss=0.18366879, RMSE_E_per_atom= 4716.32 meV, RMSE_F=  291.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:16:12.821 INFO: Epoch 6: head: mhc_head_0, loss=0.12009366, RMSE_E_per_atom= 4756.16 meV, RMSE_F=  189.57 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:16:30.251 INFO: Epoch 6: head: mhc_head_1, loss=0.13265410, RMSE_E_per_atom= 4627.15 meV, RMSE_F=  202.21 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:16:47.749 INFO: Epoch 6: head: mhc_head_2, loss=0.11943867, RMSE_E_per_atom= 4676.38 meV, RMSE_F=  186.62 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:17:06.101 INFO: Epoch 6: head: mhc_head_3, loss=0.16642262, RMSE_E_per_atom= 4674.17 meV, RMSE_F=  262.06 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:19:50.985 INFO: Epoch 7: head: mhc_head_0, loss=0.09954641, RMSE_E_per_atom= 4696.43 meV, RMSE_F=  155.22 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:20:08.464 INFO: Epoch 7: head: mhc_head_1, loss=0.10856306, RMSE_E_per_atom= 4503.64 meV, RMSE_F=  161.15 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:20:25.879 INFO: Epoch 7: head: mhc_head_2, loss=0.09530861, RMSE_E_per_atom= 4566.56 meV, RMSE_F=  145.40 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:20:43.281 INFO: Epoch 7: head: mhc_head_3, loss=0.14902796, RMSE_E_per_atom= 4633.85 meV, RMSE_F=  232.42 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:23:27.797 INFO: Epoch 8: head: mhc_head_0, loss=0.07863211, RMSE_E_per_atom= 4635.04 meV, RMSE_F=  120.77 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:23:44.885 INFO: Epoch 8: head: mhc_head_1, loss=0.08612537, RMSE_E_per_atom= 4388.82 meV, RMSE_F=  123.94 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:24:02.703 INFO: Epoch 8: head: mhc_head_2, loss=0.07223994, RMSE_E_per_atom= 4462.35 meV, RMSE_F=  107.13 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:24:20.445 INFO: Epoch 8: head: mhc_head_3, loss=0.13130168, RMSE_E_per_atom= 4594.38 meV, RMSE_F=  202.32 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:27:05.171 INFO: Epoch 9: head: mhc_head_0, loss=0.06200934, RMSE_E_per_atom= 4578.83 meV, RMSE_F=   94.48 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:27:22.642 INFO: Epoch 9: head: mhc_head_1, loss=0.06432902, RMSE_E_per_atom= 4276.47 meV, RMSE_F=   90.12 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:27:39.829 INFO: Epoch 9: head: mhc_head_2, loss=0.05161697, RMSE_E_per_atom= 4362.15 meV, RMSE_F=   75.65 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:27:57.225 INFO: Epoch 9: head: mhc_head_3, loss=0.11596637, RMSE_E_per_atom= 4559.52 meV, RMSE_F=  176.65 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:30:43.974 INFO: Epoch 10: head: mhc_head_0, loss=0.05098911, RMSE_E_per_atom= 4527.21 meV, RMSE_F=   77.41 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:31:03.126 INFO: Epoch 10: head: mhc_head_1, loss=0.04943201, RMSE_E_per_atom= 4188.29 meV, RMSE_F=   69.67 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:31:21.760 INFO: Epoch 10: head: mhc_head_2, loss=0.04045346, RMSE_E_per_atom= 4286.01 meV, RMSE_F=   60.10 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:31:40.250 INFO: Epoch 10: head: mhc_head_3, loss=0.10086598, RMSE_E_per_atom= 4525.65 meV, RMSE_F=  151.72 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:34:25.109 INFO: Epoch 11: head: mhc_head_0, loss=0.04533474, RMSE_E_per_atom= 4482.73 meV, RMSE_F=   68.69 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:34:42.766 INFO: Epoch 11: head: mhc_head_1, loss=0.04298507, RMSE_E_per_atom= 4129.25 meV, RMSE_F=   61.43 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:35:00.150 INFO: Epoch 11: head: mhc_head_2, loss=0.03689020, RMSE_E_per_atom= 4237.40 meV, RMSE_F=   55.05 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:35:17.674 INFO: Epoch 11: head: mhc_head_3, loss=0.08795872, RMSE_E_per_atom= 4496.13 meV, RMSE_F=  131.01 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:38:02.912 INFO: Epoch 12: head: mhc_head_0, loss=0.04222039, RMSE_E_per_atom= 4446.88 meV, RMSE_F=   64.06 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:38:20.324 INFO: Epoch 12: head: mhc_head_1, loss=0.04082766, RMSE_E_per_atom= 4097.90 meV, RMSE_F=   58.77 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:38:37.613 INFO: Epoch 12: head: mhc_head_2, loss=0.03519359, RMSE_E_per_atom= 4204.46 meV, RMSE_F=   52.76 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:38:55.083 INFO: Epoch 12: head: mhc_head_3, loss=0.07796626, RMSE_E_per_atom= 4471.28 meV, RMSE_F=  115.71 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:41:40.983 INFO: Epoch 13: head: mhc_head_0, loss=0.04031883, RMSE_E_per_atom= 4419.07 meV, RMSE_F=   61.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:41:59.119 INFO: Epoch 13: head: mhc_head_1, loss=0.03965029, RMSE_E_per_atom= 4077.90 meV, RMSE_F=   57.42 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:42:17.313 INFO: Epoch 13: head: mhc_head_2, loss=0.03418581, RMSE_E_per_atom= 4182.55 meV, RMSE_F=   51.49 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:42:34.789 INFO: Epoch 13: head: mhc_head_3, loss=0.07069308, RMSE_E_per_atom= 4452.02 meV, RMSE_F=  105.07 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:45:20.471 INFO: Epoch 14: head: mhc_head_0, loss=0.03919762, RMSE_E_per_atom= 4399.79 meV, RMSE_F=   59.84 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:45:37.919 INFO: Epoch 14: head: mhc_head_1, loss=0.03890520, RMSE_E_per_atom= 4066.46 meV, RMSE_F=   56.57 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:45:55.572 INFO: Epoch 14: head: mhc_head_2, loss=0.03351898, RMSE_E_per_atom= 4168.03 meV, RMSE_F=   50.67 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:46:13.483 INFO: Epoch 14: head: mhc_head_3, loss=0.06577864, RMSE_E_per_atom= 4436.70 meV, RMSE_F=   98.14 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:48:59.532 INFO: Epoch 15: head: mhc_head_0, loss=0.03844570, RMSE_E_per_atom= 4385.84 meV, RMSE_F=   58.83 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:49:16.967 INFO: Epoch 15: head: mhc_head_1, loss=0.03838575, RMSE_E_per_atom= 4057.93 meV, RMSE_F=   56.00 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:49:34.797 INFO: Epoch 15: head: mhc_head_2, loss=0.03307911, RMSE_E_per_atom= 4158.31 meV, RMSE_F=   50.14 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:49:52.615 INFO: Epoch 15: head: mhc_head_3, loss=0.06283895, RMSE_E_per_atom= 4426.21 meV, RMSE_F=   94.02 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:52:38.069 INFO: Epoch 16: head: mhc_head_0, loss=0.03799288, RMSE_E_per_atom= 4376.99 meV, RMSE_F=   58.23 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:52:55.957 INFO: Epoch 16: head: mhc_head_1, loss=0.03807455, RMSE_E_per_atom= 4052.97 meV, RMSE_F=   55.65 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:53:14.843 INFO: Epoch 16: head: mhc_head_2, loss=0.03279574, RMSE_E_per_atom= 4152.11 meV, RMSE_F=   49.79 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:53:32.644 INFO: Epoch 16: head: mhc_head_3, loss=0.06115527, RMSE_E_per_atom= 4419.23 meV, RMSE_F=   91.65 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:56:18.310 INFO: Epoch 17: head: mhc_head_0, loss=0.03774814, RMSE_E_per_atom= 4372.07 meV, RMSE_F=   57.91 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:56:36.111 INFO: Epoch 17: head: mhc_head_1, loss=0.03789999, RMSE_E_per_atom= 4050.54 meV, RMSE_F=   55.45 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:56:54.733 INFO: Epoch 17: head: mhc_head_2, loss=0.03264281, RMSE_E_per_atom= 4148.87 meV, RMSE_F=   49.61 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:57:13.387 INFO: Epoch 17: head: mhc_head_3, loss=0.06026905, RMSE_E_per_atom= 4415.16 meV, RMSE_F=   90.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 19:59:59.153 INFO: Epoch 18: head: mhc_head_0, loss=0.03763036, RMSE_E_per_atom= 4369.69 meV, RMSE_F=   57.76 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:00:16.900 INFO: Epoch 18: head: mhc_head_1, loss=0.03782140, RMSE_E_per_atom= 4049.32 meV, RMSE_F=   55.36 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:00:34.586 INFO: Epoch 18: head: mhc_head_2, loss=0.03257336, RMSE_E_per_atom= 4147.37 meV, RMSE_F=   49.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:00:51.963 INFO: Epoch 18: head: mhc_head_3, loss=0.05988540, RMSE_E_per_atom= 4413.35 meV, RMSE_F=   89.83 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:03:36.619 INFO: Epoch 19: head: mhc_head_0, loss=0.03759956, RMSE_E_per_atom= 4369.06 meV, RMSE_F=   57.72 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:03:55.003 INFO: Epoch 19: head: mhc_head_1, loss=0.03779819, RMSE_E_per_atom= 4048.99 meV, RMSE_F=   55.33 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:04:13.087 INFO: Epoch 19: head: mhc_head_2, loss=0.03255322, RMSE_E_per_atom= 4146.92 meV, RMSE_F=   49.50 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:04:30.653 INFO: Epoch 19: head: mhc_head_3, loss=0.05978009, RMSE_E_per_atom= 4412.82 meV, RMSE_F=   89.68 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:04:30.671 INFO: Training complete
+2026-11-06 20:04:30.671 INFO: 
+2026-11-06 20:04:30.671 INFO: ===========RESULTS===========
+2026-11-06 20:04:30.694 INFO: Loading checkpoint: /root/mlpdft/run_outputs/mhc4d_a40_001/smoke/mhc_frozen_readouts/checkpoints/mhc_frozen_readouts_run-123_epoch-19.pt
+2026-11-06 20:04:30.711 INFO: Loaded Stage one model from epoch 19 for evaluation
+2026-11-06 20:04:30.711 INFO: Saving model to /root/mlpdft/run_outputs/mhc4d_a40_001/smoke/mhc_frozen_readouts/checkpoints/mhc_frozen_readouts_run-123.model
+2026-11-06 20:04:30.874 INFO: Compiling model, saving metadata to /root/mlpdft/run_outputs/mhc4d_a40_001/smoke/mhc_frozen_readouts/models/mhc_frozen_readouts_compiled.model
+2026-11-06 20:04:31.547 INFO: Computing metrics for training, validation, and test sets
+2026-11-06 20:04:31.547 INFO: Skipping evaluation for heads: ['pt_head']
+2026-11-06 20:04:31.547 INFO: Evaluating train_mhc_head_0 ...
+2026-11-06 20:04:44.712 INFO: Evaluating train_mhc_head_1 ...
+2026-11-06 20:04:57.875 INFO: Evaluating train_mhc_head_2 ...
+2026-11-06 20:05:11.160 INFO: Evaluating train_mhc_head_3 ...
+2026-11-06 20:05:24.605 INFO: Evaluating valid_mhc_head_0 ...
+2026-11-06 20:05:42.504 INFO: Evaluating valid_mhc_head_1 ...
+2026-11-06 20:05:59.772 INFO: Evaluating valid_mhc_head_2 ...
+2026-11-06 20:06:16.267 INFO: Evaluating valid_mhc_head_3 ...
+2026-11-06 20:06:32.837 INFO: Error-table on TRAIN and VALID:
++------------------+---------------------+------------------+-------------------+---------------------------------------+
+|   config_type    | RMSE E / meV / atom | RMSE F / meV / A | relative F RMSE % | RMSE Stress (Virials) / meV / A (A^3) |
++------------------+---------------------+------------------+-------------------+---------------------------------------+
+| train_mhc_head_0 |         4356.9      |         54.1     |         16.29     |                  None                 |
+| train_mhc_head_1 |         4039.5      |         51.3     |         15.20     |                  None                 |
+| train_mhc_head_2 |         4143.9      |         45.2     |         13.54     |                  None                 |
+| train_mhc_head_3 |         4423.9      |         76.2     |         22.55     |                  None                 |
+| valid_mhc_head_0 |         4369.1      |         57.7     |         14.35     |                  None                 |
+| valid_mhc_head_1 |         4049.0      |         55.3     |         13.76     |                  None                 |
+| valid_mhc_head_2 |         4146.9      |         49.5     |         12.31     |                  None                 |
+| valid_mhc_head_3 |         4412.8      |         89.7     |         22.30     |                  None                 |
++------------------+---------------------+------------------+-------------------+---------------------------------------+
+2026-11-06 20:06:32.837 INFO: Evaluating F_doped_Li_mhc_head_0 ...
+2026-11-06 20:06:33.078 INFO: Evaluating bulk_LiF_mhc_head_0 ...
+2026-11-06 20:06:33.484 INFO: Error-table on TEST:
++-----------------------+---------------------+------------------+-------------------+---------------------------------------+
+|      config_type      | RMSE E / meV / atom | RMSE F / meV / A | relative F RMSE % | RMSE Stress (Virials) / meV / A (A^3) |
++-----------------------+---------------------+------------------+-------------------+---------------------------------------+
+| F_doped_Li_mhc_head_0 |          795.0      |         41.0     |         29.34     |                  None                 |
+|  bulk_LiF_mhc_head_0  |         6006.4      |         71.4     |         17.57     |                  None                 |
++-----------------------+---------------------+------------------+-------------------+---------------------------------------+
+2026-11-06 20:08:39.010 INFO: Done
+Removed 1 checkpoint file(s): /root/mlpdft/run_outputs/mhc4d_a40_001/smoke/mhc_frozen_readouts/checkpoints
+2026-11-06 20:08:39.141 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 20:08:39.141 INFO: Using head mhc_head_0 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+2026-11-06 20:08:40.129 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 20:08:40.129 INFO: Using head mhc_head_1 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+2026-11-06 20:08:41.249 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 20:08:41.249 INFO: Using head mhc_head_2 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+2026-11-06 20:08:42.169 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 20:08:42.170 INFO: Using head mhc_head_3 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+[uq_compare] smoke check passed: heads differ, min pairwise force RMS difference 0.017407 eV/A (relative 6.879e-02)
+[uq_compare] learning gate passed for mhc_frozen_readouts: mean validation force RMSE drop 84.0%, worst head 77.7%
+2026-11-06 20:08:43.149 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 20:08:43.150 INFO: Using head default out of  ['default']
+Evaluated zero_shot member foundation
+2026-11-06 20:08:45.400 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 20:08:45.400 INFO: Using head mhc_head_0 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated frozen_mhc member mhc_head_0
+2026-11-06 20:08:47.144 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 20:08:47.144 INFO: Using head mhc_head_1 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated frozen_mhc member mhc_head_1
+2026-11-06 20:08:48.773 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 20:08:48.773 INFO: Using head mhc_head_2 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated frozen_mhc member mhc_head_2
+2026-11-06 20:08:50.451 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 20:08:50.451 INFO: Using head mhc_head_3 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated frozen_mhc member mhc_head_3
+All runs and results saved under: /root/mlpdft/run_outputs/mhc4d_a40_001/smoke
+Starting 90-epoch maximum full run, with 23116 seconds available.
+cuequivariance or cuequivariance_torch is not available. Cuequivariance acceleration will be disabled.
+UQ run 'full': arms = mhc
+Calibration split: /root/mlpdft/dataset/xyz_files/uq_interim_two_env/uq_calibration.extxyz (200 frames)
+No previous uq_summary.json found; evaluating only this run's arms (no committee/snapshot comparison will be merged)
+Disjoint MHC head split (1000 frames): {'mhc_head_0': 250, 'mhc_head_1': 250, 'mhc_head_2': 250, 'mhc_head_3': 250}
+Split manifest: /root/mlpdft/run_outputs/mhc4d_a40_001/full/mhc_head_data/mhc_split.json
+[uq_compare] mhc_frozen_readouts: forces_weight=100, energy_weight=0, lr=0.001, patience=50
+
+Training mhc_frozen_readouts on /root/mlpdft/dataset/xyz_files/uq_interim_two_env/uq_train.extxyz
+2026-11-06 20:08:58.223 INFO: ===========VERIFYING SETTINGS===========
+2026-11-06 20:08:58.223 INFO: MACE version: 0.3.15
+2026-11-06 20:08:58.240 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-06 20:08:58.526 INFO: Using foundation model /root/mlpdft/src/mlpdft/outputs/mace_omat_medium/mace_omat_medium.model as initial checkpoint.
+2026-11-06 20:08:58.527 INFO: ===========LOADING INPUT DATA===========
+2026-11-06 20:08:58.527 INFO: Using heads: ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+2026-11-06 20:08:58.527 INFO: Using the key specifications to parse data:
+2026-11-06 20:08:58.527 INFO: mhc_head_0: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 20:08:58.527 INFO: mhc_head_1: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 20:08:58.527 INFO: mhc_head_2: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 20:08:58.527 INFO: mhc_head_3: KeySpecification(info_keys={'energy': 'REF_energy', 'stress': 'REF_stress', 'virials': 'REF_virials', 'dipole': 'dipole', 'head': 'head', 'elec_temp': 'elec_temp', 'total_charge': 'total_charge', 'polarizability': 'polarizability', 'total_spin': 'total_spin'}, arrays_keys={'forces': 'REF_forces', 'charges': 'REF_charges'})
+2026-11-06 20:08:58.527 INFO: =============    Processing head mhc_head_0     ===========
+2026-11-06 20:08:58.619 INFO: Training set 1/1 [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 20:08:58.620 INFO: Total Training set [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 20:08:58.687 INFO: Validation set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:58.689 INFO: Total Validation set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:58.761 INFO: Test set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:58.762 INFO: Total Test set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:58.762 INFO: Total number of configurations: train=250, valid=200, tests=[bulk_LiF_mhc_head_0: 100, F_doped_Li_mhc_head_0: 100],
+2026-11-06 20:08:58.762 INFO: =============    Processing head mhc_head_1     ===========
+2026-11-06 20:08:58.852 INFO: Training set 1/1 [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 20:08:58.853 INFO: Total Training set [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 20:08:58.927 INFO: Validation set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:58.927 INFO: Total Validation set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.001 INFO: Test set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.002 INFO: Total Test set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.002 INFO: Total number of configurations: train=250, valid=200, tests=[bulk_LiF_mhc_head_1: 100, F_doped_Li_mhc_head_1: 100],
+2026-11-06 20:08:59.002 INFO: =============    Processing head mhc_head_2     ===========
+2026-11-06 20:08:59.087 INFO: Training set 1/1 [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 20:08:59.089 INFO: Total Training set [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 20:08:59.162 INFO: Validation set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.163 INFO: Total Validation set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.241 INFO: Test set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.242 INFO: Total Test set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.242 INFO: Total number of configurations: train=250, valid=200, tests=[bulk_LiF_mhc_head_2: 100, F_doped_Li_mhc_head_2: 100],
+2026-11-06 20:08:59.242 INFO: =============    Processing head mhc_head_3     ===========
+2026-11-06 20:08:59.332 INFO: Training set 1/1 [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 20:08:59.333 INFO: Total Training set [energy: 250, stress: 0, virials: 0, dipole components: 0, head: 250, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 250, charges: 0]
+2026-11-06 20:08:59.406 INFO: Validation set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.407 INFO: Total Validation set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.475 INFO: Test set 1/1 [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.476 INFO: Total Test set [energy: 200, stress: 0, virials: 0, dipole components: 0, head: 200, elec_temp: 0, total_charge: 0, polarizability: 0, total_spin: 0, forces: 200, charges: 0]
+2026-11-06 20:08:59.476 INFO: Total number of configurations: train=250, valid=200, tests=[bulk_LiF_mhc_head_3: 100, F_doped_Li_mhc_head_3: 100],
+2026-11-06 20:08:59.487 INFO: Atomic Numbers used: [np.int64(3), np.int64(9)]
+2026-11-06 20:08:59.487 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 20:08:59.487 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 20:08:59.487 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 20:08:59.487 INFO: Isolated Atomic Energies (E0s) not in training file, using command line argument
+2026-11-06 20:08:59.487 INFO: Atomic Energies used (z: eV) for head mhc_head_0: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 20:08:59.487 INFO: Atomic Energies used (z: eV) for head mhc_head_1: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 20:08:59.487 INFO: Atomic Energies used (z: eV) for head mhc_head_2: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 20:08:59.487 INFO: Atomic Energies used (z: eV) for head mhc_head_3: {3: -205.71750385981255, 9: -795.4212791974198}
+2026-11-06 20:08:59.487 INFO: Processing datasets for head 'mhc_head_0'
+2026-11-06 20:09:00.194 INFO: Combining 1 list datasets for head 'mhc_head_0'
+2026-11-06 20:09:00.749 INFO: Combining 1 list datasets for head 'mhc_head_0_valid'
+2026-11-06 20:09:00.750 INFO: Combined validation datasets for mhc_head_0
+2026-11-06 20:09:00.750 INFO: Head 'mhc_head_0' training dataset size: 250
+2026-11-06 20:09:00.750 INFO: Processing datasets for head 'mhc_head_1'
+2026-11-06 20:09:01.605 INFO: Combining 1 list datasets for head 'mhc_head_1'
+2026-11-06 20:09:02.164 INFO: Combining 1 list datasets for head 'mhc_head_1_valid'
+2026-11-06 20:09:02.164 INFO: Combined validation datasets for mhc_head_1
+2026-11-06 20:09:02.164 INFO: Head 'mhc_head_1' training dataset size: 250
+2026-11-06 20:09:02.164 INFO: Processing datasets for head 'mhc_head_2'
+2026-11-06 20:09:02.873 INFO: Combining 1 list datasets for head 'mhc_head_2'
+2026-11-06 20:09:03.439 INFO: Combining 1 list datasets for head 'mhc_head_2_valid'
+2026-11-06 20:09:03.439 INFO: Combined validation datasets for mhc_head_2
+2026-11-06 20:09:03.439 INFO: Head 'mhc_head_2' training dataset size: 250
+2026-11-06 20:09:03.439 INFO: Processing datasets for head 'mhc_head_3'
+2026-11-06 20:09:04.152 INFO: Combining 1 list datasets for head 'mhc_head_3'
+2026-11-06 20:09:04.716 INFO: Combining 1 list datasets for head 'mhc_head_3_valid'
+2026-11-06 20:09:04.716 INFO: Combined validation datasets for mhc_head_3
+2026-11-06 20:09:04.716 INFO: Head 'mhc_head_3' training dataset size: 250
+2026-11-06 20:09:04.717 INFO: Computing average number of neighbors
+2026-11-06 20:09:07.026 INFO: Average number of neighbors: 92.37470109995218
+2026-11-06 20:09:07.026 INFO: During training the following quantities will be reported: energy, forces, stress
+2026-11-06 20:09:07.026 INFO: ===========MODEL DETAILS===========
+2026-11-06 20:09:07.335 INFO: Loading FOUNDATION model
+2026-11-06 20:09:07.336 INFO: Using filtered elements: [np.int64(3), np.int64(9)]
+2026-11-06 20:09:07.336 INFO: Model configuration extracted from foundation model
+2026-11-06 20:09:07.336 INFO: Using universal loss function for fine-tuning
+2026-11-06 20:09:07.336 INFO: Message passing with hidden irreps 128x0e+128x1o)
+2026-11-06 20:09:07.336 INFO: 2 layers, each with correlation order: 3 (body order: 4) and spherical harmonics up to: l=3
+2026-11-06 20:09:07.336 INFO: Radial cutoff: 6.0 A (total receptive field for each atom: 12.0 A)
+2026-11-06 20:09:07.336 INFO: Distance transform for radial basis functions: Agnesi
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+/root/mlpdft/.venv/lib/python3.11/site-packages/torch/jit/_check.py:178: UserWarning: The TorchScript type system doesn't support instance-level annotations on empty non-base types in `__init__`. Instead, either 1) use a type annotation in the class body, or 2) wrap the type in `torch.jit.Attribute`.
+  warnings.warn(
+[uq_compare] distance transform copied from the foundation
+[uq_compare] element-mapped foundation weights and distinct initial head readouts verified
+[uq_compare] frozen body: 4 head(s) ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3'], descriptors frozen, readouts trainable
+2026-11-06 20:09:14.216 INFO: ===========OPTIMIZER INFORMATION===========
+2026-11-06 20:09:14.216 INFO: Using ADAM as parameter optimizer
+2026-11-06 20:09:14.216 INFO: Batch size: 16
+2026-11-06 20:09:14.216 INFO: Number of gradient updates: 5625
+2026-11-06 20:09:14.216 INFO: Learning rate: 0.001, weight decay: 5e-07
+2026-11-06 20:09:14.216 INFO: UniversalLoss(energy_weight=0.000, forces_weight=100.000, stress_weight=1.000)
+2026-11-06 20:09:14.216 INFO: Freezing product weights
+2026-11-06 20:09:14.216 INFO: Freezing interaction linear weights
+2026-11-06 20:09:14.216 INFO: Freezing embedding weights
+[uq_compare] frozen-body check passed: 8,960 trainable of 662,302 parameters (1.35%)
+2026-11-06 20:09:14.217 INFO: === Layer's learning rates ===
+2026-11-06 20:09:14.218 INFO: Param group 0: lr = 0.0
+2026-11-06 20:09:14.218 INFO: Param group 1: lr = 0.0
+2026-11-06 20:09:14.218 INFO: Param group 2: lr = 0.0
+2026-11-06 20:09:14.218 INFO: Param group 3: lr = 0.0
+2026-11-06 20:09:14.218 INFO: Param group 4: lr = 0.001
+2026-11-06 20:09:14.218 INFO: Using gradient clipping with tolerance=10.000
+2026-11-06 20:09:14.218 INFO: 
+2026-11-06 20:09:14.218 INFO: ===========TRAINING===========
+2026-11-06 20:09:14.218 INFO: Started training, reporting errors on validation set
+2026-11-06 20:09:14.218 INFO: Loss metrics on validation set
+2026-11-06 20:09:32.982 INFO: Initial: head: mhc_head_0, loss=0.23572618, RMSE_E_per_atom= 5126.66 meV, RMSE_F=  382.51 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:09:49.176 INFO: Initial: head: mhc_head_1, loss=0.24837373, RMSE_E_per_atom= 5237.97 meV, RMSE_F=  397.69 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:10:05.318 INFO: Initial: head: mhc_head_2, loss=0.23687060, RMSE_E_per_atom= 5210.07 meV, RMSE_F=  385.24 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:10:21.780 INFO: Initial: head: mhc_head_3, loss=0.25133144, RMSE_E_per_atom= 4936.30 meV, RMSE_F=  402.30 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:13:09.690 INFO: Epoch 0: head: mhc_head_0, loss=0.22411245, RMSE_E_per_atom= 5079.69 meV, RMSE_F=  363.66 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:13:25.875 INFO: Epoch 0: head: mhc_head_1, loss=0.23742225, RMSE_E_per_atom= 5184.61 meV, RMSE_F=  380.08 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:13:41.981 INFO: Epoch 0: head: mhc_head_2, loss=0.22611522, RMSE_E_per_atom= 5165.03 meV, RMSE_F=  367.67 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:13:58.182 INFO: Epoch 0: head: mhc_head_3, loss=0.24396142, RMSE_E_per_atom= 4901.82 meV, RMSE_F=  390.89 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:16:42.325 INFO: Epoch 1: head: mhc_head_0, loss=0.21143514, RMSE_E_per_atom= 5031.83 meV, RMSE_F=  343.00 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:16:58.919 INFO: Epoch 1: head: mhc_head_1, loss=0.22534197, RMSE_E_per_atom= 5122.32 meV, RMSE_F=  360.25 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:17:15.029 INFO: Epoch 1: head: mhc_head_2, loss=0.21393101, RMSE_E_per_atom= 5108.90 meV, RMSE_F=  347.68 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:17:31.193 INFO: Epoch 1: head: mhc_head_3, loss=0.23548488, RMSE_E_per_atom= 4868.05 meV, RMSE_F=  377.48 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:20:14.602 INFO: Epoch 2: head: mhc_head_0, loss=0.19645898, RMSE_E_per_atom= 4980.87 meV, RMSE_F=  318.24 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:20:30.615 INFO: Epoch 2: head: mhc_head_1, loss=0.21121374, RMSE_E_per_atom= 5046.63 meV, RMSE_F=  336.72 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:20:46.854 INFO: Epoch 2: head: mhc_head_2, loss=0.19947378, RMSE_E_per_atom= 5042.01 meV, RMSE_F=  323.59 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:21:02.976 INFO: Epoch 2: head: mhc_head_3, loss=0.22531821, RMSE_E_per_atom= 4832.65 meV, RMSE_F=  361.09 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:23:46.636 INFO: Epoch 3: head: mhc_head_0, loss=0.17871629, RMSE_E_per_atom= 4925.07 meV, RMSE_F=  288.53 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:24:02.452 INFO: Epoch 3: head: mhc_head_1, loss=0.19357887, RMSE_E_per_atom= 4950.17 meV, RMSE_F=  306.84 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:24:18.736 INFO: Epoch 3: head: mhc_head_2, loss=0.18189668, RMSE_E_per_atom= 4958.42 meV, RMSE_F=  293.91 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:24:34.738 INFO: Epoch 3: head: mhc_head_3, loss=0.21259188, RMSE_E_per_atom= 4793.52 meV, RMSE_F=  340.09 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:27:18.637 INFO: Epoch 4: head: mhc_head_0, loss=0.15767477, RMSE_E_per_atom= 4862.62 meV, RMSE_F=  253.05 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:27:35.058 INFO: Epoch 4: head: mhc_head_1, loss=0.17260610, RMSE_E_per_atom= 4837.76 meV, RMSE_F=  270.94 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:27:51.173 INFO: Epoch 4: head: mhc_head_2, loss=0.15993706, RMSE_E_per_atom= 4859.14 meV, RMSE_F=  256.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:28:08.194 INFO: Epoch 4: head: mhc_head_3, loss=0.19590626, RMSE_E_per_atom= 4748.08 meV, RMSE_F=  312.03 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:30:52.381 INFO: Epoch 5: head: mhc_head_0, loss=0.13279662, RMSE_E_per_atom= 4792.07 meV, RMSE_F=  211.03 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:31:09.372 INFO: Epoch 5: head: mhc_head_1, loss=0.14597444, RMSE_E_per_atom= 4697.24 meV, RMSE_F=  225.05 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:31:27.010 INFO: Epoch 5: head: mhc_head_2, loss=0.13416348, RMSE_E_per_atom= 4740.78 meV, RMSE_F=  212.11 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:31:44.812 INFO: Epoch 5: head: mhc_head_3, loss=0.17671887, RMSE_E_per_atom= 4699.27 meV, RMSE_F=  279.53 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:34:30.529 INFO: Epoch 6: head: mhc_head_0, loss=0.10436095, RMSE_E_per_atom= 4713.31 meV, RMSE_F=  163.11 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:34:49.270 INFO: Epoch 6: head: mhc_head_1, loss=0.11520693, RMSE_E_per_atom= 4536.60 meV, RMSE_F=  172.35 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:35:07.506 INFO: Epoch 6: head: mhc_head_2, loss=0.10148090, RMSE_E_per_atom= 4595.65 meV, RMSE_F=  155.79 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:35:25.240 INFO: Epoch 6: head: mhc_head_3, loss=0.15295465, RMSE_E_per_atom= 4643.04 meV, RMSE_F=  239.03 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:38:10.745 INFO: Epoch 7: head: mhc_head_0, loss=0.07433975, RMSE_E_per_atom= 4622.91 meV, RMSE_F=  113.90 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:38:28.725 INFO: Epoch 7: head: mhc_head_1, loss=0.07837890, RMSE_E_per_atom= 4349.19 meV, RMSE_F=  111.46 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:38:46.871 INFO: Epoch 7: head: mhc_head_2, loss=0.06469130, RMSE_E_per_atom= 4425.98 meV, RMSE_F=   95.11 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:39:04.717 INFO: Epoch 7: head: mhc_head_3, loss=0.12580424, RMSE_E_per_atom= 4582.51 meV, RMSE_F=  192.93 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:41:50.522 INFO: Epoch 8: head: mhc_head_0, loss=0.04841416, RMSE_E_per_atom= 4513.75 meV, RMSE_F=   73.30 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:42:08.271 INFO: Epoch 8: head: mhc_head_1, loss=0.04630954, RMSE_E_per_atom= 4164.24 meV, RMSE_F=   65.63 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:42:25.780 INFO: Epoch 8: head: mhc_head_2, loss=0.03840801, RMSE_E_per_atom= 4262.22 meV, RMSE_F=   57.10 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:42:43.253 INFO: Epoch 8: head: mhc_head_3, loss=0.09426749, RMSE_E_per_atom= 4513.03 meV, RMSE_F=  140.71 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:45:28.442 INFO: Epoch 9: head: mhc_head_0, loss=0.03945226, RMSE_E_per_atom= 4406.51 meV, RMSE_F=   60.12 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:45:46.593 INFO: Epoch 9: head: mhc_head_1, loss=0.03911409, RMSE_E_per_atom= 4063.07 meV, RMSE_F=   57.01 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:46:04.073 INFO: Epoch 9: head: mhc_head_2, loss=0.03361585, RMSE_E_per_atom= 4165.05 meV, RMSE_F=   50.79 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:46:22.044 INFO: Epoch 9: head: mhc_head_3, loss=0.06527868, RMSE_E_per_atom= 4437.14 meV, RMSE_F=   97.22 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:49:08.226 INFO: Epoch 10: head: mhc_head_0, loss=0.03507569, RMSE_E_per_atom= 4314.23 meV, RMSE_F=   54.51 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:49:26.043 INFO: Epoch 10: head: mhc_head_1, loss=0.03586346, RMSE_E_per_atom= 4019.95 meV, RMSE_F=   53.16 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:49:44.059 INFO: Epoch 10: head: mhc_head_2, loss=0.03091002, RMSE_E_per_atom= 4105.98 meV, RMSE_F=   47.47 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:50:01.822 INFO: Epoch 10: head: mhc_head_3, loss=0.05163914, RMSE_E_per_atom= 4348.85 meV, RMSE_F=   77.07 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:52:47.750 INFO: Epoch 11: head: mhc_head_0, loss=0.03216267, RMSE_E_per_atom= 4235.01 meV, RMSE_F=   50.87 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:53:06.572 INFO: Epoch 11: head: mhc_head_1, loss=0.03311164, RMSE_E_per_atom= 3984.65 meV, RMSE_F=   49.98 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:53:25.494 INFO: Epoch 11: head: mhc_head_2, loss=0.02876718, RMSE_E_per_atom= 4060.53 meV, RMSE_F=   44.82 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:53:43.357 INFO: Epoch 11: head: mhc_head_3, loss=0.04682848, RMSE_E_per_atom= 4269.11 meV, RMSE_F=   70.51 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:56:29.466 INFO: Epoch 12: head: mhc_head_0, loss=0.02996854, RMSE_E_per_atom= 4171.11 meV, RMSE_F=   47.82 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:56:48.363 INFO: Epoch 12: head: mhc_head_1, loss=0.03068175, RMSE_E_per_atom= 3955.31 meV, RMSE_F=   47.14 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:57:08.194 INFO: Epoch 12: head: mhc_head_2, loss=0.02713221, RMSE_E_per_atom= 4018.43 meV, RMSE_F=   42.89 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 20:57:26.378 INFO: Epoch 12: head: mhc_head_3, loss=0.04289230, RMSE_E_per_atom= 4196.41 meV, RMSE_F=   65.31 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:00:11.367 INFO: Epoch 13: head: mhc_head_0, loss=0.02835482, RMSE_E_per_atom= 4118.21 meV, RMSE_F=   45.62 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:00:28.423 INFO: Epoch 13: head: mhc_head_1, loss=0.02873415, RMSE_E_per_atom= 3928.50 meV, RMSE_F=   44.95 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:00:45.291 INFO: Epoch 13: head: mhc_head_2, loss=0.02592064, RMSE_E_per_atom= 3986.65 meV, RMSE_F=   41.45 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:01:02.204 INFO: Epoch 13: head: mhc_head_3, loss=0.03976885, RMSE_E_per_atom= 4133.07 meV, RMSE_F=   61.25 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:03:47.040 INFO: Epoch 14: head: mhc_head_0, loss=0.02720993, RMSE_E_per_atom= 4076.18 meV, RMSE_F=   44.10 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:04:03.887 INFO: Epoch 14: head: mhc_head_1, loss=0.02710881, RMSE_E_per_atom= 3907.65 meV, RMSE_F=   43.03 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:04:20.785 INFO: Epoch 14: head: mhc_head_2, loss=0.02501922, RMSE_E_per_atom= 3965.42 meV, RMSE_F=   40.32 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:04:37.429 INFO: Epoch 14: head: mhc_head_3, loss=0.03687903, RMSE_E_per_atom= 4071.61 meV, RMSE_F=   57.41 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:07:21.484 INFO: Epoch 15: head: mhc_head_0, loss=0.02634139, RMSE_E_per_atom= 4042.98 meV, RMSE_F=   42.89 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:07:38.640 INFO: Epoch 15: head: mhc_head_1, loss=0.02588146, RMSE_E_per_atom= 3891.99 meV, RMSE_F=   41.56 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:07:55.780 INFO: Epoch 15: head: mhc_head_2, loss=0.02435308, RMSE_E_per_atom= 3948.37 meV, RMSE_F=   39.48 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:08:12.521 INFO: Epoch 15: head: mhc_head_3, loss=0.03459771, RMSE_E_per_atom= 4018.15 meV, RMSE_F=   54.35 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:10:56.709 INFO: Epoch 16: head: mhc_head_0, loss=0.02568794, RMSE_E_per_atom= 4013.52 meV, RMSE_F=   42.03 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:11:13.394 INFO: Epoch 16: head: mhc_head_1, loss=0.02502857, RMSE_E_per_atom= 3874.17 meV, RMSE_F=   40.67 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:11:30.323 INFO: Epoch 16: head: mhc_head_2, loss=0.02382553, RMSE_E_per_atom= 3936.55 meV, RMSE_F=   38.76 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:11:47.007 INFO: Epoch 16: head: mhc_head_3, loss=0.03265452, RMSE_E_per_atom= 3970.29 meV, RMSE_F=   51.70 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:14:31.643 INFO: Epoch 17: head: mhc_head_0, loss=0.02517783, RMSE_E_per_atom= 3995.31 meV, RMSE_F=   41.27 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:14:48.565 INFO: Epoch 17: head: mhc_head_1, loss=0.02437208, RMSE_E_per_atom= 3862.17 meV, RMSE_F=   39.89 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:15:05.430 INFO: Epoch 17: head: mhc_head_2, loss=0.02341742, RMSE_E_per_atom= 3922.12 meV, RMSE_F=   38.30 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:15:22.958 INFO: Epoch 17: head: mhc_head_3, loss=0.03100677, RMSE_E_per_atom= 3925.37 meV, RMSE_F=   49.42 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:18:08.424 INFO: Epoch 18: head: mhc_head_0, loss=0.02471713, RMSE_E_per_atom= 3979.55 meV, RMSE_F=   40.56 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:18:26.452 INFO: Epoch 18: head: mhc_head_1, loss=0.02391969, RMSE_E_per_atom= 3849.23 meV, RMSE_F=   39.42 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:18:44.271 INFO: Epoch 18: head: mhc_head_2, loss=0.02309261, RMSE_E_per_atom= 3913.55 meV, RMSE_F=   37.88 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:19:02.149 INFO: Epoch 18: head: mhc_head_3, loss=0.02979754, RMSE_E_per_atom= 3890.67 meV, RMSE_F=   47.72 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:21:47.513 INFO: Epoch 19: head: mhc_head_0, loss=0.02444642, RMSE_E_per_atom= 3965.58 meV, RMSE_F=   40.24 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:22:05.378 INFO: Epoch 19: head: mhc_head_1, loss=0.02352751, RMSE_E_per_atom= 3839.28 meV, RMSE_F=   38.90 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:22:22.925 INFO: Epoch 19: head: mhc_head_2, loss=0.02283740, RMSE_E_per_atom= 3905.63 meV, RMSE_F=   37.58 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:22:40.263 INFO: Epoch 19: head: mhc_head_3, loss=0.02868505, RMSE_E_per_atom= 3857.86 meV, RMSE_F=   46.18 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:25:26.192 INFO: Epoch 20: head: mhc_head_0, loss=0.02402857, RMSE_E_per_atom= 3956.52 meV, RMSE_F=   39.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:25:43.661 INFO: Epoch 20: head: mhc_head_1, loss=0.02326744, RMSE_E_per_atom= 3830.60 meV, RMSE_F=   38.61 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:26:01.108 INFO: Epoch 20: head: mhc_head_2, loss=0.02257700, RMSE_E_per_atom= 3902.40 meV, RMSE_F=   37.17 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:26:18.518 INFO: Epoch 20: head: mhc_head_3, loss=0.02780977, RMSE_E_per_atom= 3831.43 meV, RMSE_F=   44.97 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:29:04.798 INFO: Epoch 21: head: mhc_head_0, loss=0.02373589, RMSE_E_per_atom= 3948.60 meV, RMSE_F=   39.03 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:29:22.914 INFO: Epoch 21: head: mhc_head_1, loss=0.02306706, RMSE_E_per_atom= 3822.46 meV, RMSE_F=   38.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:29:42.104 INFO: Epoch 21: head: mhc_head_2, loss=0.02235371, RMSE_E_per_atom= 3896.64 meV, RMSE_F=   36.86 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:30:00.241 INFO: Epoch 21: head: mhc_head_3, loss=0.02720810, RMSE_E_per_atom= 3813.37 meV, RMSE_F=   44.06 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:32:45.893 INFO: Epoch 22: head: mhc_head_0, loss=0.02347547, RMSE_E_per_atom= 3943.41 meV, RMSE_F=   38.61 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:33:03.425 INFO: Epoch 22: head: mhc_head_1, loss=0.02281326, RMSE_E_per_atom= 3820.33 meV, RMSE_F=   37.89 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:33:20.985 INFO: Epoch 22: head: mhc_head_2, loss=0.02218013, RMSE_E_per_atom= 3893.84 meV, RMSE_F=   36.62 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:33:38.439 INFO: Epoch 22: head: mhc_head_3, loss=0.02660704, RMSE_E_per_atom= 3795.54 meV, RMSE_F=   43.18 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:36:25.112 INFO: Epoch 23: head: mhc_head_0, loss=0.02326412, RMSE_E_per_atom= 3935.72 meV, RMSE_F=   38.32 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:36:44.271 INFO: Epoch 23: head: mhc_head_1, loss=0.02268113, RMSE_E_per_atom= 3811.49 meV, RMSE_F=   37.79 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:37:02.277 INFO: Epoch 23: head: mhc_head_2, loss=0.02203929, RMSE_E_per_atom= 3888.84 meV, RMSE_F=   36.47 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:37:20.708 INFO: Epoch 23: head: mhc_head_3, loss=0.02615107, RMSE_E_per_atom= 3782.13 meV, RMSE_F=   42.49 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:40:07.029 INFO: Epoch 24: head: mhc_head_0, loss=0.02301966, RMSE_E_per_atom= 3931.64 meV, RMSE_F=   37.92 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:40:26.573 INFO: Epoch 24: head: mhc_head_1, loss=0.02252561, RMSE_E_per_atom= 3809.08 meV, RMSE_F=   37.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:40:45.535 INFO: Epoch 24: head: mhc_head_2, loss=0.02182683, RMSE_E_per_atom= 3891.03 meV, RMSE_F=   36.07 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:41:03.052 INFO: Epoch 24: head: mhc_head_3, loss=0.02562999, RMSE_E_per_atom= 3767.87 meV, RMSE_F=   41.73 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:43:50.293 INFO: Epoch 25: head: mhc_head_0, loss=0.02283959, RMSE_E_per_atom= 3927.33 meV, RMSE_F=   37.66 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:44:08.850 INFO: Epoch 25: head: mhc_head_1, loss=0.02240221, RMSE_E_per_atom= 3804.70 meV, RMSE_F=   37.35 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:44:26.706 INFO: Epoch 25: head: mhc_head_2, loss=0.02171376, RMSE_E_per_atom= 3885.41 meV, RMSE_F=   35.97 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:44:45.170 INFO: Epoch 25: head: mhc_head_3, loss=0.02527361, RMSE_E_per_atom= 3759.87 meV, RMSE_F=   41.18 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:47:32.197 INFO: Epoch 26: head: mhc_head_0, loss=0.02266280, RMSE_E_per_atom= 3922.44 meV, RMSE_F=   37.39 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:47:51.292 INFO: Epoch 26: head: mhc_head_1, loss=0.02230596, RMSE_E_per_atom= 3800.91 meV, RMSE_F=   37.23 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:48:09.278 INFO: Epoch 26: head: mhc_head_2, loss=0.02160142, RMSE_E_per_atom= 3883.60 meV, RMSE_F=   35.82 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:48:28.258 INFO: Epoch 26: head: mhc_head_3, loss=0.02495962, RMSE_E_per_atom= 3753.79 meV, RMSE_F=   40.68 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:51:15.324 INFO: Epoch 27: head: mhc_head_0, loss=0.02242745, RMSE_E_per_atom= 3923.50 meV, RMSE_F=   36.97 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:51:34.446 INFO: Epoch 27: head: mhc_head_1, loss=0.02216255, RMSE_E_per_atom= 3799.82 meV, RMSE_F=   36.95 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:51:53.841 INFO: Epoch 27: head: mhc_head_2, loss=0.02144386, RMSE_E_per_atom= 3884.45 meV, RMSE_F=   35.54 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:52:12.780 INFO: Epoch 27: head: mhc_head_3, loss=0.02462035, RMSE_E_per_atom= 3746.18 meV, RMSE_F=   40.17 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:55:00.636 INFO: Epoch 28: head: mhc_head_0, loss=0.02226213, RMSE_E_per_atom= 3919.36 meV, RMSE_F=   36.73 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:55:20.283 INFO: Epoch 28: head: mhc_head_1, loss=0.02205515, RMSE_E_per_atom= 3797.23 meV, RMSE_F=   36.77 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:55:39.133 INFO: Epoch 28: head: mhc_head_2, loss=0.02132892, RMSE_E_per_atom= 3882.60 meV, RMSE_F=   35.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:55:57.831 INFO: Epoch 28: head: mhc_head_3, loss=0.02436743, RMSE_E_per_atom= 3743.04 meV, RMSE_F=   39.76 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:58:43.563 INFO: Epoch 29: head: mhc_head_0, loss=0.02209172, RMSE_E_per_atom= 3916.69 meV, RMSE_F=   36.45 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:59:01.944 INFO: Epoch 29: head: mhc_head_1, loss=0.02196749, RMSE_E_per_atom= 3794.07 meV, RMSE_F=   36.65 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:59:19.880 INFO: Epoch 29: head: mhc_head_2, loss=0.02120711, RMSE_E_per_atom= 3879.68 meV, RMSE_F=   35.20 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 21:59:37.845 INFO: Epoch 29: head: mhc_head_3, loss=0.02410304, RMSE_E_per_atom= 3738.61 meV, RMSE_F=   39.34 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:02:23.519 INFO: Epoch 30: head: mhc_head_0, loss=0.02192631, RMSE_E_per_atom= 3915.03 meV, RMSE_F=   36.18 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:02:40.901 INFO: Epoch 30: head: mhc_head_1, loss=0.02186784, RMSE_E_per_atom= 3792.26 meV, RMSE_F=   36.48 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:02:58.598 INFO: Epoch 30: head: mhc_head_2, loss=0.02110091, RMSE_E_per_atom= 3881.40 meV, RMSE_F=   35.01 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:03:16.598 INFO: Epoch 30: head: mhc_head_3, loss=0.02388392, RMSE_E_per_atom= 3736.72 meV, RMSE_F=   39.00 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:06:02.145 INFO: Epoch 31: head: mhc_head_0, loss=0.02177451, RMSE_E_per_atom= 3914.07 meV, RMSE_F=   35.94 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:06:19.973 INFO: Epoch 31: head: mhc_head_1, loss=0.02177672, RMSE_E_per_atom= 3790.85 meV, RMSE_F=   36.34 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:06:37.714 INFO: Epoch 31: head: mhc_head_2, loss=0.02099461, RMSE_E_per_atom= 3882.92 meV, RMSE_F=   34.83 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:06:55.204 INFO: Epoch 31: head: mhc_head_3, loss=0.02365116, RMSE_E_per_atom= 3733.43 meV, RMSE_F=   38.63 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:09:40.432 INFO: Epoch 32: head: mhc_head_0, loss=0.02163254, RMSE_E_per_atom= 3912.36 meV, RMSE_F=   35.72 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:09:58.047 INFO: Epoch 32: head: mhc_head_1, loss=0.02166361, RMSE_E_per_atom= 3789.43 meV, RMSE_F=   36.12 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:10:15.513 INFO: Epoch 32: head: mhc_head_2, loss=0.02088424, RMSE_E_per_atom= 3881.66 meV, RMSE_F=   34.65 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:10:33.095 INFO: Epoch 32: head: mhc_head_3, loss=0.02346467, RMSE_E_per_atom= 3732.83 meV, RMSE_F=   38.33 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:13:18.932 INFO: Epoch 33: head: mhc_head_0, loss=0.02156559, RMSE_E_per_atom= 3908.25 meV, RMSE_F=   35.66 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:13:37.981 INFO: Epoch 33: head: mhc_head_1, loss=0.02159454, RMSE_E_per_atom= 3787.89 meV, RMSE_F=   36.03 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:13:56.102 INFO: Epoch 33: head: mhc_head_2, loss=0.02082434, RMSE_E_per_atom= 3878.04 meV, RMSE_F=   34.62 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:14:14.412 INFO: Epoch 33: head: mhc_head_3, loss=0.02325023, RMSE_E_per_atom= 3729.93 meV, RMSE_F=   38.00 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:17:00.651 INFO: Epoch 34: head: mhc_head_0, loss=0.02141787, RMSE_E_per_atom= 3907.63 meV, RMSE_F=   35.41 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:17:17.913 INFO: Epoch 34: head: mhc_head_1, loss=0.02152109, RMSE_E_per_atom= 3785.72 meV, RMSE_F=   35.93 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:17:35.468 INFO: Epoch 34: head: mhc_head_2, loss=0.02071676, RMSE_E_per_atom= 3877.12 meV, RMSE_F=   34.44 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:17:53.239 INFO: Epoch 34: head: mhc_head_3, loss=0.02306980, RMSE_E_per_atom= 3728.86 meV, RMSE_F=   37.72 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:20:37.903 INFO: Epoch 35: head: mhc_head_0, loss=0.02131560, RMSE_E_per_atom= 3905.78 meV, RMSE_F=   35.27 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:20:55.115 INFO: Epoch 35: head: mhc_head_1, loss=0.02139459, RMSE_E_per_atom= 3787.07 meV, RMSE_F=   35.66 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:21:12.317 INFO: Epoch 35: head: mhc_head_2, loss=0.02065044, RMSE_E_per_atom= 3877.60 meV, RMSE_F=   34.35 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:21:29.595 INFO: Epoch 35: head: mhc_head_3, loss=0.02291717, RMSE_E_per_atom= 3729.29 meV, RMSE_F=   37.48 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:24:14.761 INFO: Epoch 36: head: mhc_head_0, loss=0.02122614, RMSE_E_per_atom= 3903.82 meV, RMSE_F=   35.15 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:24:32.204 INFO: Epoch 36: head: mhc_head_1, loss=0.02136616, RMSE_E_per_atom= 3783.01 meV, RMSE_F=   35.69 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:24:50.038 INFO: Epoch 36: head: mhc_head_2, loss=0.02055564, RMSE_E_per_atom= 3876.44 meV, RMSE_F=   34.19 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:25:07.725 INFO: Epoch 36: head: mhc_head_3, loss=0.02275270, RMSE_E_per_atom= 3727.77 meV, RMSE_F=   37.22 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:27:52.691 INFO: Epoch 37: head: mhc_head_0, loss=0.02111900, RMSE_E_per_atom= 3903.94 meV, RMSE_F=   34.97 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:28:10.249 INFO: Epoch 37: head: mhc_head_1, loss=0.02125625, RMSE_E_per_atom= 3785.02 meV, RMSE_F=   35.45 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:28:28.023 INFO: Epoch 37: head: mhc_head_2, loss=0.02047122, RMSE_E_per_atom= 3875.96 meV, RMSE_F=   34.06 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:28:45.698 INFO: Epoch 37: head: mhc_head_3, loss=0.02257426, RMSE_E_per_atom= 3726.89 meV, RMSE_F=   36.95 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:31:31.874 INFO: Epoch 38: head: mhc_head_0, loss=0.02100349, RMSE_E_per_atom= 3902.83 meV, RMSE_F=   34.78 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:31:50.094 INFO: Epoch 38: head: mhc_head_1, loss=0.02120155, RMSE_E_per_atom= 3781.42 meV, RMSE_F=   35.40 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:32:08.352 INFO: Epoch 38: head: mhc_head_2, loss=0.02039608, RMSE_E_per_atom= 3876.03 meV, RMSE_F=   33.95 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:32:26.816 INFO: Epoch 38: head: mhc_head_3, loss=0.02243719, RMSE_E_per_atom= 3725.50 meV, RMSE_F=   36.73 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:35:12.718 INFO: Epoch 39: head: mhc_head_0, loss=0.02094415, RMSE_E_per_atom= 3900.37 meV, RMSE_F=   34.73 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:35:30.904 INFO: Epoch 39: head: mhc_head_1, loss=0.02112904, RMSE_E_per_atom= 3781.28 meV, RMSE_F=   35.28 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:35:48.764 INFO: Epoch 39: head: mhc_head_2, loss=0.02030883, RMSE_E_per_atom= 3876.73 meV, RMSE_F=   33.80 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:36:06.933 INFO: Epoch 39: head: mhc_head_3, loss=0.02230180, RMSE_E_per_atom= 3725.33 meV, RMSE_F=   36.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:38:53.210 INFO: Epoch 40: head: mhc_head_0, loss=0.02085792, RMSE_E_per_atom= 3898.80 meV, RMSE_F=   34.60 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:39:11.147 INFO: Epoch 40: head: mhc_head_1, loss=0.02110123, RMSE_E_per_atom= 3778.20 meV, RMSE_F=   35.28 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:39:28.838 INFO: Epoch 40: head: mhc_head_2, loss=0.02028870, RMSE_E_per_atom= 3875.17 meV, RMSE_F=   33.80 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:39:46.560 INFO: Epoch 40: head: mhc_head_3, loss=0.02217337, RMSE_E_per_atom= 3725.62 meV, RMSE_F=   36.33 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:42:32.852 INFO: Epoch 41: head: mhc_head_0, loss=0.02073981, RMSE_E_per_atom= 3899.85 meV, RMSE_F=   34.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:42:50.959 INFO: Epoch 41: head: mhc_head_1, loss=0.02098242, RMSE_E_per_atom= 3780.37 meV, RMSE_F=   35.03 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:43:08.528 INFO: Epoch 41: head: mhc_head_2, loss=0.02017596, RMSE_E_per_atom= 3877.37 meV, RMSE_F=   33.58 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:43:26.334 INFO: Epoch 41: head: mhc_head_3, loss=0.02204336, RMSE_E_per_atom= 3724.41 meV, RMSE_F=   36.12 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:46:11.252 INFO: Epoch 42: head: mhc_head_0, loss=0.02065713, RMSE_E_per_atom= 3899.18 meV, RMSE_F=   34.26 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:46:29.172 INFO: Epoch 42: head: mhc_head_1, loss=0.02090863, RMSE_E_per_atom= 3779.37 meV, RMSE_F=   34.90 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:46:46.814 INFO: Epoch 42: head: mhc_head_2, loss=0.02013840, RMSE_E_per_atom= 3875.48 meV, RMSE_F=   33.56 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:47:04.628 INFO: Epoch 42: head: mhc_head_3, loss=0.02192378, RMSE_E_per_atom= 3723.74 meV, RMSE_F=   35.94 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:49:51.547 INFO: Epoch 43: head: mhc_head_0, loss=0.02059531, RMSE_E_per_atom= 3897.40 meV, RMSE_F=   34.18 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:50:09.718 INFO: Epoch 43: head: mhc_head_1, loss=0.02089364, RMSE_E_per_atom= 3776.04 meV, RMSE_F=   34.94 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:50:28.118 INFO: Epoch 43: head: mhc_head_2, loss=0.02006149, RMSE_E_per_atom= 3875.69 meV, RMSE_F=   33.43 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:50:46.244 INFO: Epoch 43: head: mhc_head_3, loss=0.02180997, RMSE_E_per_atom= 3722.42 meV, RMSE_F=   35.77 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:53:33.818 INFO: Epoch 44: head: mhc_head_0, loss=0.02052509, RMSE_E_per_atom= 3896.61 meV, RMSE_F=   34.08 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:53:52.872 INFO: Epoch 44: head: mhc_head_1, loss=0.02081319, RMSE_E_per_atom= 3777.39 meV, RMSE_F=   34.78 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:54:11.773 INFO: Epoch 44: head: mhc_head_2, loss=0.02000067, RMSE_E_per_atom= 3874.83 meV, RMSE_F=   33.34 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:54:29.797 INFO: Epoch 44: head: mhc_head_3, loss=0.02171643, RMSE_E_per_atom= 3722.71 meV, RMSE_F=   35.62 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:57:16.832 INFO: Epoch 45: head: mhc_head_0, loss=0.02045886, RMSE_E_per_atom= 3895.60 meV, RMSE_F=   33.99 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:57:35.223 INFO: Epoch 45: head: mhc_head_1, loss=0.02075723, RMSE_E_per_atom= 3776.41 meV, RMSE_F=   34.70 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:57:53.430 INFO: Epoch 45: head: mhc_head_2, loss=0.01993063, RMSE_E_per_atom= 3874.98 meV, RMSE_F=   33.21 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 22:58:11.411 INFO: Epoch 45: head: mhc_head_3, loss=0.02159624, RMSE_E_per_atom= 3721.47 meV, RMSE_F=   35.44 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:00:57.356 INFO: Epoch 46: head: mhc_head_0, loss=0.02037668, RMSE_E_per_atom= 3895.96 meV, RMSE_F=   33.84 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:01:14.823 INFO: Epoch 46: head: mhc_head_1, loss=0.02070277, RMSE_E_per_atom= 3775.49 meV, RMSE_F=   34.60 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:01:33.948 INFO: Epoch 46: head: mhc_head_2, loss=0.01986185, RMSE_E_per_atom= 3876.11 meV, RMSE_F=   33.10 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:01:53.182 INFO: Epoch 46: head: mhc_head_3, loss=0.02151381, RMSE_E_per_atom= 3721.81 meV, RMSE_F=   35.31 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:04:38.890 INFO: Epoch 47: head: mhc_head_0, loss=0.02030964, RMSE_E_per_atom= 3896.08 meV, RMSE_F=   33.74 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:04:56.431 INFO: Epoch 47: head: mhc_head_1, loss=0.02066228, RMSE_E_per_atom= 3775.00 meV, RMSE_F=   34.55 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:05:14.101 INFO: Epoch 47: head: mhc_head_2, loss=0.01983776, RMSE_E_per_atom= 3874.67 meV, RMSE_F=   33.09 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:05:31.611 INFO: Epoch 47: head: mhc_head_3, loss=0.02141439, RMSE_E_per_atom= 3720.58 meV, RMSE_F=   35.16 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:08:16.494 INFO: Epoch 48: head: mhc_head_0, loss=0.02027876, RMSE_E_per_atom= 3893.21 meV, RMSE_F=   33.73 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:08:34.188 INFO: Epoch 48: head: mhc_head_1, loss=0.02059289, RMSE_E_per_atom= 3775.71 meV, RMSE_F=   34.42 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:08:51.377 INFO: Epoch 48: head: mhc_head_2, loss=0.01977758, RMSE_E_per_atom= 3874.17 meV, RMSE_F=   33.00 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:09:07.896 INFO: Epoch 48: head: mhc_head_3, loss=0.02133387, RMSE_E_per_atom= 3721.15 meV, RMSE_F=   35.04 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:11:53.013 INFO: Epoch 49: head: mhc_head_0, loss=0.02020161, RMSE_E_per_atom= 3893.94 meV, RMSE_F=   33.58 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:12:10.477 INFO: Epoch 49: head: mhc_head_1, loss=0.02055187, RMSE_E_per_atom= 3774.67 meV, RMSE_F=   34.36 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:12:28.122 INFO: Epoch 49: head: mhc_head_2, loss=0.01972588, RMSE_E_per_atom= 3874.23 meV, RMSE_F=   32.92 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:12:45.761 INFO: Epoch 49: head: mhc_head_3, loss=0.02125713, RMSE_E_per_atom= 3720.77 meV, RMSE_F=   34.92 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:15:30.882 INFO: Epoch 50: head: mhc_head_0, loss=0.02014633, RMSE_E_per_atom= 3893.53 meV, RMSE_F=   33.50 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:15:48.205 INFO: Epoch 50: head: mhc_head_1, loss=0.02051689, RMSE_E_per_atom= 3773.67 meV, RMSE_F=   34.32 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:16:05.557 INFO: Epoch 50: head: mhc_head_2, loss=0.01965724, RMSE_E_per_atom= 3876.19 meV, RMSE_F=   32.78 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:16:22.900 INFO: Epoch 50: head: mhc_head_3, loss=0.02118161, RMSE_E_per_atom= 3720.48 meV, RMSE_F=   34.81 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:19:08.590 INFO: Epoch 51: head: mhc_head_0, loss=0.02009961, RMSE_E_per_atom= 3892.81 meV, RMSE_F=   33.44 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:19:25.910 INFO: Epoch 51: head: mhc_head_1, loss=0.02045095, RMSE_E_per_atom= 3774.15 meV, RMSE_F=   34.19 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:19:43.455 INFO: Epoch 51: head: mhc_head_2, loss=0.01962656, RMSE_E_per_atom= 3874.84 meV, RMSE_F=   32.76 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:20:00.529 INFO: Epoch 51: head: mhc_head_3, loss=0.02110404, RMSE_E_per_atom= 3719.42 meV, RMSE_F=   34.69 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:22:45.911 INFO: Epoch 52: head: mhc_head_0, loss=0.02005546, RMSE_E_per_atom= 3891.98 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:23:03.846 INFO: Epoch 52: head: mhc_head_1, loss=0.02043124, RMSE_E_per_atom= 3772.84 meV, RMSE_F=   34.18 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:23:21.640 INFO: Epoch 52: head: mhc_head_2, loss=0.01958181, RMSE_E_per_atom= 3874.33 meV, RMSE_F=   32.69 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:23:39.485 INFO: Epoch 52: head: mhc_head_3, loss=0.02104309, RMSE_E_per_atom= 3719.79 meV, RMSE_F=   34.59 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:26:24.735 INFO: Epoch 53: head: mhc_head_0, loss=0.01999538, RMSE_E_per_atom= 3892.65 meV, RMSE_F=   33.27 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:26:42.064 INFO: Epoch 53: head: mhc_head_1, loss=0.02040192, RMSE_E_per_atom= 3771.99 meV, RMSE_F=   34.14 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:26:59.661 INFO: Epoch 53: head: mhc_head_2, loss=0.01953424, RMSE_E_per_atom= 3875.54 meV, RMSE_F=   32.61 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:27:17.494 INFO: Epoch 53: head: mhc_head_3, loss=0.02098092, RMSE_E_per_atom= 3719.17 meV, RMSE_F=   34.50 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:30:02.808 INFO: Epoch 54: head: mhc_head_0, loss=0.01996817, RMSE_E_per_atom= 3890.80 meV, RMSE_F=   33.26 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:30:19.982 INFO: Epoch 54: head: mhc_head_1, loss=0.02035293, RMSE_E_per_atom= 3772.08 meV, RMSE_F=   34.06 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:30:37.161 INFO: Epoch 54: head: mhc_head_2, loss=0.01949634, RMSE_E_per_atom= 3875.53 meV, RMSE_F=   32.55 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:30:54.985 INFO: Epoch 54: head: mhc_head_3, loss=0.02092021, RMSE_E_per_atom= 3719.69 meV, RMSE_F=   34.41 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:33:41.662 INFO: Epoch 55: head: mhc_head_0, loss=0.01992480, RMSE_E_per_atom= 3890.97 meV, RMSE_F=   33.19 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:34:00.530 INFO: Epoch 55: head: mhc_head_1, loss=0.02032202, RMSE_E_per_atom= 3772.06 meV, RMSE_F=   34.01 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:34:19.720 INFO: Epoch 55: head: mhc_head_2, loss=0.01945084, RMSE_E_per_atom= 3875.02 meV, RMSE_F=   32.49 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:34:37.774 INFO: Epoch 55: head: mhc_head_3, loss=0.02085977, RMSE_E_per_atom= 3719.99 meV, RMSE_F=   34.32 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:37:23.763 INFO: Epoch 56: head: mhc_head_0, loss=0.01988677, RMSE_E_per_atom= 3890.02 meV, RMSE_F=   33.14 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:37:43.250 INFO: Epoch 56: head: mhc_head_1, loss=0.02028142, RMSE_E_per_atom= 3772.02 meV, RMSE_F=   33.94 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:38:02.142 INFO: Epoch 56: head: mhc_head_2, loss=0.01942395, RMSE_E_per_atom= 3874.97 meV, RMSE_F=   32.45 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:38:20.603 INFO: Epoch 56: head: mhc_head_3, loss=0.02080585, RMSE_E_per_atom= 3718.10 meV, RMSE_F=   34.24 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:41:06.672 INFO: Epoch 57: head: mhc_head_0, loss=0.01984051, RMSE_E_per_atom= 3889.75 meV, RMSE_F=   33.06 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:41:24.654 INFO: Epoch 57: head: mhc_head_1, loss=0.02025187, RMSE_E_per_atom= 3771.71 meV, RMSE_F=   33.90 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:41:42.543 INFO: Epoch 57: head: mhc_head_2, loss=0.01940572, RMSE_E_per_atom= 3873.06 meV, RMSE_F=   32.45 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:42:01.062 INFO: Epoch 57: head: mhc_head_3, loss=0.02075890, RMSE_E_per_atom= 3718.20 meV, RMSE_F=   34.16 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:44:46.589 INFO: Epoch 58: head: mhc_head_0, loss=0.01980753, RMSE_E_per_atom= 3889.91 meV, RMSE_F=   33.01 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:45:04.146 INFO: Epoch 58: head: mhc_head_1, loss=0.02024327, RMSE_E_per_atom= 3770.59 meV, RMSE_F=   33.90 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:45:22.149 INFO: Epoch 58: head: mhc_head_2, loss=0.01936533, RMSE_E_per_atom= 3873.86 meV, RMSE_F=   32.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:45:40.073 INFO: Epoch 58: head: mhc_head_3, loss=0.02070901, RMSE_E_per_atom= 3718.31 meV, RMSE_F=   34.09 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:48:25.797 INFO: Epoch 59: head: mhc_head_0, loss=0.01978134, RMSE_E_per_atom= 3888.99 meV, RMSE_F=   32.99 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:48:43.768 INFO: Epoch 59: head: mhc_head_1, loss=0.02020501, RMSE_E_per_atom= 3770.58 meV, RMSE_F=   33.84 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:49:01.641 INFO: Epoch 59: head: mhc_head_2, loss=0.01934295, RMSE_E_per_atom= 3873.34 meV, RMSE_F=   32.36 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:49:19.558 INFO: Epoch 59: head: mhc_head_3, loss=0.02066751, RMSE_E_per_atom= 3718.39 meV, RMSE_F=   34.03 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:52:04.667 INFO: Epoch 60: head: mhc_head_0, loss=0.01973919, RMSE_E_per_atom= 3889.07 meV, RMSE_F=   32.91 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:52:22.787 INFO: Epoch 60: head: mhc_head_1, loss=0.02017774, RMSE_E_per_atom= 3770.07 meV, RMSE_F=   33.79 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:52:40.595 INFO: Epoch 60: head: mhc_head_2, loss=0.01931078, RMSE_E_per_atom= 3873.56 meV, RMSE_F=   32.30 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:52:58.267 INFO: Epoch 60: head: mhc_head_3, loss=0.02062544, RMSE_E_per_atom= 3718.38 meV, RMSE_F=   33.96 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:55:43.364 INFO: Epoch 61: head: mhc_head_0, loss=0.01971371, RMSE_E_per_atom= 3888.75 meV, RMSE_F=   32.88 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:56:00.763 INFO: Epoch 61: head: mhc_head_1, loss=0.02015528, RMSE_E_per_atom= 3769.88 meV, RMSE_F=   33.76 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:56:18.579 INFO: Epoch 61: head: mhc_head_2, loss=0.01926809, RMSE_E_per_atom= 3874.38 meV, RMSE_F=   32.23 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:56:36.100 INFO: Epoch 61: head: mhc_head_3, loss=0.02058675, RMSE_E_per_atom= 3718.07 meV, RMSE_F=   33.90 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:59:21.491 INFO: Epoch 62: head: mhc_head_0, loss=0.01970189, RMSE_E_per_atom= 3887.77 meV, RMSE_F=   32.88 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:59:39.206 INFO: Epoch 62: head: mhc_head_1, loss=0.02013046, RMSE_E_per_atom= 3769.76 meV, RMSE_F=   33.72 meV / A, RMSE_stress=None meV / A^3
+2026-11-06 23:59:56.614 INFO: Epoch 62: head: mhc_head_2, loss=0.01925535, RMSE_E_per_atom= 3873.86 meV, RMSE_F=   32.22 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:00:14.071 INFO: Epoch 62: head: mhc_head_3, loss=0.02054998, RMSE_E_per_atom= 3717.40 meV, RMSE_F=   33.85 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:02:59.288 INFO: Epoch 63: head: mhc_head_0, loss=0.01967145, RMSE_E_per_atom= 3887.64 meV, RMSE_F=   32.83 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:03:17.235 INFO: Epoch 63: head: mhc_head_1, loss=0.02010101, RMSE_E_per_atom= 3770.02 meV, RMSE_F=   33.67 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:03:34.829 INFO: Epoch 63: head: mhc_head_2, loss=0.01922092, RMSE_E_per_atom= 3874.28 meV, RMSE_F=   32.16 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:03:52.707 INFO: Epoch 63: head: mhc_head_3, loss=0.02052139, RMSE_E_per_atom= 3718.30 meV, RMSE_F=   33.81 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:06:38.384 INFO: Epoch 64: head: mhc_head_0, loss=0.01964723, RMSE_E_per_atom= 3887.92 meV, RMSE_F=   32.79 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:06:56.310 INFO: Epoch 64: head: mhc_head_1, loss=0.02009141, RMSE_E_per_atom= 3769.51 meV, RMSE_F=   33.66 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:07:14.340 INFO: Epoch 64: head: mhc_head_2, loss=0.01919640, RMSE_E_per_atom= 3874.37 meV, RMSE_F=   32.12 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:07:31.917 INFO: Epoch 64: head: mhc_head_3, loss=0.02048209, RMSE_E_per_atom= 3717.26 meV, RMSE_F=   33.75 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:10:17.255 INFO: Epoch 65: head: mhc_head_0, loss=0.01962759, RMSE_E_per_atom= 3887.22 meV, RMSE_F=   32.77 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:10:34.634 INFO: Epoch 65: head: mhc_head_1, loss=0.02006358, RMSE_E_per_atom= 3769.78 meV, RMSE_F=   33.61 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:10:51.822 INFO: Epoch 65: head: mhc_head_2, loss=0.01919173, RMSE_E_per_atom= 3873.47 meV, RMSE_F=   32.13 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:11:09.098 INFO: Epoch 65: head: mhc_head_3, loss=0.02045374, RMSE_E_per_atom= 3716.77 meV, RMSE_F=   33.71 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:13:53.941 INFO: Epoch 66: head: mhc_head_0, loss=0.01960792, RMSE_E_per_atom= 3887.14 meV, RMSE_F=   32.74 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:14:11.487 INFO: Epoch 66: head: mhc_head_1, loss=0.02005160, RMSE_E_per_atom= 3769.55 meV, RMSE_F=   33.60 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:14:28.895 INFO: Epoch 66: head: mhc_head_2, loss=0.01916407, RMSE_E_per_atom= 3873.68 meV, RMSE_F=   32.08 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:14:46.231 INFO: Epoch 66: head: mhc_head_3, loss=0.02043121, RMSE_E_per_atom= 3717.43 meV, RMSE_F=   33.67 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:17:31.126 INFO: Epoch 67: head: mhc_head_0, loss=0.01959539, RMSE_E_per_atom= 3886.57 meV, RMSE_F=   32.73 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:17:48.894 INFO: Epoch 67: head: mhc_head_1, loss=0.02003222, RMSE_E_per_atom= 3769.35 meV, RMSE_F=   33.57 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:18:06.659 INFO: Epoch 67: head: mhc_head_2, loss=0.01914233, RMSE_E_per_atom= 3874.38 meV, RMSE_F=   32.04 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:18:24.220 INFO: Epoch 67: head: mhc_head_3, loss=0.02040566, RMSE_E_per_atom= 3717.01 meV, RMSE_F=   33.63 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:21:09.238 INFO: Epoch 68: head: mhc_head_0, loss=0.01957390, RMSE_E_per_atom= 3886.57 meV, RMSE_F=   32.69 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:21:26.204 INFO: Epoch 68: head: mhc_head_1, loss=0.02001383, RMSE_E_per_atom= 3769.39 meV, RMSE_F=   33.53 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:21:43.726 INFO: Epoch 68: head: mhc_head_2, loss=0.01912669, RMSE_E_per_atom= 3874.28 meV, RMSE_F=   32.02 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:22:01.405 INFO: Epoch 68: head: mhc_head_3, loss=0.02038354, RMSE_E_per_atom= 3716.76 meV, RMSE_F=   33.60 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:24:46.093 INFO: Epoch 69: head: mhc_head_0, loss=0.01955291, RMSE_E_per_atom= 3886.49 meV, RMSE_F=   32.66 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:25:03.380 INFO: Epoch 69: head: mhc_head_1, loss=0.02000678, RMSE_E_per_atom= 3769.16 meV, RMSE_F=   33.53 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:25:20.568 INFO: Epoch 69: head: mhc_head_2, loss=0.01911844, RMSE_E_per_atom= 3873.89 meV, RMSE_F=   32.02 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:25:38.020 INFO: Epoch 69: head: mhc_head_3, loss=0.02036319, RMSE_E_per_atom= 3716.99 meV, RMSE_F=   33.57 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:28:22.613 INFO: Epoch 70: head: mhc_head_0, loss=0.01954336, RMSE_E_per_atom= 3886.41 meV, RMSE_F=   32.65 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:28:39.852 INFO: Epoch 70: head: mhc_head_1, loss=0.01998768, RMSE_E_per_atom= 3769.39 meV, RMSE_F=   33.49 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:28:57.213 INFO: Epoch 70: head: mhc_head_2, loss=0.01910582, RMSE_E_per_atom= 3873.75 meV, RMSE_F=   32.00 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:29:14.400 INFO: Epoch 70: head: mhc_head_3, loss=0.02034361, RMSE_E_per_atom= 3716.72 meV, RMSE_F=   33.54 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:31:59.537 INFO: Epoch 71: head: mhc_head_0, loss=0.01953159, RMSE_E_per_atom= 3886.14 meV, RMSE_F=   32.63 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:32:16.941 INFO: Epoch 71: head: mhc_head_1, loss=0.01996998, RMSE_E_per_atom= 3769.59 meV, RMSE_F=   33.46 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:32:34.534 INFO: Epoch 71: head: mhc_head_2, loss=0.01908788, RMSE_E_per_atom= 3873.93 meV, RMSE_F=   31.97 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:32:52.243 INFO: Epoch 71: head: mhc_head_3, loss=0.02032821, RMSE_E_per_atom= 3716.63 meV, RMSE_F=   33.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:35:37.597 INFO: Epoch 72: head: mhc_head_0, loss=0.01952748, RMSE_E_per_atom= 3885.80 meV, RMSE_F=   32.63 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:35:54.855 INFO: Epoch 72: head: mhc_head_1, loss=0.01996962, RMSE_E_per_atom= 3768.93 meV, RMSE_F=   33.47 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:36:13.544 INFO: Epoch 72: head: mhc_head_2, loss=0.01908332, RMSE_E_per_atom= 3873.62 meV, RMSE_F=   31.97 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:36:32.162 INFO: Epoch 72: head: mhc_head_3, loss=0.02031257, RMSE_E_per_atom= 3716.43 meV, RMSE_F=   33.50 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:39:17.907 INFO: Epoch 73: head: mhc_head_0, loss=0.01950805, RMSE_E_per_atom= 3885.83 meV, RMSE_F=   32.60 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:39:36.256 INFO: Epoch 73: head: mhc_head_1, loss=0.01995884, RMSE_E_per_atom= 3769.04 meV, RMSE_F=   33.45 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:39:54.935 INFO: Epoch 73: head: mhc_head_2, loss=0.01906959, RMSE_E_per_atom= 3873.73 meV, RMSE_F=   31.95 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:40:12.911 INFO: Epoch 73: head: mhc_head_3, loss=0.02029801, RMSE_E_per_atom= 3716.40 meV, RMSE_F=   33.47 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:42:57.794 INFO: Epoch 74: head: mhc_head_0, loss=0.01949869, RMSE_E_per_atom= 3885.85 meV, RMSE_F=   32.58 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:43:15.243 INFO: Epoch 74: head: mhc_head_1, loss=0.01995170, RMSE_E_per_atom= 3768.84 meV, RMSE_F=   33.44 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:43:32.910 INFO: Epoch 74: head: mhc_head_2, loss=0.01906129, RMSE_E_per_atom= 3873.73 meV, RMSE_F=   31.93 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:43:50.644 INFO: Epoch 74: head: mhc_head_3, loss=0.02028622, RMSE_E_per_atom= 3716.33 meV, RMSE_F=   33.46 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:46:35.325 INFO: Epoch 75: head: mhc_head_0, loss=0.01949279, RMSE_E_per_atom= 3885.56 meV, RMSE_F=   32.58 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:46:52.688 INFO: Epoch 75: head: mhc_head_1, loss=0.01994560, RMSE_E_per_atom= 3768.79 meV, RMSE_F=   33.43 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:47:09.790 INFO: Epoch 75: head: mhc_head_2, loss=0.01905213, RMSE_E_per_atom= 3873.69 meV, RMSE_F=   31.92 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:47:27.017 INFO: Epoch 75: head: mhc_head_3, loss=0.02027581, RMSE_E_per_atom= 3716.46 meV, RMSE_F=   33.44 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:50:12.096 INFO: Epoch 76: head: mhc_head_0, loss=0.01948260, RMSE_E_per_atom= 3885.70 meV, RMSE_F=   32.56 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:50:29.419 INFO: Epoch 76: head: mhc_head_1, loss=0.01993778, RMSE_E_per_atom= 3768.81 meV, RMSE_F=   33.42 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:50:46.895 INFO: Epoch 76: head: mhc_head_2, loss=0.01904254, RMSE_E_per_atom= 3873.84 meV, RMSE_F=   31.90 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:51:04.044 INFO: Epoch 76: head: mhc_head_3, loss=0.02026651, RMSE_E_per_atom= 3716.41 meV, RMSE_F=   33.43 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:53:49.327 INFO: Epoch 77: head: mhc_head_0, loss=0.01947482, RMSE_E_per_atom= 3885.67 meV, RMSE_F=   32.55 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:54:06.577 INFO: Epoch 77: head: mhc_head_1, loss=0.01992829, RMSE_E_per_atom= 3768.99 meV, RMSE_F=   33.40 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:54:23.857 INFO: Epoch 77: head: mhc_head_2, loss=0.01903564, RMSE_E_per_atom= 3873.81 meV, RMSE_F=   31.89 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:54:41.242 INFO: Epoch 77: head: mhc_head_3, loss=0.02025895, RMSE_E_per_atom= 3716.34 meV, RMSE_F=   33.41 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:57:26.100 INFO: Epoch 78: head: mhc_head_0, loss=0.01947117, RMSE_E_per_atom= 3885.60 meV, RMSE_F=   32.54 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:57:43.430 INFO: Epoch 78: head: mhc_head_1, loss=0.01992548, RMSE_E_per_atom= 3768.92 meV, RMSE_F=   33.40 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:58:00.966 INFO: Epoch 78: head: mhc_head_2, loss=0.01903251, RMSE_E_per_atom= 3873.71 meV, RMSE_F=   31.89 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 00:58:18.484 INFO: Epoch 78: head: mhc_head_3, loss=0.02025117, RMSE_E_per_atom= 3716.15 meV, RMSE_F=   33.40 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:01:03.591 INFO: Epoch 79: head: mhc_head_0, loss=0.01946633, RMSE_E_per_atom= 3885.57 meV, RMSE_F=   32.53 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:01:20.905 INFO: Epoch 79: head: mhc_head_1, loss=0.01992134, RMSE_E_per_atom= 3768.88 meV, RMSE_F=   33.39 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:01:38.405 INFO: Epoch 79: head: mhc_head_2, loss=0.01902708, RMSE_E_per_atom= 3873.77 meV, RMSE_F=   31.88 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:01:56.228 INFO: Epoch 79: head: mhc_head_3, loss=0.02024535, RMSE_E_per_atom= 3716.10 meV, RMSE_F=   33.40 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:04:41.367 INFO: Epoch 80: head: mhc_head_0, loss=0.01946368, RMSE_E_per_atom= 3885.51 meV, RMSE_F=   32.53 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:04:58.729 INFO: Epoch 80: head: mhc_head_1, loss=0.01992014, RMSE_E_per_atom= 3768.77 meV, RMSE_F=   33.39 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:05:16.141 INFO: Epoch 80: head: mhc_head_2, loss=0.01902415, RMSE_E_per_atom= 3873.67 meV, RMSE_F=   31.88 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:05:33.459 INFO: Epoch 80: head: mhc_head_3, loss=0.02024128, RMSE_E_per_atom= 3716.18 meV, RMSE_F=   33.39 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:08:18.218 INFO: Epoch 81: head: mhc_head_0, loss=0.01946087, RMSE_E_per_atom= 3885.43 meV, RMSE_F=   32.53 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:08:35.812 INFO: Epoch 81: head: mhc_head_1, loss=0.01991536, RMSE_E_per_atom= 3768.84 meV, RMSE_F=   33.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:08:53.134 INFO: Epoch 81: head: mhc_head_2, loss=0.01901992, RMSE_E_per_atom= 3873.77 meV, RMSE_F=   31.87 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:09:10.436 INFO: Epoch 81: head: mhc_head_3, loss=0.02023694, RMSE_E_per_atom= 3716.08 meV, RMSE_F=   33.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:11:55.596 INFO: Epoch 82: head: mhc_head_0, loss=0.01945796, RMSE_E_per_atom= 3885.40 meV, RMSE_F=   32.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:12:13.169 INFO: Epoch 82: head: mhc_head_1, loss=0.01991334, RMSE_E_per_atom= 3768.79 meV, RMSE_F=   33.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:12:30.570 INFO: Epoch 82: head: mhc_head_2, loss=0.01901775, RMSE_E_per_atom= 3873.75 meV, RMSE_F=   31.87 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:12:47.922 INFO: Epoch 82: head: mhc_head_3, loss=0.02023392, RMSE_E_per_atom= 3716.08 meV, RMSE_F=   33.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:15:32.514 INFO: Epoch 83: head: mhc_head_0, loss=0.01945612, RMSE_E_per_atom= 3885.41 meV, RMSE_F=   32.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:15:50.181 INFO: Epoch 83: head: mhc_head_1, loss=0.01991230, RMSE_E_per_atom= 3768.73 meV, RMSE_F=   33.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:16:07.561 INFO: Epoch 83: head: mhc_head_2, loss=0.01901533, RMSE_E_per_atom= 3873.78 meV, RMSE_F=   31.86 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:16:24.790 INFO: Epoch 83: head: mhc_head_3, loss=0.02023141, RMSE_E_per_atom= 3716.06 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:19:09.215 INFO: Epoch 84: head: mhc_head_0, loss=0.01945527, RMSE_E_per_atom= 3885.35 meV, RMSE_F=   32.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:19:26.864 INFO: Epoch 84: head: mhc_head_1, loss=0.01991105, RMSE_E_per_atom= 3768.72 meV, RMSE_F=   33.38 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:19:44.369 INFO: Epoch 84: head: mhc_head_2, loss=0.01901427, RMSE_E_per_atom= 3873.76 meV, RMSE_F=   31.86 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:20:01.632 INFO: Epoch 84: head: mhc_head_3, loss=0.02022980, RMSE_E_per_atom= 3716.08 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:22:47.250 INFO: Epoch 85: head: mhc_head_0, loss=0.01945410, RMSE_E_per_atom= 3885.36 meV, RMSE_F=   32.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:23:05.026 INFO: Epoch 85: head: mhc_head_1, loss=0.01990968, RMSE_E_per_atom= 3768.74 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:23:22.863 INFO: Epoch 85: head: mhc_head_2, loss=0.01901359, RMSE_E_per_atom= 3873.76 meV, RMSE_F=   31.86 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:23:40.564 INFO: Epoch 85: head: mhc_head_3, loss=0.02022855, RMSE_E_per_atom= 3716.07 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:26:25.479 INFO: Epoch 86: head: mhc_head_0, loss=0.01945337, RMSE_E_per_atom= 3885.36 meV, RMSE_F=   32.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:26:42.645 INFO: Epoch 86: head: mhc_head_1, loss=0.01990904, RMSE_E_per_atom= 3768.74 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:27:00.032 INFO: Epoch 86: head: mhc_head_2, loss=0.01901268, RMSE_E_per_atom= 3873.76 meV, RMSE_F=   31.86 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:27:17.275 INFO: Epoch 86: head: mhc_head_3, loss=0.02022762, RMSE_E_per_atom= 3716.06 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:30:02.550 INFO: Epoch 87: head: mhc_head_0, loss=0.01945279, RMSE_E_per_atom= 3885.36 meV, RMSE_F=   32.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:30:20.091 INFO: Epoch 87: head: mhc_head_1, loss=0.01990880, RMSE_E_per_atom= 3768.73 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:30:37.653 INFO: Epoch 87: head: mhc_head_2, loss=0.01901231, RMSE_E_per_atom= 3873.76 meV, RMSE_F=   31.86 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:30:54.946 INFO: Epoch 87: head: mhc_head_3, loss=0.02022710, RMSE_E_per_atom= 3716.06 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:33:39.314 INFO: Epoch 88: head: mhc_head_0, loss=0.01945262, RMSE_E_per_atom= 3885.35 meV, RMSE_F=   32.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:33:56.344 INFO: Epoch 88: head: mhc_head_1, loss=0.01990857, RMSE_E_per_atom= 3768.73 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:34:13.594 INFO: Epoch 88: head: mhc_head_2, loss=0.01901202, RMSE_E_per_atom= 3873.76 meV, RMSE_F=   31.86 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:34:31.183 INFO: Epoch 88: head: mhc_head_3, loss=0.02022668, RMSE_E_per_atom= 3716.05 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:37:16.046 INFO: Epoch 89: head: mhc_head_0, loss=0.01945251, RMSE_E_per_atom= 3885.35 meV, RMSE_F=   32.52 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:37:33.406 INFO: Epoch 89: head: mhc_head_1, loss=0.01990839, RMSE_E_per_atom= 3768.73 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:37:50.426 INFO: Epoch 89: head: mhc_head_2, loss=0.01901191, RMSE_E_per_atom= 3873.76 meV, RMSE_F=   31.86 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:38:07.669 INFO: Epoch 89: head: mhc_head_3, loss=0.02022650, RMSE_E_per_atom= 3716.05 meV, RMSE_F=   33.37 meV / A, RMSE_stress=None meV / A^3
+2026-11-07 01:38:07.687 INFO: Training complete
+2026-11-07 01:38:07.688 INFO: 
+2026-11-07 01:38:07.688 INFO: ===========RESULTS===========
+2026-11-07 01:38:08.354 INFO: Loading checkpoint: /root/mlpdft/run_outputs/mhc4d_a40_001/full/mhc_frozen_readouts/checkpoints/mhc_frozen_readouts_run-123_epoch-89.pt
+2026-11-07 01:38:08.375 INFO: Loaded Stage one model from epoch 89 for evaluation
+2026-11-07 01:38:08.375 INFO: Saving model to /root/mlpdft/run_outputs/mhc4d_a40_001/full/mhc_frozen_readouts/checkpoints/mhc_frozen_readouts_run-123.model
+2026-11-07 01:38:08.573 INFO: Compiling model, saving metadata to /root/mlpdft/run_outputs/mhc4d_a40_001/full/mhc_frozen_readouts/models/mhc_frozen_readouts_compiled.model
+2026-11-07 01:38:09.376 INFO: Computing metrics for training, validation, and test sets
+2026-11-07 01:38:09.377 INFO: Skipping evaluation for heads: ['pt_head']
+2026-11-07 01:38:09.377 INFO: Evaluating train_mhc_head_0 ...
+2026-11-07 01:38:22.475 INFO: Evaluating train_mhc_head_1 ...
+2026-11-07 01:38:35.729 INFO: Evaluating train_mhc_head_2 ...
+2026-11-07 01:38:48.998 INFO: Evaluating train_mhc_head_3 ...
+2026-11-07 01:39:02.478 INFO: Evaluating valid_mhc_head_0 ...
+2026-11-07 01:39:19.682 INFO: Evaluating valid_mhc_head_1 ...
+2026-11-07 01:39:37.050 INFO: Evaluating valid_mhc_head_2 ...
+2026-11-07 01:39:53.842 INFO: Evaluating valid_mhc_head_3 ...
+2026-11-07 01:40:11.228 INFO: Error-table on TRAIN and VALID:
++------------------+---------------------+------------------+-------------------+---------------------------------------+
+|   config_type    | RMSE E / meV / atom | RMSE F / meV / A | relative F RMSE % | RMSE Stress (Virials) / meV / A (A^3) |
++------------------+---------------------+------------------+-------------------+---------------------------------------+
+| train_mhc_head_0 |         3873.4      |         27.6     |          8.29     |                  None                 |
+| train_mhc_head_1 |         3758.6      |         28.7     |          8.50     |                  None                 |
+| train_mhc_head_2 |         3872.2      |         26.5     |          7.95     |                  None                 |
+| train_mhc_head_3 |         3730.0      |         27.8     |          8.23     |                  None                 |
+| valid_mhc_head_0 |         3885.3      |         32.5     |          8.08     |                  None                 |
+| valid_mhc_head_1 |         3768.7      |         33.4     |          8.30     |                  None                 |
+| valid_mhc_head_2 |         3873.8      |         31.9     |          7.92     |                  None                 |
+| valid_mhc_head_3 |         3716.0      |         33.4     |          8.30     |                  None                 |
++------------------+---------------------+------------------+-------------------+---------------------------------------+
+2026-11-07 01:40:11.229 INFO: Evaluating F_doped_Li_mhc_head_0 ...
+2026-11-07 01:40:17.590 INFO: Evaluating bulk_LiF_mhc_head_0 ...
+2026-11-07 01:40:28.254 INFO: Error-table on TEST:
++-----------------------+---------------------+------------------+-------------------+---------------------------------------+
+|      config_type      | RMSE E / meV / atom | RMSE F / meV / A | relative F RMSE % | RMSE Stress (Virials) / meV / A (A^3) |
++-----------------------+---------------------+------------------+-------------------+---------------------------------------+
+| F_doped_Li_mhc_head_0 |         1169.2      |         23.1     |         17.42     |                  None                 |
+|  bulk_LiF_mhc_head_0  |         5392.9      |         40.1     |          7.04     |                  None                 |
++-----------------------+---------------------+------------------+-------------------+---------------------------------------+
+2026-11-07 01:42:54.340 INFO: Done
+Removed 1 checkpoint file(s): /root/mlpdft/run_outputs/mhc4d_a40_001/full/mhc_frozen_readouts/checkpoints
+2026-11-07 01:42:54.541 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-07 01:42:54.542 INFO: Using head default out of  ['default']
+Evaluated zero_shot member foundation
+2026-11-07 01:43:42.965 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-07 01:43:42.966 INFO: Using head mhc_head_0 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated frozen_mhc member mhc_head_0
+2026-11-07 01:44:15.407 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-07 01:44:15.407 INFO: Using head mhc_head_1 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated frozen_mhc member mhc_head_1
+2026-11-07 01:44:48.204 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-07 01:44:48.205 INFO: Using head mhc_head_2 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated frozen_mhc member mhc_head_2
+2026-11-07 01:45:20.595 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-07 01:45:20.595 INFO: Using head mhc_head_3 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated frozen_mhc member mhc_head_3
+2026-11-07 01:45:53.327 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-07 01:45:53.327 INFO: Using head mhc_head_0 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated previous_frozen_mhc member mhc_head_0
+2026-11-07 01:46:26.119 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-07 01:46:26.120 INFO: Using head mhc_head_1 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated previous_frozen_mhc member mhc_head_1
+2026-11-07 01:46:58.971 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-07 01:46:58.971 INFO: Using head mhc_head_2 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated previous_frozen_mhc member mhc_head_2
+2026-11-07 01:47:31.544 INFO: CUDA version: 12.4, CUDA device: 0
+2026-11-07 01:47:31.544 INFO: Using head mhc_head_3 out of  ['mhc_head_0', 'mhc_head_1', 'mhc_head_2', 'mhc_head_3']
+Evaluated previous_frozen_mhc member mhc_head_3
+All runs and results saved under: /root/mlpdft/run_outputs/mhc4d_a40_001/full
+FINAL_UQ_SUMMARY_JSON {"frozen_mhc": {"atom_level_file": "/root/mlpdft/run_outputs/mhc4d_a40_001/full/evaluation/frozen_mhc_atom_level.npz", "atom_level_pearson_uncertainty_vs_force_error": 0.44670989034214287, "atom_level_spearman_uncertainty_vs_force_error": 0.4315471870616378, "by_group": {"F_doped_Li": {"atom_level_pearson_uncertainty_vs_force_error": 0.2655393110856256, "atom_level_spearman_uncertainty_vs_force_error": 0.18836490693219085, "coverage_1sigma_energy": 1.0, "coverage_1sigma_force": 0.7304938271604938, "coverage_2sigma_energy": 1.0, "coverage_2sigma_force": 0.9092592592592592, "energy_mae_mev_per_atom": 1216.7834459140329, "energy_rmse_mev_per_atom": 1216.7834546037943, "force_mae_ev_per_angstrom": 0.01894168726636957, "force_rmse_ev_per_angstrom": 0.02330201402673342, "low_uncertainty_risk_coverage_force_rmse": {"0.1": 0.023316505318842783, "0.25": 0.023443744128991018, "0.5": 0.023091589934394894, "0.75": 0.023281619809746055, "1.0": 0.02330201402673342}, "n_frames": 100, "pearson_uncertainty_vs_force_error": 0.15601943564790707, "rll_force": -0.5711378229128938, "spearman_uncertainty_vs_force_error": 0.1055265526552655}, "bulk_LiF": {"atom_level_pearson_uncertainty_vs_force_error": 0.2933090191804974, "atom_level_spearman_uncertainty_vs_force_error": 0.28057392071408505, "coverage_1sigma_energy": 0.0, "coverage_1sigma_force": 0.8255208333333334, "coverage_2sigma_energy": 1.0, "coverage_2sigma_force": 0.9611458333333334, "energy_mae_mev_per_atom": 5269.124275835857, "energy_rmse_mev_per_atom": 5271.259609885087, "force_mae_ev_per_angstrom": 0.030270892176828042, "force_rmse_ev_per_angstrom": 0.039749953446723725, "low_uncertainty_risk_coverage_force_rmse": {"0.1": 0.037094748556777385, "0.25": 0.036574384632660696, "0.5": 0.036958104448824546, "0.75": 0.03773470496079088, "1.0": 0.03974995344672372}, "n_frames": 100, "pearson_uncertainty_vs_force_error": 0.6448584949847647, "rll_force": -0.26315253788798404, "spearman_uncertainty_vs_force_error": 0.5885748574857486}}, "calibration": {"alpha_energy": 32.34750578727523, "alpha_force": 12.835560631971926, "baseline_force_rmse_ev_per_angstrom": 0.033196566411833626, "coverage_1sigma_energy": 0.5, "coverage_1sigma_force": 0.7820338983050847, "coverage_2sigma_energy": 1.0, "coverage_2sigma_force": 0.9374011299435028, "definition": "alpha^2 = mean((prediction - reference)^2 / disagreement^2) on the calibration frames", "n_frames": 200, "rll_force": -0.394088730008515}, "member_accuracy": [{"energy_rmse_mev_per_atom": 3901.912051395225, "force_rmse_ev_per_angstrom": 0.03342998597492514, "head": "mhc_head_0", "member": "mhc_head_0"}, {"energy_rmse_mev_per_atom": 3783.534892131906, "force_rmse_ev_per_angstrom": 0.034491841758282946, "head": "mhc_head_1", "member": "mhc_head_1"}, {"energy_rmse_mev_per_atom": 3888.745428556079, "force_rmse_ev_per_angstrom": 0.03271758010579922, "head": "mhc_head_2", "member": "mhc_head_2"}, {"energy_rmse_mev_per_atom": 3730.3273206912645, "force_rmse_ev_per_angstrom": 0.033892340304183345, "head": "mhc_head_3", "member": "mhc_head_3"}], "member_count": 4, "method": "frozen_mhc", "overall": {"coverage_1sigma_energy": 0.5, "coverage_1sigma_force": 0.7820338983050847, "coverage_2sigma_energy": 1.0, "coverage_2sigma_force": 0.9374011299435028, "energy_mae_mev_per_atom": 3242.9538608749453, "energy_rmse_mev_per_atom": 3825.358796910652, "force_mae_ev_per_angstrom": 0.025086340777126705, "force_rmse_ev_per_angstrom": 0.03324853653628874, "low_uncertainty_risk_coverage_force_rmse": {"0.1": 0.023356394276875, "0.25": 0.023091589934394894, "0.5": 0.02330201402673342, "0.75": 0.029140792119111955, "1.0": 0.03324853653628874}, "n_frames": 200, "pearson_uncertainty_vs_force_error": 0.9113702647848251, "rll_force": -0.394088730008515, "spearman_uncertainty_vs_force_error": 0.8367749193729845}, "prediction_file": "/root/mlpdft/run_outputs/mhc4d_a40_001/full/evaluation/frozen_mhc_predictions.csv"}, "previous_frozen_mhc": {"atom_level_file": "/root/mlpdft/run_outputs/mhc4d_a40_001/full/evaluation/previous_frozen_mhc_atom_level.npz", "atom_level_pearson_uncertainty_vs_force_error": 0.3151040280893654, "atom_level_spearman_uncertainty_vs_force_error": 0.6041067318569933, "by_group": {"F_doped_Li": {"atom_level_pearson_uncertainty_vs_force_error": 0.6768920082290711, "atom_level_spearman_uncertainty_vs_force_error": 0.25047152009695045, "coverage_1sigma_energy": 0.0, "coverage_1sigma_force": 0.8727160493827161, "coverage_2sigma_energy": 1.0, "coverage_2sigma_force": 0.970246913580247, "energy_mae_mev_per_atom": 2557.7024882476794, "energy_rmse_mev_per_atom": 2557.702492760058, "force_mae_ev_per_angstrom": 0.017481359514513062, "force_rmse_ev_per_angstrom": 0.029950097438608794, "low_uncertainty_risk_coverage_force_rmse": {"0.1": 0.032429488064254726, "0.25": 0.03181484540264211, "0.5": 0.0311979476197891, "0.75": 0.0307466794167937, "1.0": 0.029950097438608797}, "n_frames": 100, "pearson_uncertainty_vs_force_error": -0.7197037042190632, "rll_force": 0.19773798779809407, "spearman_uncertainty_vs_force_error": -0.6923732373237322}, "bulk_LiF": {"atom_level_pearson_uncertainty_vs_force_error": -0.09545480987606125, "atom_level_spearman_uncertainty_vs_force_error": -0.1293679991911133, "coverage_1sigma_energy": 1.0, "coverage_1sigma_force": 0.85828125, "coverage_2sigma_energy": 1.0, "coverage_2sigma_force": 0.95953125, "energy_mae_mev_per_atom": 2079.6661410551446, "energy_rmse_mev_per_atom": 2081.495630179714, "force_mae_ev_per_angstrom": 0.0563292934771484, "force_rmse_ev_per_angstrom": 0.07479310978911494, "low_uncertainty_risk_coverage_force_rmse": {"0.1": 0.10052933608059002, "0.25": 0.10004824023529246, "0.5": 0.09389580789438864, "0.75": 0.08277158795324076, "1.0": 0.07479310978911494}, "n_frames": 100, "pearson_uncertainty_vs_force_error": -0.8981370202199965, "rll_force": -0.8322647929296382, "spearman_uncertainty_vs_force_error": -0.8661986198619861}}, "calibration": {"alpha_energy": 57.687784547113495, "alpha_force": 135.4564467316983, "baseline_force_rmse_ev_per_angstrom": 0.060485025962104366, "coverage_1sigma_energy": 0.5, "coverage_1sigma_force": 0.8648870056497175, "coverage_2sigma_energy": 1.0, "coverage_2sigma_force": 0.9644350282485876, "definition": "alpha^2 = mean((prediction - reference)^2 / disagreement^2) on the calibration frames", "n_frames": 200, "rll_force": -0.22080375089122112}, "member_accuracy": [{"energy_rmse_mev_per_atom": 2352.147073518241, "force_rmse_ev_per_angstrom": 0.05828203206333027, "head": "mhc_head_0", "member": "mhc_head_0"}, {"energy_rmse_mev_per_atom": 2342.5061259759163, "force_rmse_ev_per_angstrom": 0.058579123041921505, "head": "mhc_head_1", "member": "mhc_head_1"}, {"energy_rmse_mev_per_atom": 2288.5276025783414, "force_rmse_ev_per_angstrom": 0.060099903540523365, "head": "mhc_head_2", "member": "mhc_head_2"}, {"energy_rmse_mev_per_atom": 2344.8151098278877, "force_rmse_ev_per_angstrom": 0.05787814494993194, "head": "mhc_head_3", "member": "mhc_head_3"}], "member_count": 4, "method": "previous_frozen_mhc", "overall": {"coverage_1sigma_energy": 0.5, "coverage_1sigma_force": 0.8648870056497175, "coverage_2sigma_energy": 1.0, "coverage_2sigma_force": 0.9644350282485876, "energy_mae_mev_per_atom": 2318.6843146514116, "energy_rmse_mev_per_atom": 2331.7875224737195, "force_mae_ev_per_angstrom": 0.03855142539255257, "force_rmse_ev_per_angstrom": 0.05869015477587731, "low_uncertainty_risk_coverage_force_rmse": {"0.1": 0.03205408030032299, "0.25": 0.0311979476197891, "0.5": 0.029950097438608797, "0.75": 0.06199812242655105, "1.0": 0.05869015477587731}, "n_frames": 200, "pearson_uncertainty_vs_force_error": 0.18054246956693124, "rll_force": -0.22080375089122112, "spearman_uncertainty_vs_force_error": 0.3654721368034201}, "prediction_file": "/root/mlpdft/run_outputs/mhc4d_a40_001/full/evaluation/previous_frozen_mhc_predictions.csv"}, "zero_shot": {"atom_level_file": "/root/mlpdft/run_outputs/mhc4d_a40_001/full/evaluation/zero_shot_atom_level.npz", "atom_level_pearson_uncertainty_vs_force_error": null, "atom_level_spearman_uncertainty_vs_force_error": null, "by_group": {"F_doped_Li": {"atom_level_pearson_uncertainty_vs_force_error": null, "atom_level_spearman_uncertainty_vs_force_error": null, "energy_mae_mev_per_atom": 213717.40645284703, "energy_rmse_mev_per_atom": 213717.4064528996, "force_mae_ev_per_angstrom": 0.018691540416634702, "force_rmse_ev_per_angstrom": 0.03022722872181008, "low_uncertainty_risk_coverage_force_rmse": null, "n_frames": 100, "pearson_uncertainty_vs_force_error": null, "spearman_uncertainty_vs_force_error": null}, "bulk_LiF": {"atom_level_pearson_uncertainty_vs_force_error": null, "atom_level_spearman_uncertainty_vs_force_error": null, "energy_mae_mev_per_atom": 503098.9376017309, "energy_rmse_mev_per_atom": 503098.9507006677, "force_mae_ev_per_angstrom": 0.04220844837842768, "force_rmse_ev_per_angstrom": 0.05927227161260595, "low_uncertainty_risk_coverage_force_rmse": null, "n_frames": 100, "pearson_uncertainty_vs_force_error": null, "spearman_uncertainty_vs_force_error": null}}, "calibration": null, "member_accuracy": [{"energy_rmse_mev_per_atom": 386512.40860874485, "force_rmse_ev_per_angstrom": 0.04820365947941034, "head": null, "member": "foundation"}], "member_count": 1, "method": "zero_shot", "overall": {"energy_mae_mev_per_atom": 358408.172027289, "energy_rmse_mev_per_atom": 386512.40860874485, "force_mae_ev_per_angstrom": 0.031446473548454625, "force_rmse_ev_per_angstrom": 0.04820365947941034, "low_uncertainty_risk_coverage_force_rmse": null, "n_frames": 200, "pearson_uncertainty_vs_force_error": null, "spearman_uncertainty_vs_force_error": null}, "prediction_file": "/root/mlpdft/run_outputs/mhc4d_a40_001/full/evaluation/zero_shot_predictions.csv"}}
+Run completed. Outputs: /root/mlpdft/run_outputs/mhc4d_a40_001/full
