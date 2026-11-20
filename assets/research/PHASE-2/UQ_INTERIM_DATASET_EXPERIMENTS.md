@@ -2,13 +2,13 @@
 
 **Status:** planning only. No experiment on this dataset has been launched.
 
-**Dataset superseded for current planning:** the user requested removal of the
-interface. A two-environment curation candidate is recorded in
-[`UQ_TWO_ENVIRONMENT_CURATION.md`](UQ_TWO_ENVIRONMENT_CURATION.md); it is not
-yet cleared for production comparisons because F-doped burn-in and temporal
-dependence remain unresolved. The three-environment dataset, quotas, budgets and
-head allocations below describe the earlier plan and must be revised before
-launching on the new candidate.
+**Dataset status:** the interface is **back in scope**. A provisional
+three-environment build exists — 1,954 / 292 / 292 / 292 frames from one source
+run per environment, with a 60-step guard — recorded in
+[`UQ_FINAL_DATASET_CURATION.md`](UQ_FINAL_DATASET_CURATION.md). It is not cleared
+for production comparisons: F-doped Li is 70 frames short of the 800 / 100 / 100
+/ 100 target, its burn-in is still provisional, and temporal dependence remains
+unresolved. The quotas, budgets and head allocations below match this design.
 
 ## Research question
 
