@@ -78,8 +78,45 @@ margin. This is the only data the final build actually needs.
 | Calibration separate from validation and test | ✅ | disjoint blocks, 60-step guard |
 
 The lag limit in `F_doped_Li` validation/test and all three interface splits
-except test means those ESS values are lower bounds; report them as such and do
-not treat suggested block lengths as calibrated.
+except test means the correlation time is truncated, so `ESS = n / tau` is an
+**upper bound** on the effective sample size. Report it as optimistic and do not
+treat suggested block lengths as calibrated.
+
+## Correlation time and the correct frame stride
+
+The stride in the source filenames (3 / 3 / 1) is the cadence chosen when the
+extxyz files were extracted. It is **not** a decorrelation choice, and the
+builder only conditions on it. The physical correlation time comes from the QE
+output itself: `estimate_qe_correlation.py` reads every converged SCF block,
+removes a linear drift, and estimates the integrated autocorrelation time with
+Sokal automatic windowing.
+
+| Run | Usable steps | $$\\tau_E$$ | $$\\tau_V$$ | Slowest $$\\tau$$ | Stride $$2\\tau$$ | Independent configs |
+|---|---:|---:|---:|---:|---:|---:|
+| Bulk LiF | 9,900 | 6.9 | 14.6 | 14.6 | **30** | ~330 |
+| F-doped Li | 3,576 | 108.6 | — | 108.6 | **218** | ~16 |
+| Interface | 1,758 | 187.4* | — | 187.4* | **375** | ~5 |
+
+\* window-capped: the true value is larger, so the count is optimistic.
+
+The dense dataset is therefore oversampled by roughly 10× (bulk), 73×
+(F-doped) and 375× (interface). At a decorrelated spacing these trajectories
+hold about **330 / 16 / 5** configurations, not 800 / 800 / 400.
+
+Two consequences:
+
+1. **Training may keep dense frames** — redundancy costs storage, not
+   correctness — but every split must report its independent count, and
+   calibration/test should not use more frames than the trajectory can decorrelate.
+2. **F-doped Li and the interface cannot support the planned dataset from one
+   run.** The defensible fix is independent replicas (several short runs), not a
+   longer single trajectory, because replicas also give a clean replica-level
+   train/test split.
+
+The interface run also drifts by **−1.48 eV per 1,000 steps** (about −2.6 eV over
+the usable window against a standard deviation of 0.78 eV). That is not
+stationary. Treat its correlation time as a lower bound and the trajectory
+itself as suspect until the drift is explained.
 
 ## Unresolved scientific caveats
 

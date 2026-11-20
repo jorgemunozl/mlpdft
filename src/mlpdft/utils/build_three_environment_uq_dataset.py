@@ -222,7 +222,7 @@ def select(
     return chosen, report
 
 
-def autocorrelation(values: np.ndarray) -> dict | None:
+def autocorrelation(values: np.ndarray, stride: int) -> dict | None:
     """Normalized ACF with first-nonpositive truncation, on an energy proxy.
 
     Selected frames are irregularly spaced, so this is a triage diagnostic,
@@ -246,7 +246,7 @@ def autocorrelation(values: np.ndarray) -> dict | None:
     return {
         "lag1": float(acf[1]),
         "tau_frames": tau,
-        "tau_md_steps": SOURCES["interface"]["stride"] * tau,
+        "tau_md_steps": stride * tau,
         "ess": n / tau,
         "truncation_lag": stop - 1,
         "reached_window_limit": stop == max_lag + 1,
@@ -266,7 +266,7 @@ def temporal_diagnostics(chosen: list[dict]) -> dict:
             energy = np.array(
                 [float(r["energy"]) / int(r["natoms"]) for r in rows], dtype=float
             )
-            acf = autocorrelation(energy)
+            acf = autocorrelation(energy, stride)
             steps = np.diff([int(r["time_index"]) for r in rows])
             result[env][split] = {
                 "frames": len(rows),
