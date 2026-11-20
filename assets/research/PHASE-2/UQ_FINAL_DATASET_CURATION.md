@@ -84,6 +84,9 @@ treat suggested block lengths as calibrated.
 
 ## Correlation time and the correct frame stride
 
+Full method, results and limitations:
+[`AUTOCORRELATION_AND_STRIDE.md`](AUTOCORRELATION_AND_STRIDE.md).
+
 The stride in the source filenames (3 / 3 / 1) is the cadence chosen when the
 extxyz files were extracted. It is **not** a decorrelation choice, and the
 builder only conditions on it. The physical correlation time comes from the QE
