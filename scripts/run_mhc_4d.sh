@@ -18,7 +18,7 @@ task_id=${ORX_RUN_ID:-manual-preflight}
 task_out="${PWD}/run_outputs/${task_id}"
 task_data="${PWD}/dataset/xyz_files/uq_interim_two_env"
 task_model="${PWD}/src/mlpdft/outputs/mace_omat_medium/mace_omat_medium.model"
-task_old_model="${PWD}/assets/research/experiments/exp-03-mhc/runs/mhc_pilot_2026-11-05/training/mhc_saved.model"
+task_old_model="${PWD}/assets/research/experiments/exp-03-mhc/runs/2026-11-05-mhc-pilot/training/mhc_saved.model"
 task_stage="${MHC_STAGE_ROOT:-${HOME}/.cache/mlpdft_mhc_4d}"
 mkdir -p "$task_out"
 printf 'Budget: 8h including setup, smoke, training and evaluation; run %s\n' "$task_id"

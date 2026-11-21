@@ -57,7 +57,7 @@ independent of the head count:
 2. the QE E0 reference was inconsistent with that readout (2.2–2.5 eV/atom);
 3. each head saw only about 54 frames.
 
-See [`experiment3_runs/mhc_pilot_2026-11-05/DIAGNOSIS.md`](runs/2026-11-05-mhc-pilot/DIAGNOSIS.md).
+See [`2026-11-05-mhc-pilot/DIAGNOSIS.md`](runs/2026-11-05-mhc-pilot/DIAGNOSIS.md).
 Changing `A` in the repair run would add a fourth difference and make the
 comparison uninterpretable. Keeping `A = 4` isolates the three fixes.
 

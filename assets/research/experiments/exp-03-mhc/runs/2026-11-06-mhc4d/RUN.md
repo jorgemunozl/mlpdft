@@ -7,7 +7,7 @@ owner: jorge
 # Four-head disjoint MHC: A40 development run
 
 **Status:** completed 2026-11-07 (run `mhc4d_a40_001`); results in
-[`experiment3_runs/mhc_4d_2026-11-06/README.md`](README.md).
+[`2026-11-06-mhc4d/README.md`](README.md).
 This document applies the design in
 [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](../../DESIGN.md) to the
 user's approximately eight-hour compute budget.
