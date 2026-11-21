@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Materialize the Phase 1 frozen splits as extended XYZ files.
 
-Reads ``assets/research/PHASE-1/audit/frames.csv``, which records the source
+Reads ``assets/research/datasets/phase1-audit/audit/frames.csv``, which records the source
 file and frame index for every unique frame and its split assignment, and writes
 one extxyz file per split:
 
@@ -20,7 +20,7 @@ Usage
 -----
     python3 src/mlpdft/utils/build_phase1_splits.py \
         --data-root /path/to/dataset \
-        --frames assets/research/PHASE-1/audit/frames.csv \
+        --frames assets/research/datasets/phase1-audit/audit/frames.csv \
         --output-dir /path/to/dataset/xyz_files/uq_splits
 
 Use ``--limit-per-split 20`` for a smoke test.
@@ -148,7 +148,7 @@ def main() -> None:
     parser.add_argument(
         "--frames",
         type=Path,
-        default=Path("assets/research/PHASE-1/audit/frames.csv"),
+        default=Path("assets/research/datasets/phase1-audit/audit/frames.csv"),
     )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument(

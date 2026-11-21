@@ -20,8 +20,8 @@ Usage
     python src/mlpdft/utils/make_paper_figures.py \
         --split-manifest dataset/xyz_files/uq_splits/split_manifest.json \
         --train-file dataset/xyz_files/uq_splits/uq_train.extxyz \
-        --analysis assets/research/PHASE-2/analysis/uq_analysis.json \
-        --outdir assets/research/PHASE-2/analysis/figures
+        --analysis assets/research/experiments/exp-02-snapshots/analysis/uq_analysis.json \
+        --outdir assets/research/experiments/exp-02-snapshots/analysis/figures
 
     # once the loop has run
     python src/mlpdft/utils/make_paper_figures.py ... \

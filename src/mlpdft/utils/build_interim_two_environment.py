@@ -171,7 +171,7 @@ def qc(chosen, output, old_test):
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('--data-root',type=Path,required=True)
-    ap.add_argument('--frames',type=Path,default=Path('assets/research/PHASE-1/audit/frames.csv'))
+    ap.add_argument('--frames',type=Path,default=Path('assets/research/datasets/phase1-audit/audit/frames.csv'))
     ap.add_argument('--previous-test',type=Path)
     ap.add_argument('--output-dir',type=Path,required=True)
     args=ap.parse_args()

@@ -115,7 +115,7 @@ def verify_scf(rows: list[dict], root: Path) -> dict:
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--data-root", type=Path, required=True)
-    p.add_argument("--frames", type=Path, default=Path("assets/research/PHASE-1/audit/frames.csv"))
+    p.add_argument("--frames", type=Path, default=Path("assets/research/datasets/phase1-audit/audit/frames.csv"))
     p.add_argument("--output-dir", type=Path, required=True)
     p.add_argument("--previous-test", type=Path)
     args = p.parse_args()
