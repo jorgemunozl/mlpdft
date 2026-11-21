@@ -1,9 +1,9 @@
-# UQ Experiment Protocol: Warm-Snapshot vs. Independent Committee for MACE vs. Multi Head finetunning
+# UQ Experiment: Warm-Snapshot vs. Independent Committee for MACE
 
 > **Status (2026-10-29):** the transport endpoints in this planning document are
 > superseded by the UQ + AL framing in `../DESCRIPTION.md` and `../ROUTE.md`.
-> The frozen splits are in `../PHASE-1/AUDIT.md`; the retrospective AL protocol
-> is `../PHASE-3/ACTIVE_LEARNING_PROTOCOL.md`. This file is retained as a
+> The frozen splits are in `../datasets/phase1-audit/AUDIT.md`; the retrospective AL protocol
+> is `../exp-04-active-learning/PROTOCOL.md`. This file is retained as a
 > planning record.
 
 
@@ -19,7 +19,7 @@ unreliability as well as an independent-model committee — or not.
 ## Data & Scope
 
 Primary test: Li/F diffusion, no boron chemistry. Use the final, non-isolated
-**NVT** groups from [`DATASET.md`](../PHASE-1/DATASET.md):
+**NVT** groups from [`DATASET.md`](../datasets/phase1-audit/DATASET.md):
 
 - Bulk LiF: `LIF64_KJPAW_FINAL`
 - Li-rich Li–F: `LIWITHF_KJPAW_FINAL`
@@ -94,12 +94,19 @@ test set is excluded from all training, scheduler selection, and calibration.
 | Single fine-tune | Each committee member reported individually | Accuracy reference |
 | Independent committee | 3 fine-tunes, seeds 123/124/125, single cosine decay | Standard committee-UQ baseline |
 | Warm-snapshot committee | 1 fine-tune, cosine warm restarts; 3 cycle-minimum checkpoints | Candidate low-cost UQ |
-| Multi-head fine-tuning with replay (MH-FT; historical plan, not the frozen-body MHC) | Shared trainable body, 3 bootstrap heads + MP replay head | Lower-cost head disagreement; report correlation + replay cost |
+| Multi-head fine-tuning with replay (MH-FT) | Trainable shared body, 3 bootstrap heads + MP replay head (`pt_train_file='omat'` is routed to MP by mace 0.3.15) | Experiment 2 arm; report correlation and the replay cost separately |
+| Frozen-body multi-head committee (MHC) | Frozen AEDs, 8 randomly initialised heads on 80% overlapping subsets, no replay, force-only loss | Experiment 3 arm; the paper's method |
 
-`uq_compare.py` defaults: 150 epochs, snapshots near epochs 50/100/150 (cycle
-ends 49/99/149 under T₀ = epochs//count = 50). Confirm checkpoints are cycle
-minima and converged. Report equal-member and matched-cost comparisons. A larger
-spread is not "better UQ" unless it predicts larger errors.
+`uq_compare.py` defaults changed with Experiment 3: the no-flag run is now the
+MHC arm (`--arms mhc,frozen-probe`, 8 overlapping heads, 120 MHC epochs,
+force-only loss) and merges the Experiment 2 committee/snapshot summary when it
+is present. Reproduce Experiment
+2 explicitly with
+`--arms committee,snapshots,multihead-bootstrap --epochs 150 --pt-train-file omat --pt-samples 1000`
+and a fresh `--run-id`. Snapshot checkpoints are the cycle ends 49/99/149 under
+T₀ = epochs//count = 50. Confirm checkpoints are cycle minima and converged.
+Report equal-member and matched-cost comparisons. A larger spread is not "better
+UQ" unless it predicts larger errors.
 
 ## Evaluation
 
@@ -110,10 +117,11 @@ Report overall and by group/ensemble/environment:
 - Energy MAE/RMSE (meV/atom); force MAE/RMSE (eV/Å).
 - Ensemble force uncertainty from member disagreement, with the aggregation rule
   fixed in advance (RMS component std across atoms + max per-atom uncertainty).
-- Uncertainty-vs-error rank correlation; error by uncertainty quantile;
-  risk-vs-coverage curves.
-- Calibration on validation; empirical coverage on the locked test. Calibrate
-  scales on validation only.
+- Uncertainty-vs-error **rank correlation (Spearman)** and **linear correlation
+  (Pearson)**; error by uncertainty quantile; risk-vs-coverage curves.
+- Calibration: α scaling fitted on validation only, then **RLL** (Kellner et
+  al.) and **empirical 1σ/2σ coverage** on the locked test, overall and by
+  group.
 - Energy uncertainty as secondary; check energy-reference alignment (shared
   offsets are invisible to disagreement).
 

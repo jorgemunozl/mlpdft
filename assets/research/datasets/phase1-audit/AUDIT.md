@@ -3,7 +3,7 @@
 **Date:** 2026-10-29
 **Scope:** Phase 1 only — provenance, de-duplication, environment labels, and
 frozen splits. No model training, no active-learning run, no transport work.
-**Script:** [`src/mlpdft/utils/phase1_audit.py`](../../../src/mlpdft/utils/phase1_audit.py)
+**Script:** [`src/mlpdft/utils/phase1_audit.py`](../../../../src/mlpdft/utils/phase1_audit.py)
 **Data root:** `/home/jorge/project/mlpdft/dataset` (read-only)
 **Artifacts:** `provenance.csv`, `frames.csv`, `manifest.json` in this directory.
 
@@ -12,7 +12,7 @@ Reproduce with:
 ```bash
 python3 src/mlpdft/utils/phase1_audit.py \
   --data-root /home/jorge/project/mlpdft/dataset \
-  --output-dir assets/research/PHASE-1/audit
+  --output-dir assets/research/datasets/phase1-audit/audit
 ```
 
 ---

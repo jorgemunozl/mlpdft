@@ -3,10 +3,10 @@
 **Status:** curation audit of the planned `li-f-uq-interim-2900` dataset.
 No dataset rebuild or training run was performed for this report.
 **Scope:** the 2,000 / 300 / 300 / 300 interim split used by
-[`UQ_INTERIM_DATASET_EXPERIMENTS.md`](UQ_INTERIM_DATASET_EXPERIMENTS.md).
-**Builder:** [`build_interim_uq_dataset.py`](../../../src/mlpdft/utils/build_interim_uq_dataset.py),
+[`UQ_INTERIM_DATASET_EXPERIMENTS.md`](../../experiments/PLAN.md).
+**Builder:** [`build_interim_uq_dataset.py`](../../../../src/mlpdft/utils/build_interim_uq_dataset.py),
 which selects from the Phase 1 audit table
-[`frames.csv`](../PHASE-1/audit/frames.csv) and materialises the extxyz files.
+[`frames.csv`](../phase1-audit/audit/frames.csv) and materialises the extxyz files.
 
 This report distinguishes what the builder already enforces from what must be
 verified or fixed before the dataset can support the planned UQ claims.
@@ -21,7 +21,7 @@ verified or fixed before the dataset can support the planned UQ claims.
   dataset card / checksums.
 - Labels: `REF_energy` (eV) and `REF_forces` (eV/Å).
 - The runner now accepts `--calibration-file`
-  ([`uq_calibration.py`](../../../src/mlpdft/uq_calibration.py)); pass all four
+  ([`uq_calibration.py`](../../../../src/mlpdft/uq_calibration.py)); pass all four
   paths explicitly. Omitting it falls back to validation with a warning, which
   does **not** satisfy this protocol.
 
@@ -203,7 +203,7 @@ run manifest:
 ```bash
 uv run --locked python src/mlpdft/utils/build_interim_uq_dataset.py \
   --data-root /path/to/qe_outputs \
-  --frames assets/research/PHASE-1/audit/frames.csv \
+  --frames assets/research/datasets/phase1-audit/audit/frames.csv \
   --output-dir dataset/xyz_files/uq_interim \
   --previous-test dataset/xyz_files/uq_splits/uq_test.extxyz
 ```

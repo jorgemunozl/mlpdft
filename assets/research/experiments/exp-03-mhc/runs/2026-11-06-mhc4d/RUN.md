@@ -1,9 +1,9 @@
 # Four-head disjoint MHC: A40 development run
 
 **Status:** completed 2026-11-07 (run `mhc4d_a40_001`); results in
-[`experiment3_runs/mhc_4d_2026-11-06/README.md`](experiment3_runs/mhc_4d_2026-11-06/README.md).
+[`experiment3_runs/mhc_4d_2026-11-06/README.md`](README.md).
 This document applies the design in
-[`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](UQ_MHC_4HEAD_DISJOINT_DESIGN.md) to the
+[`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](../../DESIGN.md) to the
 user's approximately eight-hour compute budget.
 
 ## Objective and scope
@@ -96,13 +96,13 @@ coverage 0.782/0.937, and RLL is −0.394 (negative in both groups). The ensembl
 is slightly worse than its best member (33.25 vs 32.72).
 
 Full analysis:
-[`analysis/report.md`](experiment3_runs/mhc_4d_2026-11-06/analysis/report.md).
+[`analysis/report.md`](analysis/report.md).
 Run metadata and contents:
-[`README.md`](experiment3_runs/mhc_4d_2026-11-06/README.md).
+[`README.md`](README.md).
 
 ## Launch contract
 
-[`scripts/run_mhc_4d.sh`](../../../scripts/run_mhc_4d.sh) is the fixed run
+[`scripts/run_mhc_4d.sh`](../../../../../../scripts/run_mhc_4d.sh) is the fixed run
 recipe. It expects an authenticated Hugging Face environment, or private inputs
 staged at the pinned locations before preflight. It produces `preflight.json`,
 head manifests, smoke and full run outputs, and prints the final UQ summary.

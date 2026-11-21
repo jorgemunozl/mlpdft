@@ -69,8 +69,8 @@ composition. These labels drive the stratified metrics in Phase 3.
 
 ### Phase 1 outputs
 
-The frozen audit is [`PHASE-1/AUDIT.md`](PHASE-1/AUDIT.md) plus `PHASE-1/audit/provenance.csv`,
-`PHASE-1/audit/frames.csv` (per-frame environment and split), and `PHASE-1/audit/manifest.json`.
+The frozen audit is [`PHASE-1/AUDIT.md`](datasets/phase1-audit/AUDIT.md) plus `datasets/phase1-audit/audit/provenance.csv`,
+`datasets/phase1-audit/audit/frames.csv` (per-frame environment and split), and `datasets/phase1-audit/audit/manifest.json`.
 Split counts, equilibration cutoffs, and excluded sets are recorded there.
 
 ## Phase 2 — Models, baselines, and cost accounting

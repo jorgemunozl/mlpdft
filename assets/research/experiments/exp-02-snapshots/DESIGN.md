@@ -2,13 +2,13 @@
 
 **Status:** 🔵 **running** on the private external cluster (as of 2026-10-27; results arrive as
 pasted logs — not tracked in `orx`).
-**Predecessor:** [`UQ_EXPERIMENT_1.md`](UQ_EXPERIMENT_1.md) — the run whose confounds this one fixes.
+**Predecessor:** [`UQ_EXPERIMENT_1.md`](../exp-01-committee/DESIGN.md) — the run whose confounds this one fixes.
 
 ## Purpose
 
 Rerun the three-way comparison with the experiment-1 confounds fixed, and freeze the
 **calibration leg** and the **full-data ceiling model** that the active-learning loop
-([`ACTIVE_LEARNING_PROTOCOL.md`](ACTIVE_LEARNING_PROTOCOL.md)) will approach.
+([`PROTOCOL.md`](../exp-04-active-learning/PROTOCOL.md)) will approach.
 
 ## Changes from experiment 1 (the fixes)
 

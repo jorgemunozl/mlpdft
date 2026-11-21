@@ -11,7 +11,7 @@ Usage
 -----
     python3 src/mlpdft/utils/build_three_environment_uq_dataset.py \
         --data-root /path/to/dataset \
-        --frames assets/research/PHASE-1/audit/frames.csv \
+        --frames assets/research/datasets/phase1-audit/audit/frames.csv \
         --output-dir outputs/uq_dataset_three_env
 
 No independence is implied by time-blocked splits or by the provisional
@@ -428,7 +428,7 @@ def main() -> None:
     parser.add_argument(
         "--frames",
         type=Path,
-        default=Path("assets/research/PHASE-1/audit/frames.csv"),
+        default=Path("assets/research/datasets/phase1-audit/audit/frames.csv"),
     )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument(

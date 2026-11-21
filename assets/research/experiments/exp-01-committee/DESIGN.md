@@ -1,13 +1,13 @@
 # UQ Experiment 1 — First Fine-Tuning Run
 
 **Status:** ✅ **completed & reviewed** (analysis 2026-10-20).
-**Next:** [`UQ_EXPERIMENT_2.md`](UQ_EXPERIMENT_2.md) — the corrected rerun, now running.
+**Next:** [`UQ_EXPERIMENT_2.md`](../exp-02-snapshots/DESIGN.md) — the corrected rerun, now running.
 
 ## Goal
 
 First full three-way comparison of uncertainty strategies for a fine-tuned MACE foundation
 model on the Li/F core: does ensemble disagreement track held-out DFT force error, and at what
-cost? Scope per [`DESCRIPTION.md`](DESCRIPTION.md) and [`ROUTE.md`](ROUTE.md).
+cost? Scope per [`CHARTER.md`](../../CHARTER.md) and [`ROADMAP.md`](../../ROADMAP.md).
 
 ## Configuration (as actually run)
 

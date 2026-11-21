@@ -4,8 +4,8 @@
 **Status:** ✅ completed — results analyzed.
 **Source:** `outputs/outputs_v3/` (local copy of the cluster run
 `lif_uq_001`; raw outputs under `src/mlpdft/outputs/uq_diffusion_comparison/`).
-**Predecessor:** [`../UQ_EXPERIMENT_1.md`](../UQ_EXPERIMENT_1.md).
-**Feeds:** [`../ACTIVE_LEARNING_PROTOCOL.md`](../ACTIVE_LEARNING_PROTOCOL.md) (the
+**Predecessor:** [`exp-01-committee/DESIGN.md`](../exp-01-committee/DESIGN.md).
+**Feeds:** [`exp-04-active-learning/PROTOCOL.md`](../exp-04-active-learning/PROTOCOL.md) (the
 AL leg; ceiling RMSE fixed here).
 
 ---
@@ -124,7 +124,7 @@ calibrator.
 ## 7. Implication for the active-learning leg
 
 The calibration leg lands exactly where the pre-registered decision rules in
-[`../ACTIVE_LEARNING_PROTOCOL.md`](../ACTIVE_LEARNING_PROTOCOL.md) anticipate:
+[`exp-04-active-learning/PROTOCOL.md`](../exp-04-active-learning/PROTOCOL.md) anticipate:
 
 - **H1 (calibration → data efficiency):** snapshot leads (0.834 vs 0.656), so it
   should acquire the most informative configs per label.
@@ -144,7 +144,7 @@ the OOD conclusion is qualitative there, as already flagged in the protocol.
 ## 8. Expected results — where they are answered
 
 This section maps each outcome anticipated in
-[`UQ_EXPERIMENT_2.md`](UQ_EXPERIMENT_2.md) and the pre-registered protocol to
+[`UQ_EXPERIMENT_2.md`](DESIGN.md) and the pre-registered protocol to
 the evidence in this report.
 
 | Expected result | Answered in | Status |

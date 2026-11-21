@@ -22,7 +22,7 @@ Usage
 -----
     python3 src/mlpdft/utils/phase1_audit.py \
         --data-root /path/to/dataset \
-        --output-dir assets/research/PHASE-1/audit
+        --output-dir assets/research/datasets/phase1-audit/audit
 """
 
 from __future__ import annotations
@@ -469,7 +469,7 @@ def main() -> None:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("assets/research/PHASE-1/audit"),
+        default=Path("assets/research/datasets/phase1-audit/audit"),
     )
     parser.add_argument("--groups", nargs="+", default=CORE_GROUPS)
     parser.add_argument("--cal-frac", type=float, default=0.15)

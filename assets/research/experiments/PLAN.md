@@ -5,7 +5,7 @@
 **Dataset status:** the interface is **back in scope**. A provisional
 three-environment build exists — 1,954 / 292 / 292 / 292 frames from one source
 run per environment, with a 60-step guard — recorded in
-[`UQ_FINAL_DATASET_CURATION.md`](UQ_FINAL_DATASET_CURATION.md). It is not cleared
+[`UQ_FINAL_DATASET_CURATION.md`](../datasets/final-3env/CURATION.md). It is not cleared
 for production comparisons: F-doped Li is 70 frames short of the 800 / 100 / 100
 / 100 target, its burn-in is still provisional, and temporal dependence remains
 unresolved. The quotas, budgets and head allocations below match this design.
@@ -22,8 +22,8 @@ multi-head experiment.
 
 These are new experiments on a new dataset. Historical results and the 214 /
 53 / 178 pilot belong to different splits and must not be merged into this
-comparison. See [Experiment 2 results](UQ_EXPERIMENT_2_RESULTS.md) and the
-[MHC pilot diagnosis](experiment3_runs/mhc_pilot_2026-11-05/DIAGNOSIS.md) for
+comparison. See [Experiment 2 results](exp-02-snapshots/RESULTS.md) and the
+[MHC pilot diagnosis](exp-03-mhc/runs/2026-11-05-mhc-pilot/DIAGNOSIS.md) for
 their background and limitations.
 
 ## Shared dataset
@@ -35,7 +35,7 @@ downloaded files against `SHA256SUMS` and record the revision and file hashes in
 every run manifest.
 
 Curation audit, composition checks, temporal-dependence caveats and acceptance
-gates: [`UQ_INTERIM_DATASET_CURATION.md`](UQ_INTERIM_DATASET_CURATION.md).
+gates: [`UQ_INTERIM_DATASET_CURATION.md`](../datasets/interim-2env/CURATION.md).
 
 | Environment | Train | Validation | Calibration | Test | Source stride (MD steps) | Audit thermalization cutoff (steps) |
 |---|---:|---:|---:|---:|---|---:|
@@ -133,7 +133,7 @@ ensemble gain or lose? A larger spread alone does not demonstrate better UQ.
 > training frames (500 bulk + 500 F-doped) and no interface. The first MHC run
 > uses **4 heads, disjoint**, i.e. 250 frames/head, not the eight-head
 > overlapping design described below. Rationale, command and gates:
-> [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](UQ_MHC_4HEAD_DISJOINT_DESIGN.md). The
+> [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](exp-03-mhc/DESIGN.md). The
 > 2,000-frame / 1,600-per-head numbers in this section describe the earlier
 > three-environment plan.
 
@@ -228,9 +228,9 @@ Measure startup and steady-state epoch/update time separately, peak memory and
 evaluation time; then revise the full and ablation estimates. For the benchmark,
 use validation as the runner's test input and skip final-test evaluation: MACE
 receives the `--test-file` during training as well as the later evaluation.
-References: [pilot gate](experiment3_runs/mhc_pilot_2026-11-05/GATE.md),
-[probe training log](experiment3_runs/mhc_pilot_2026-11-05/probe150/train.log),
-and [Experiment 2 cost](UQ_EXPERIMENT_2_RESULTS.md).
+References: [pilot gate](exp-03-mhc/runs/2026-11-05-mhc-pilot/GATE.md),
+[probe training log](exp-03-mhc/runs/2026-11-05-mhc-pilot/probe150/train.log),
+and [Experiment 2 cost](exp-02-snapshots/RESULTS.md).
 
 ## Minimum remaining campaign and transition to active learning
 
@@ -284,7 +284,7 @@ answer that question with a separately specified unstratified diagnostic.
 An actual DFT acquisition round, if later undertaken, is a separate prospective
 validation rather than part of the retrospective result.
 
-The older [active-learning protocol](../PHASE-3/ACTIVE_LEARNING_PROTOCOL.md)
+The older [active-learning protocol](exp-04-active-learning/PROTOCOL.md)
 contains preliminary assumptions about four disjoint MHC heads, split
 attribution and interface/OOD status. Reconcile it with the selected method and
 the eventual final dataset before pre-registering the AL study; do not treat its

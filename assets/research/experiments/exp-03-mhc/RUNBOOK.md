@@ -10,7 +10,7 @@ split, force-focused frozen arms).
 > pilot split and an 8-head, 80%-overlapping recipe. The first full MHC run
 > uses **4 heads, disjoint**, on the 1,000-frame two-environment interim
 > candidate: see
-> [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](UQ_MHC_4HEAD_DISJOINT_DESIGN.md) for the
+> [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](DESIGN.md) for the
 > rationale, exact command and gates. Use that document, not this runbook, to
 > launch the MHC arm.
 
@@ -147,4 +147,4 @@ orx exp run <experimentId> --backend ssh --host <ssh-config-alias>
 ```
 
 Until then, the durable record is the pod's `/workspace/runs/` plus the copies
-pulled into `assets/research/PHASE-2/experiment3_runs/`.
+pulled into `assets/research/experiments/exp-03-mhc/runs/`.

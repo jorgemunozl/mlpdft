@@ -1,13 +1,24 @@
+---
+status: superseded
+date: 2026-11-03
+phase: 2
+superseded_by: ../experiments/exp-03-mhc/DESIGN.md
+---
+
+> **Archived.** Superseded by the four-head disjoint design in
+> [`exp-03-mhc/DESIGN.md`](../experiments/exp-03-mhc/DESIGN.md). Kept for
+> provenance; do not edit.
+
 # UQ Experiment 3 — Frozen-Body Multi-Head Committee (MHC)
 
 **Status:** 🟡 **ready to run** — code path implemented, smoke gate not yet passed.
-**Predecessors:** [`UQ_EXPERIMENT_2.md`](UQ_EXPERIMENT_2.md),
-[`UQ_EXPERIMENT_PROTOCOL.md`](UQ_EXPERIMENT_PROTOCOL.md).
+**Predecessors:** [`UQ_EXPERIMENT_2.md`](../experiments/exp-02-snapshots/DESIGN.md),
+[`UQ_EXPERIMENT_PROTOCOL.md`](../experiments/PROTOCOL.md).
 **Method:** Beck et al., *Multi-head committees enable direct uncertainty
 prediction for atomistic foundation models*, arXiv:2508.09907.
 
 > **First MHC run superseded.** The first run uses the **4-head, disjoint**
-> design in [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](UQ_MHC_4HEAD_DISJOINT_DESIGN.md),
+> design in [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](../experiments/exp-03-mhc/DESIGN.md),
 > on the 1,000-frame two-environment interim candidate (250 frames/head). The
 > 8-head, 80%-overlapping figures and commands below describe the earlier plan
 > and are retained for the broader protocol, not for this run.

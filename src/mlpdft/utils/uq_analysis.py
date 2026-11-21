@@ -26,7 +26,7 @@ Usage
     python src/mlpdft/utils/uq_analysis.py \
         --prediction committee=path/to/independent_committee_predictions.csv \
         --prediction snapshot=path/to/warm_snapshots_predictions.csv \
-        --output-dir assets/research/PHASE-2/analysis \
+        --output-dir assets/research/experiments/exp-02-snapshots/analysis \
         --block 20 --n-boot 2000
 
 The output is ``uq_analysis.json`` plus a human-readable

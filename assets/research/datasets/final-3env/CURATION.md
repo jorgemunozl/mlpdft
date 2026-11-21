@@ -8,7 +8,7 @@ dataset.
 **Builder:** `src/mlpdft/utils/build_three_environment_uq_dataset.py`
 **Build:** `outputs/uq_dataset_three_env_needblocks/` (gitignored, 2,830 frames)
 **Supersedes:** the two-environment candidate in
-[`UQ_TWO_ENVIRONMENT_CURATION.md`](UQ_TWO_ENVIRONMENT_CURATION.md), which
+[`UQ_TWO_ENVIRONMENT_CURATION.md`](../../archive/2026-11-06-two-env-dataset.md), which
 excluded the interface.
 
 ## Design
@@ -85,7 +85,7 @@ treat suggested block lengths as calibrated.
 ## Correlation time and the correct frame stride
 
 Full method, results and limitations:
-[`AUTOCORRELATION_AND_STRIDE.md`](AUTOCORRELATION_AND_STRIDE.md).
+[`AUTOCORRELATION_AND_STRIDE.md`](../../methods/autocorrelation.md).
 
 The stride in the source filenames (3 / 3 / 1) is the cadence chosen when the
 extxyz files were extracted. It is **not** a decorrelation choice, and the
@@ -140,7 +140,7 @@ itself as suspect until the drift is explained.
 ```bash
 PYTHONPATH=src python3 src/mlpdft/utils/build_three_environment_uq_dataset.py \
   --data-root /path/to/dataset \
-  --frames assets/research/PHASE-1/audit/frames.csv \
+  --frames assets/research/datasets/phase1-audit/audit/frames.csv \
   --output-dir outputs/uq_dataset_three_env_needblocks \
   --block-mode need
 ```

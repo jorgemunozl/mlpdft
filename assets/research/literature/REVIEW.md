@@ -3,7 +3,7 @@
 - **Date:** 2026-10-27
 - **Status:** reframed on 2026-10-29 for the UQ + AL + tier-0 anchor scope; supersedes the 2026-09-13 draft (E₀ and zero-shot property dependence) and the 2026-10-27 transport framing.
 - **Scope:** uncertainty quantification (UQ) for machine-learning interatomic potentials (MLIPs), with emphasis on cheap versus expensive ensemble constructions and uncertainty-guided active learning on a Li–F testbed. Transport is context, not a claimed observable.
-- **Project cross-reference:** [`DESCRIPTION.md`](../DESCRIPTION.md), [`ROUTE.md`](../ROUTE.md), [`UQ_EXPERIMENT_0.md`](../PHASE-2/UQ_EXPERIMENT_0.md), [`ACTIVE_LEARNING_PROTOCOL.md`](../PHASE-3/ACTIVE_LEARNING_PROTOCOL.md).
+- **Project cross-reference:** [`DESCRIPTION.md`](../CHARTER.md), [`ROUTE.md`](../ROADMAP.md), [`UQ_EXPERIMENT_0.md`](../archive/2026-10-29-uq-protocol-v0.md), [`ACTIVE_LEARNING_PROTOCOL.md`](../experiments/exp-04-active-learning/PROTOCOL.md).
 
 **Search.** arXiv, alphaXiv, and Crossref; queries combined MLIP/MLFF, uncertainty quantification, ensemble, snapshot, multi-head, active learning, and Li-ion/LiF diffusion; cutoff 2026-10-27. The ranked retrieval set supplied for this revision was checked against canonical records. **Inclusion:** UQ methods or benchmarks for MLIPs, active learning, and Li–F/Li-ion context. **Exclusion:** E₀-only or zero-shot-transfer papers, except where they affect energy metrics.
 
@@ -108,7 +108,7 @@ The independent committee is the right reference because it is the most studied 
 
 Kurniawan et al. include random-initialization and bootstrap ensembles in their comparison, alongside dropout and snapshot ensembles. Their key result is not that one construction wins everywhere, but that all of them can fail OOD: uncertainty may plateau or decrease while error grows. That makes the independent committee a necessary baseline but a weak novelty claim.
 
-The project's own first run is consistent with the broader warning: committee members can be highly correlated when they share a foundation checkpoint and training recipe, so "three seeds" does not guarantee three independent hypotheses ([`UQ_EXPERIMENT_1.md`](../PHASE-2/UQ_EXPERIMENT_1.md)). The literature on GNN epistemic collapse offers a plausible mechanism, though it is not an MLIP-specific result ([Vieira et al., 2026](https://arxiv.org/abs/2605.22593)). The practical lesson is to report member-to-member diversity, not just ensemble size.
+The project's own first run is consistent with the broader warning: committee members can be highly correlated when they share a foundation checkpoint and training recipe, so "three seeds" does not guarantee three independent hypotheses ([`UQ_EXPERIMENT_1.md`](../experiments/exp-01-committee/DESIGN.md)). The literature on GNN epistemic collapse offers a plausible mechanism, though it is not an MLIP-specific result ([Vieira et al., 2026](https://arxiv.org/abs/2605.22593)). The practical lesson is to report member-to-member diversity, not just ensemble size.
 
 **Role in this paper:** reference construction for cost and accuracy; the method that must be beaten or matched on discrimination, calibration, and label efficiency.
 
@@ -126,7 +126,7 @@ But the specific claim this paper needs — that a warm-restart snapshot ensembl
 
 These are not the same thing. A shallow ensemble shares most weights across members and is trained with a probabilistic objective; a warm-restart snapshot ensemble shares one optimization trajectory and varies the checkpoint. The paper should define its arm precisely and should not cite shallow ensembles as if they were direct evidence for warm snapshots.
 
-There is also an operational trap. A checkpoint taken at an arbitrary epoch is not an ensemble member; it may be a loss-spiked model just after a restart. The members should be taken at **cycle minima**, and the selection rule should be fixed before looking at test performance. The project's first run collected snapshots at evenly spaced epochs that coincided with restart boundaries, and two of the three members were loss-spiked just after a restart; the corrected run uses cycle-end checkpoints ([`UQ_EXPERIMENT_1.md`](../PHASE-2/UQ_EXPERIMENT_1.md), [`UQ_EXPERIMENT_2.md`](../PHASE-2/UQ_EXPERIMENT_2.md)). This is a concrete design lesson, not a literature result: the snapshot recipe is only as good as its checkpoint-selection rule.
+There is also an operational trap. A checkpoint taken at an arbitrary epoch is not an ensemble member; it may be a loss-spiked model just after a restart. The members should be taken at **cycle minima**, and the selection rule should be fixed before looking at test performance. The project's first run collected snapshots at evenly spaced epochs that coincided with restart boundaries, and two of the three members were loss-spiked just after a restart; the corrected run uses cycle-end checkpoints ([`UQ_EXPERIMENT_1.md`](../experiments/exp-01-committee/DESIGN.md), [`UQ_EXPERIMENT_2.md`](../experiments/exp-02-snapshots/DESIGN.md)). This is a concrete design lesson, not a literature result: the snapshot recipe is only as good as its checkpoint-selection rule.
 
 **Role in this paper:** the low-training-cost candidate. The hypothesis is not that snapshots are intrinsically better, but that they may reach comparable discrimination and transport-QoI uncertainty at a fraction of the fine-tuning cost. The risk is that their members are too correlated, or that the cycle-end checkpoints are not diverse enough to represent epistemic uncertainty.
 
@@ -276,7 +276,7 @@ There are several reasons AL can fail even with a good ranking:
 - **Cost asymmetry:** a method may need fewer labels but more compute per label, so "labels-to-target" and "compute-to-target" can disagree.
 - **Calibration disconnect:** pooled force RMSE can improve while within-environment calibration does not, especially when the environments differ in scale.
 
-The project's protocol already anticipates these issues: same candidate pool, equal batch size, random control, group stratification, diversity gap, locked test, and both labels-to-target and compute-to-target ([`ACTIVE_LEARNING_PROTOCOL.md`](../PHASE-3/ACTIVE_LEARNING_PROTOCOL.md)). The literature supports that design.
+The project's protocol already anticipates these issues: same candidate pool, equal batch size, random control, group stratification, diversity gap, locked test, and both labels-to-target and compute-to-target ([`ACTIVE_LEARNING_PROTOCOL.md`](../experiments/exp-04-active-learning/PROTOCOL.md)). The literature supports that design.
 
 ### 6.3 What "matched cost" should mean
 

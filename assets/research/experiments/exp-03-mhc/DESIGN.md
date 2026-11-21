@@ -3,8 +3,8 @@
 **Experiment design and theoretical rationale for the first MHC run**
 
 **Status:** design frozen before training. Supersedes the 8-head,
-80%-overlapping configuration in [`UQ_EXPERIMENT_3.md`](UQ_EXPERIMENT_3.md) and
-[`EXPERIMENT_3_RUNBOOK.md`](EXPERIMENT_3_RUNBOOK.md) for this experiment.
+80%-overlapping configuration in [`UQ_EXPERIMENT_3.md`](../../archive/2026-11-03-exp3-eight-head-overlap.md) and
+[`EXPERIMENT_3_RUNBOOK.md`](RUNBOOK.md) for this experiment.
 **Date:** 2026-11-06.
 **Method:** Beck et al., *Multi-head committees enable direct uncertainty
 prediction for atomistic foundation models*,
@@ -15,7 +15,7 @@ prediction for atomistic foundation models*,
 (500 bulk LiF + 500 F-doped Li). The interface is excluded.
 **Code:** `src/mlpdft/uq_compare.py`, arm `mhc`.
 
-> **Dataset caveat.** [`UQ_TWO_ENVIRONMENT_CURATION.md`](UQ_TWO_ENVIRONMENT_CURATION.md)
+> **Dataset caveat.** [`UQ_TWO_ENVIRONMENT_CURATION.md`](../../archive/2026-11-06-two-env-dataset.md)
 > marks this candidate *development only, not cleared for production UQ
 > comparisons*: F-doped burn-in is unverified and the temporal diagnostics hit
 > their lag limit. Unless those gates close first, this run is a development
@@ -51,7 +51,7 @@ independent of the head count:
 2. the QE E0 reference was inconsistent with that readout (2.2–2.5 eV/atom);
 3. each head saw only about 54 frames.
 
-See [`experiment3_runs/mhc_pilot_2026-11-05/DIAGNOSIS.md`](experiment3_runs/mhc_pilot_2026-11-05/DIAGNOSIS.md).
+See [`experiment3_runs/mhc_pilot_2026-11-05/DIAGNOSIS.md`](runs/2026-11-05-mhc-pilot/DIAGNOSIS.md).
 Changing `A` in the repair run would add a fourth difference and make the
 comparison uninterpretable. Keeping `A = 4` isolates the three fixes.
 
@@ -349,8 +349,8 @@ size, not the MHC arm.
 1. H. Beck, P. Simko, L. L. Schaaf, O. Marsalek, C. Schran, *Multi-head
    committees enable direct uncertainty prediction for atomistic foundation
    models*, [arXiv:2508.09907](https://arxiv.org/abs/2508.09907).
-2. [`DIAGNOSIS.md`](experiment3_runs/mhc_pilot_2026-11-05/DIAGNOSIS.md) — why
+2. [`DIAGNOSIS.md`](runs/2026-11-05-mhc-pilot/DIAGNOSIS.md) — why
    the four-head pilot failed.
-3. [`UQ_TWO_ENVIRONMENT_CURATION.md`](UQ_TWO_ENVIRONMENT_CURATION.md) — current
+3. [`UQ_TWO_ENVIRONMENT_CURATION.md`](../../archive/2026-11-06-two-env-dataset.md) — current
    dataset composition and unresolved gates.
-4. [`UQ_EXPERIMENT_3.md`](UQ_EXPERIMENT_3.md) — broader Experiment 3 protocol.
+4. [`UQ_EXPERIMENT_3.md`](../../archive/2026-11-03-exp3-eight-head-overlap.md) — broader Experiment 3 protocol.

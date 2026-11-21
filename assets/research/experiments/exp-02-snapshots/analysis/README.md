@@ -31,18 +31,18 @@ python src/mlpdft/utils/uq_analysis.py \
   --prediction snapshot=$D/warm_snapshots_predictions.csv \
   --prediction multihead=$D/multihead_bootstrap_predictions.csv \
   --prediction zero_shot=$D/zero_shot_predictions.csv \
-  --output-dir assets/research/PHASE-2/analysis --block 20 --n-boot 2000
+  --output-dir assets/research/experiments/exp-02-snapshots/analysis --block 20 --n-boot 2000
 
 python src/mlpdft/utils/make_paper_figures.py \
   --split-manifest dataset/xyz_files/uq_splits/split_manifest.json \
   --train-file dataset/xyz_files/uq_splits/uq_train.extxyz \
-  --analysis assets/research/PHASE-2/analysis/uq_analysis.json \
-  --outdir assets/research/PHASE-2/analysis/figures --only 1,2,3
+  --analysis assets/research/experiments/exp-02-snapshots/analysis/uq_analysis.json \
+  --outdir assets/research/experiments/exp-02-snapshots/analysis/figures --only 1,2,3
 
 # after the active-learning run
 python src/mlpdft/utils/make_paper_figures.py \
   --al-manifest outputs/.../al_manifest.json \
-  --outdir assets/research/PHASE-2/analysis/figures --only 4
+  --outdir assets/research/experiments/exp-02-snapshots/analysis/figures --only 4
 ```
 
 Figures are built at the paper's 5.5 in text width, written as PDF (vector, for

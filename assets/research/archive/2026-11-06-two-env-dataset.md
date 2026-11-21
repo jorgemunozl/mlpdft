@@ -1,9 +1,20 @@
+---
+status: superseded
+date: 2026-11-06
+phase: 2
+superseded_by: ../datasets/final-3env/CURATION.md
+---
+
+> **Archived.** Superseded by the three-environment build in
+> [`datasets/final-3env/CURATION.md`](../datasets/final-3env/CURATION.md).
+> Kept for provenance; do not edit.
+
 # Two-environment interim UQ dataset: curation result
 
 **Status:** development candidate; **not cleared for production UQ
 comparisons**. The interface is excluded from all files, as requested. The
 candidate follows the applicable checks in
-[`UQ_INTERIM_DATASET_CURATION.md`](UQ_INTERIM_DATASET_CURATION.md), with the
+[`UQ_INTERIM_DATASET_CURATION.md`](../datasets/interim-2env/CURATION.md), with the
 three-environment frame-count gate replaced by the counts below.
 
 Private dataset:
