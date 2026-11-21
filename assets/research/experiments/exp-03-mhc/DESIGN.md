@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-03
+owner: jorge
+---
+
 # MHC-4D: four-head disjoint committee
 
 **Experiment design and theoretical rationale for the first MHC run**

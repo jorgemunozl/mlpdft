@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-06
+owner: jorge
+---
+
 # MHC-4D on the two-environment Li–F candidate
 
 **Run:** `mhc4d_a40_001`, NVIDIA A40, 2026-11-06 18:49 UTC → 2026-11-07 ~01:40 UTC.

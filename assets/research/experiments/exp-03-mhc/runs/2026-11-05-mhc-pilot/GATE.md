@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-05
+owner: jorge
+---
+
 # Experiment 3 — frozen MHC gate report (pilot)
 
 **Run:** `lif_uq_mhc_002` on the 214 / 53 / 178 split (`li_f_uq_splits_v2`).

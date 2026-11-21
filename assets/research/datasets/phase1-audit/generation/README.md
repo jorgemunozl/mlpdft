@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-04
+owner: jorge
+---
+
 # Data Generation — Interface Closure
 
 **Date:** 2026-11-04

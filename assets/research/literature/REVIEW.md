@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-10-27
+owner: jorge
+---
+
 # Literature Review — Uncertainty Quantification and Active Learning for Foundation MACE on Li–F
 
 - **Date:** 2026-10-27

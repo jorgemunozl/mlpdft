@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-06
+owner: jorge
+---
+
 # Experiment 3 — 150-epoch rerun and probe attribution (pilot)
 
 **Runs:** `mhc150_s123` (MHC, 150 epochs, standard loss), `probe150` (frozen

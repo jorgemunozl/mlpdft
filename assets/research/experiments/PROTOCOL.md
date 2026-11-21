@@ -1,10 +1,17 @@
-# UQ Experiment: Warm-Snapshot vs. Independent Committee for MACE
+---
+status: active
+date: 2026-10-29
+owner: jorge
+---
 
-> **Status (2026-10-29):** the transport endpoints in this planning document are
-> superseded by the UQ + AL framing in `../DESCRIPTION.md` and `../ROUTE.md`.
-> The frozen splits are in `../datasets/phase1-audit/AUDIT.md`; the retrospective AL protocol
-> is `../exp-04-active-learning/PROTOCOL.md`. This file is retained as a
-> planning record.
+# Experiment campaign protocol — arms, defaults and metrics
+
+> **Scope.** The transport endpoints of the original draft are retired; the
+> UQ + AL framing is in [`CHARTER.md`](../CHARTER.md) and
+> [`ROADMAP.md`](../ROADMAP.md). The frozen splits are in
+> [`datasets/phase1-audit/AUDIT.md`](../datasets/phase1-audit/AUDIT.md); the
+> retrospective AL protocol is
+> [`exp-04-active-learning/PROTOCOL.md`](exp-04-active-learning/PROTOCOL.md).
 
 
 

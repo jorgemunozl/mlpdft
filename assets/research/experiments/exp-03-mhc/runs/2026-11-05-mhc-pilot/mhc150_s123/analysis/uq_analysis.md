@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-21
+owner: jorge
+---
+
 # UQ analysis
 
 Block bootstrap: 20 frames, 2000 replicates, seed 0.

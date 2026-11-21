@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-21
+owner: jorge
+---
+
 # Experiment 3 — frozen-body MHC runbook
 
 **Scope:** the frozen-body multi-head committee (MHC) and the single-head

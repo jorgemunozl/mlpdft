@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-20
+owner: jorge
+---
+
 # Three-environment UQ dataset — curation build
 
 **Date:** 2026-11-20

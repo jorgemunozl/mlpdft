@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-21
+owner: jorge
+---
+
 # Experiment 3 — why the frozen-body MHC pilot fails
 
 **Status:** diagnosis of existing runs only; no new training.

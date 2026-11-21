@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-21
+owner: jorge
+---
+
 # Project Route: UQ and Active Learning for Fine-Tuned MACE on a Li–F Testbed
 
 ## Research goal

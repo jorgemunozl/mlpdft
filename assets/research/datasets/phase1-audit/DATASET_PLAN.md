@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-05
+owner: jorge
+---
+
 # Dataset plan — closing the interface gap
 
 **One page for collaborators and slides.** The detailed provenance and generation

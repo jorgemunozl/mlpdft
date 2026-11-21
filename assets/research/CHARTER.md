@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-21
+owner: jorge
+---
+
 # Uncertainty Quantification and Active Learning for Fine-Tuned MACE on a Li–F Testbed
 
 ## One-sentence description

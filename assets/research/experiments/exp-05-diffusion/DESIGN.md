@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-10-29
+owner: jorge
+---
+
 # Diffusion-Validation Cell Decision — Interstitial Li in Bulk LiF
 
 > **Status: superseded (2026-10-29).** Transport validation (diffusivity and

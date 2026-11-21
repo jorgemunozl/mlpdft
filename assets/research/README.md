@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-20
+owner: jorge
+---
+
 # Research documentation
 
 This tree holds the project's durable research record. It is organised by

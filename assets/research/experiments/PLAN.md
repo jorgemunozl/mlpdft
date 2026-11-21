@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-21
+owner: jorge
+---
+
 # Three UQ experiments on the interim Li–F dataset
 
 **Status:** planning only. No experiment on this dataset has been launched.

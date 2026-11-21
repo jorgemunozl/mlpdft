@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-21
+owner: jorge
+---
+
 # Experiment 2 — environment-resolved re-analysis
 
 Pilot analysis of the 214-frame run in

@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-04
+owner: jorge
+---
+
 # Active-Learning Protocol — Retrospective UQ Comparison
 
 **Date:** 2026-11-04

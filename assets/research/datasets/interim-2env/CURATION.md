@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-21
+owner: jorge
+---
+
 # Interim Li–F UQ dataset — curation audit and required actions
 
 **Status:** curation audit of the planned `li-f-uq-interim-2900` dataset.

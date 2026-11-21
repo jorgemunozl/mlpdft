@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-10-20
+owner: jorge
+---
+
 # UQ Experiment 1 — First Fine-Tuning Run
 
 **Status:** ✅ **completed & reviewed** (analysis 2026-10-20).

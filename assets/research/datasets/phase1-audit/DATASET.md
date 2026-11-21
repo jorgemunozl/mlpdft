@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-21
+owner: jorge
+---
+
 # Dataset Families for MACE UQ
 
 ## Purpose

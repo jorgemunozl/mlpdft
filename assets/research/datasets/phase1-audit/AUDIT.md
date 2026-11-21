@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-10-29
+owner: jorge
+---
+
 # Phase 1 Audit — UQ + AL Li–F Testbed
 
 **Date:** 2026-10-29

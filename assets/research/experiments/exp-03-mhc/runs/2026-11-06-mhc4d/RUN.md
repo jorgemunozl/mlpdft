@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-07
+owner: jorge
+---
+
 # Four-head disjoint MHC: A40 development run
 
 **Status:** completed 2026-11-07 (run `mhc4d_a40_001`); results in

@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-20
+owner: jorge
+---
+
 # Autocorrelation and the frame stride
 
 **Date:** 2026-11-20

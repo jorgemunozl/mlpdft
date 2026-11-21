@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-10-27
+owner: jorge
+---
+
 # UQ Experiment 2 — Corrected Calibration Run
 
 **Status:** 🔵 **running** on the private external cluster (as of 2026-10-27; results arrive as

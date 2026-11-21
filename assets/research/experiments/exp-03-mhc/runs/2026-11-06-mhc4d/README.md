@@ -1,3 +1,9 @@
+---
+status: active
+date: 2026-11-07
+owner: jorge
+---
+
 # MHC-4D A40 run — `mhc4d_a40_001`
 
 **Status:** completed 2026-11-07 (~01:40 UTC); 90/90 epochs, smoke gate passed.
