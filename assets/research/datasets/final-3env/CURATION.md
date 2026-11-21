@@ -90,8 +90,15 @@ treat suggested block lengths as calibrated.
 
 ## Correlation time and the correct frame stride
 
+> **Corrected 2026-11-21.** The τ values below reproduce, but none of the three
+> runs meets the method's assumptions: bulk is a barely damped cell
+> oscillation, and F-doped and the interface drift under overdamped Andersen
+> dynamics. The strides and independent counts in this section are not
+> decorrelation results. See
+> [`methods/autocorrelation.md`](../../methods/autocorrelation.md).
+
 Full method, results and limitations:
-[`AUTOCORRELATION_AND_STRIDE.md`](../../methods/autocorrelation.md).
+[`methods/autocorrelation.md`](../../methods/autocorrelation.md).
 
 The stride in the source filenames (3 / 3 / 1) is the cadence chosen when the
 extxyz files were extracted. It is **not** a decorrelation choice, and the
