@@ -1,15 +1,16 @@
-# Run the QE campaign (stages 1 and 2)
+# Run the QE campaign (stages 0–2)
 
-Six SLURM jobs with the same settings as the earlier LiF runs (QE 7.4, 40 Ry,
+Seven SLURM jobs with the same settings as the earlier LiF runs (QE 7.4, 40 Ry,
 48 cores per node):
 
 | Stage | Jobs | What | Expected time |
 |---|---|---|---|
-| `stage1_pilot` | 2 | bulk LiF MD at 300 K, 3,000 steps each (SVR and Andersen thermostats) | ~18 h each (30 h requested) |
-| `stage2_cutoff` | 4 | 77 single-point calculations on frames of the earlier runs, at 30–80 Ry | 0.5–5 h each (3–9 h requested) |
+| `stage0_preflight` | 1 | one bulk LiF single point that must reproduce the earlier 40 Ry run | ~5 min |
+| `stage1_pilot` | 2 | bulk LiF MD at 300 K, 3,000 steps each (SVR and Andersen thermostats); they start only if the preflight passes | ~18 h each (30 h requested) |
+| `stage2_cutoff` | 4 | 77 single points on frames of the earlier runs, at 30–80 Ry | 0.5–5 h each (3–9 h requested) |
 
-All six can run at the same time. A second batch (5 MD jobs like stage 1) will
-follow once the stage 1 results are back.
+A second batch (5 MD jobs like stage 1) will follow once the stage 1 results
+are back.
 
 ## Prerequisites
 
@@ -17,15 +18,18 @@ follow once the stage 1 results are back.
 |---|---|
 | **SLURM account** | The one used in the earlier `QE_JOB` scripts (`#SBATCH --account=...`) |
 | **QuantumESPRESSO 7.4** | The scripts run `module load GCC/13.3.0 OpenMPI/5.0.3 QuantumESPRESSO/7.4` |
-| **The original pseudopotentials** | `Li.pbe-sl-kjpaw_psl.1.0.0.UPF` and `F.pbe-n-kjpaw_psl.1.0.0.UPF`, **the same files** used for the earlier 40 Ry runs (their `pseudos` folder) |
-| **Scratch space** | ~5 GB per MD job (kept for restarts), ~15 GB peak for a cutoff job (cleaned after each calculation) |
+| **Pseudopotentials** | Nothing to download: the jobs use the repository's `assets/quantum_expresso/pseudo/` |
+| **Scratch space** | ~5 GB per MD job (kept for restarts), ~15 GB peak per cutoff job (cleaned after each calculation) |
 
-### 1. Unpack
+### 1. Get the files
 
 ```bash
-tar xzf campaign-2026-11.tar.gz
-cd campaign-2026-11
+git clone https://github.com/jorgemunozl/mlpdft.git
+cd mlpdft/assets/quantum_expresso/campaign-2026-11
 ```
+
+If you were sent `campaign-2026-11.tar.gz` instead:
+`tar xzf campaign-2026-11.tar.gz && cd quantum_expresso/campaign-2026-11`.
 
 ### 2. Configure (once)
 
@@ -34,70 +38,73 @@ cp config.env.example config.env
 nano config.env
 ```
 
-Fill in the three values:
+Fill in the two empty values:
 
 | Variable | Example |
 |---|---|
 | `SLURM_ACCOUNT` | the account number from the old `QE_JOB` scripts |
-| `ESPRESSO_PSEUDO` | `/scratch/user/<you>/QE/pseudos` |
 | `SCRATCH_BASE` | `/scratch/user/<you>/QE/campaign-2026-11` |
 
-Check that the pseudopotentials are the original files:
-
-```bash
-source config.env
-md5sum $ESPRESSO_PSEUDO/Li.pbe-sl-kjpaw_psl.1.0.0.UPF $ESPRESSO_PSEUDO/F.pbe-n-kjpaw_psl.1.0.0.UPF
-```
-
-Expected: `d2f1e9ef3385d70aefdbf456043e54ab` (Li) and
-`48ea186a387ffd7661a6cc7d97657bc3` (F). If they differ, find the original
-files. Every job checks this again at start-up and stops if they don't match.
+Leave `ESPRESSO_PSEUDO` as it is; it already points to `../pseudo`.
 
 ### 3. Submit
 
 ```bash
-./submit.sh stage1_pilot      # 2 jobs
-./submit.sh stage2_cutoff     # 4 jobs
+./submit.sh all
 squeue -u $USER
 ```
+
+This submits the preflight, the two MD jobs (they wait for the preflight) and
+the four cutoff jobs.
 
 > Do not edit the `pw.in` files or the inputs (the only exception is a restart,
 > step 5).
 
-### 4. Check after ~10 minutes
+### 4. Check after ~15 minutes
 
 ```bash
-grep -A1 "controlled by" stage1_pilot/*/pw.out      # thermostat of each MD job
-grep -c "^!" stage1_pilot/*/pw.out                  # MD steps done (target 3,000)
-ls stage2_cutoff/*/outputs/                          # single points appearing
+cat stage0_preflight/*/preflight.log
 ```
 
-- The Andersen job should show `Collision frequency = 0.0100/timestep`.
-- If a job stops right away, read its `slurm.e*` file:
-  - `pseudopotential checksum mismatch` (exit code 3): `ESPRESSO_PSEUDO` points
-    to different UPF files. Fix `config.env` and resubmit only that job, e.g.
-    `./submit.sh stage1_pilot bulk_svr_s101`.
-  - `pw.x stopped before reading the pseudopotentials`: QE failed to start;
-    send the job's `pw.out` and `slurm.e*`.
+- `PREFLIGHT PASS`: the MD jobs start by themselves. Nothing else to do.
+- `PREFLIGHT FAIL`: the MD jobs are cancelled automatically, while the cutoff
+  jobs keep running. Send me `stage0_preflight/*/preflight.log` and
+  `stage0_preflight/*/pw.out`.
+
+Once the MD jobs are running:
+
+```bash
+grep -A1 "controlled by" stage1_pilot/*/pw.out   # thermostat of each MD job
+grep -c "^!" stage1_pilot/*/pw.out               # MD steps done (target 3,000)
+ls stage2_cutoff/*/outputs/                       # single points appearing
+```
+
+If any job stops right away, read its `slurm.e*` file:
+- `pseudopotential checksum mismatch` (exit code 3): `ESPRESSO_PSEUDO` was
+  changed. Restore it as in `config.env.example`, then resubmit that job.
+- `pw.x stopped before reading the pseudopotentials`: QE failed to start. Send
+  me that job's `pw.out` and `slurm.e*`.
+
+To resubmit one job: `./submit.sh stage1_pilot bulk_svr_s101`.
 
 ### 5. If a job hits its time limit
 
 This should not happen with these requests.
 - **MD jobs** stop cleanly one hour before the limit. To continue, change
   `restart_mode = 'from_scratch'` to `restart_mode = 'restart'` in that job's
-  `pw.in`, then resubmit it, e.g. `./submit.sh stage1_pilot bulk_svr_s101`.
-  The new output goes to `pw.restart1.out`; `pw.out` is kept.
+  `pw.in` and resubmit it. The new output goes to `pw.restart1.out`; `pw.out` is
+  kept.
 - **Cutoff jobs:** just resubmit; finished calculations are skipped.
 
 Keep `$SCRATCH_BASE` until the MD jobs have finished, since restarts need it.
 
 ## 6. Give me the results
 
-When all six jobs have finished:
+When all jobs have finished:
 
 ```bash
-cd campaign-2026-11
 tar czf qe_campaign_results.tar.gz \
+  stage0_preflight/*/preflight.log stage0_preflight/*/pw.out \
   stage1_pilot/*/pw.in stage1_pilot/*/pw*.out stage1_pilot/*/slurm.* \
   stage2_cutoff/*/outputs stage2_cutoff/*/slurm.*
 ```

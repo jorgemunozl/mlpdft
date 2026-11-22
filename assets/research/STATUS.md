@@ -15,7 +15,7 @@ decision is taken or a gate changes; leave history to the ADRs and run folders.
 | Topic | Decision | Record |
 |---|---|---|
 | Study design | Train on bulk LiF; calibrate and test on independent bulk replicas; evaluate along a graded shift (≈ 162 K bulk → F-doped Li, Li metal → LiF/Li film); LLPR and NLL shallow-ensemble baselines | [ADR-0007](decisions/ADR-0007-bulk-trained-shift-ladder.md) |
-| DFT settings and MD protocol | 40/320 Ry labels only; new MD with `nraise = 100`, thermostat chosen by a pilot, ideal-lattice starts; pseudopotential checksum guard | [ADR-0008](decisions/ADR-0008-40ry-labels-and-md-protocol.md) |
+| DFT settings and MD protocol | 40/320 Ry labels only; new MD with `nraise = 100`, thermostat chosen by a pilot, ideal-lattice starts; repository pseudopotentials pinned by checksum and verified by a preflight that must reproduce the old 40 Ry data | [ADR-0008](decisions/ADR-0008-40ry-labels-and-md-protocol.md) (rev. 2026-11-21) |
 | Multi-head architecture | Four randomly initialised heads, frozen MACE-OMAT body, disjoint bulk LiF data (250 frames per head at 1,000 labels), force-only loss | [ADR-0001](decisions/ADR-0001-four-head-disjoint.md) (rev. 2026-11-21) |
 | Role of MHC | Fixed-budget arm; not an acquisition model inside the AL loop | [ADR-0002](decisions/ADR-0002-mhc-outside-al-loop.md) |
 | Frame spacing | Fixed stride of 10 steps for training; calibration and test from independent replicas; τ reported, never used to pick the stride | [ADR-0003](decisions/ADR-0003-qe-decorrelation-stride.md) (rev. 2026-11-21) |

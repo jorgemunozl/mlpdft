@@ -9,7 +9,10 @@ Stages
 pilot     Two bulk LiF NVT runs (300 K, 40 Ry) started from the ideal lattice
           with independent random displacements: SVR and Andersen, both with
           nraise = 100. The thermostat with the shorter force decorrelation is
-          used for the replicas; both pilots double as replicas.
+          used for the replicas; both pilots double as replicas. Also writes
+          stage 0, a preflight single point that must reproduce the existing
+          40 Ry bulk run with the repository's pseudopotentials; submit.sh
+          makes the pilots wait for it.
 cutoff    Single points on frames of the existing 40 Ry runs at 30/40/60/80 Ry
           (30 Ry only for the environments whose old data used it) and a
           4x4x4 k-point check, to justify 40 Ry and document why 30 Ry was
@@ -42,8 +45,16 @@ from diagnose_qe_drift import cell_from_out, parse
 
 MASSES = {"Li": 6.941, "F": 18.998}
 UPF = {"Li": "Li.pbe-sl-kjpaw_psl.1.0.0.UPF", "F": "F.pbe-n-kjpaw_psl.1.0.0.UPF"}
-# MD5 sums QE printed when it read the pseudopotentials of the existing runs.
-QE_MD5 = {"Li": "d2f1e9ef3385d70aefdbf456043e54ab", "F": "48ea186a387ffd7661a6cc7d97657bc3"}
+# The campaign uses the repository's files (assets/quantum_expresso/pseudo); the
+# guard pins exactly these. The existing runs read differently formatted copies
+# of the same PSLibrary files (QE printed the sums in OLD_RUN_MD5). The preflight
+# job checks that the repository files reproduce the existing 40 Ry data.
+QE_MD5 = {"Li": "4191b14a59696d8f3147dc7708df3c20", "F": "f73bf51f2e812fc84686424137293589"}
+OLD_RUN_MD5 = {"Li": "d2f1e9ef3385d70aefdbf456043e54ab", "F": "48ea186a387ffd7661a6cc7d97657bc3"}
+RY_PER_BOHR_TO_MEV_PER_A = 25711.0
+PREFLIGHT_TOL_FORCE_MEV_A = 1.0
+PREFLIGHT_TOL_MAX_MEV_A = 3.0
+PREFLIGHT_TOL_ENERGY_RY = 1.0e-4
 
 # Settings read from the headers of the existing 40 Ry runs.
 ENVS = {
@@ -209,8 +220,69 @@ def write_md_job(folder: Path, *, env: str, prefix: str, thermostat: str, seed: 
 
 
 # -------------------------------------------------------------------- stages
+PREFLIGHT_AWK = r"""awk -v tolF="$TOL_F" -v tolMax="$TOL_MAX" -v tolE="$TOL_E" -v conv="$CONV" '
+function abs(v) { return v < 0 ? -v : v }
+FNR == NR {
+  if ($1 == "energy_Ry") eref = $2
+  else if ($1 == "force") { n++; rx[n] = $2; ry[n] = $3; rz[n] = $4 }
+  next
+}
+/^!/ && !gotE { e = $(NF - 1); gotE = 1 }
+/Forces acting on atoms/ { inF = 1; next }
+inF && /force =/ {
+  m++; split($0, a, "="); split(a[2], f, " ")
+  dx = f[1] - rx[m]; dy = f[2] - ry[m]; dz = f[3] - rz[m]
+  s += dx * dx + dy * dy + dz * dz; c += 3
+  if (abs(dx) > mx) mx = abs(dx); if (abs(dy) > mx) mx = abs(dy); if (abs(dz) > mx) mx = abs(dz)
+  if (m == n) inF = 0
+}
+END {
+  if (!gotE || m < n) { print "PREFLIGHT FAIL: pw.out has no complete energy and forces"; exit 1 }
+  rmse = sqrt(s / c) * conv; mx = mx * conv; de = abs(e - eref)
+  printf "force RMSE %.4f meV/A (tolerance %.1f), max %.4f meV/A (tolerance %.1f), |dE| %.2e Ry (tolerance %.0e)\n", rmse, tolF, mx, tolMax, de, tolE
+  if (rmse <= tolF && mx <= tolMax && de <= tolE) {
+    print "PREFLIGHT PASS: the repository pseudopotentials reproduce the existing 40 Ry data"; exit 0
+  }
+  print "PREFLIGHT FAIL: results differ from the existing 40 Ry data; the MD jobs will not start"; exit 1
+}' reference.txt pw.out"""
+
+
+def stage_preflight(root: Path) -> dict:
+    """One bulk LiF single point that must reproduce the existing 40 Ry run.
+
+    It recomputes the configuration of SCF step 501 of ``LIF64_KJPAW_FINAL``
+    with the campaign's settings and pseudopotentials and compares energy and
+    forces with that run's own values. The MD pilots depend on it.
+    """
+    from estimate_qe_correlation import RY_TO_EV, parse_forces, parse_steps
+
+    frame = trajectory_frames(Path(ARGS.dataset_root), "bulk_LiF", ARGS.frames)[0]
+    source = Path(ARGS.dataset_root) / ENVS["bulk_LiF"]["source"] / f"{ENVS['bulk_LiF']['source']}.out"
+    energy_ry = parse_steps(source)[0][frame["step"]] / RY_TO_EV
+    forces = parse_forces(source)[frame["step"]]
+    folder = root / "stage0_preflight" / f"bulk_LiF_step{frame['step']}"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "pw.in").write_text(pw_input(
+        env="bulk_LiF", calculation="scf", prefix=f"preflight_step{frame['step']}", cell=frame["cell"],
+        species=frame["species"], positions=frame["positions"]))
+    lines = [f"# {ENVS['bulk_LiF']['source']}, SCF step {frame['step']}: energy (Ry) and forces (Ry/bohr)",
+             f"energy_Ry {energy_ry:.10f}"]
+    lines += [f"force {fx:.8f} {fy:.8f} {fz:.8f}" for fx, fy, fz in forces]
+    (folder / "reference.txt").write_text("\n".join(lines) + "\n")
+    body = [
+        f'run_pw pw.in pw.out "{md5_list(frame["species"])}" || exit $?',
+        f"TOL_F={PREFLIGHT_TOL_FORCE_MEV_A}; TOL_MAX={PREFLIGHT_TOL_MAX_MEV_A}; "
+        f"TOL_E={PREFLIGHT_TOL_ENERGY_RY}; CONV={RY_PER_BOHR_TO_MEV_PER_A}",
+        PREFLIGHT_AWK + " | tee preflight.log",
+        "exit ${PIPESTATUS[0]}",
+    ]
+    (folder / "job.sbatch").write_text(job_script(name="preflight", hours=1, body=body))
+    return {"job": folder.name, "stage": "stage0_preflight", "reference_step": frame["step"]}
+
+
 def stage_pilot(root: Path) -> list[dict]:
     stage = root / "stage1_pilot"
+    stage_preflight(root)
     return [
         write_md_job(stage / "bulk_svr_s101", env="bulk_LiF", prefix="pilot_svr_s101",
                      thermostat="svr", seed=101, nstep=ARGS.nstep),
@@ -314,26 +386,50 @@ run_pw() {
 """
 
 SUBMIT_SH = r"""#!/bin/bash
-# Usage: ./submit.sh <stage folder> [job folder ...]
-#   ./submit.sh stage1_pilot
-#   ./submit.sh stage2_cutoff interface
+# Usage:
+#   ./submit.sh all                        preflight, then stage 1 (starts only if the
+#                                          preflight passes) and stage 2
+#   ./submit.sh <stage folder> [job ...]   one stage, or some of its jobs, by hand
+#   ./submit.sh stage1_pilot bulk_svr_s101
 set -euo pipefail
 root=$(cd "$(dirname "$0")" && pwd)
 source "$root/config.env"
 : "${SLURM_ACCOUNT:?set SLURM_ACCOUNT in config.env}"
 : "${ESPRESSO_PSEUDO:?set ESPRESSO_PSEUDO in config.env}"
 : "${SCRATCH_BASE:?set SCRATCH_BASE in config.env}"
+for upf in Li.pbe-sl-kjpaw_psl.1.0.0.UPF F.pbe-n-kjpaw_psl.1.0.0.UPF; do
+  [ -f "$ESPRESSO_PSEUDO/$upf" ] || { echo "missing $ESPRESSO_PSEUDO/$upf" >&2; exit 1; }
+done
+
+submit() {  # submit <stage> <job> [sbatch options...]; prints the job id
+  (cd "$root/$1/$2" && sbatch --parsable --account="$SLURM_ACCOUNT" "${@:3}" job.sbatch) | cut -d';' -f1
+}
+jobs_in() { (cd "$root/$1" && ls -d */ | tr -d /); }
+
+if [ "${1:-}" = all ]; then
+  pre=$(submit stage0_preflight "$(jobs_in stage0_preflight)")
+  echo "stage0_preflight: job $pre"
+  for j in $(jobs_in stage1_pilot); do
+    echo "stage1_pilot/$j: job $(submit stage1_pilot "$j" --dependency=afterok:"$pre" --kill-on-invalid-dep=yes) (waits for the preflight)"
+  done
+  for j in $(jobs_in stage2_cutoff); do
+    echo "stage2_cutoff/$j: job $(submit stage2_cutoff "$j")"
+  done
+  exit 0
+fi
+
 stage=$1; shift
-if [ $# -gt 0 ]; then jobs=("$@"); else jobs=($(cd "$root/$stage" && ls -d */ | tr -d /)); fi
+if [ $# -gt 0 ]; then jobs=("$@"); else jobs=($(jobs_in "$stage")); fi
 for j in "${jobs[@]}"; do
-  (cd "$root/$stage/$j" && sbatch --account="$SLURM_ACCOUNT" job.sbatch)
+  echo "$stage/$j: job $(submit "$stage" "$j")"
 done
 """
 
-CONFIG_EXAMPLE = """# Copy to config.env and fill in. config.env is not committed.
+CONFIG_EXAMPLE = """# Copy to config.env and fill in the two empty values. config.env is not committed.
 export SLURM_ACCOUNT=""     # the account used by the earlier QE_JOB scripts
-export ESPRESSO_PSEUDO=""   # folder with the original Li/F PSLibrary 1.0.0 UPF files of the 40 Ry runs
 export SCRATCH_BASE=""      # scratch folder for QE temporary files, e.g. /scratch/user/<you>/QE/campaign-2026-11
+# The repository's pseudopotentials (assets/quantum_expresso/pseudo), next to this folder.
+export ESPRESSO_PSEUDO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../pseudo" && pwd)"
 """
 
 

@@ -17,4 +17,4 @@ load_qe
 # so the earlier part of the trajectory in pw.out is never overwritten.
 out=pw.out
 if [ -s pw.out ]; then n=1; while [ -e "pw.restart$n.out" ]; do n=$((n + 1)); done; out="pw.restart$n.out"; fi
-run_pw pw.in "$out" "d2f1e9ef3385d70aefdbf456043e54ab 48ea186a387ffd7661a6cc7d97657bc3"
+run_pw pw.in "$out" "4191b14a59696d8f3147dc7708df3c20 f73bf51f2e812fc84686424137293589"

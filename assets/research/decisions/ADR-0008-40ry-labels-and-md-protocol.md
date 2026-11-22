@@ -1,11 +1,17 @@
 ---
 status: accepted
 date: 2026-11-21
+revised: 2026-11-21
 phase: 2
 owner: jorge
 supersedes: —
 superseded_by: —
 ---
+
+> **Revised 2026-11-21**, the same day and before any job ran. At the owner's
+> request, new jobs use the repository's pseudopotential files rather than
+> the cluster copies. A preflight reproduction check replaces the earlier
+> requirement that checksums match the old runs.
 
 # ADR-0008: 40 Ry labels only, and an MD protocol that decorrelates
 
@@ -19,8 +25,12 @@ superseded_by: —
 - **The MD inputs set `ion_temperature = 'andersen'` without `nraise`.** QE's
   default `nraise = 1` re-thermalises every atom at every step, which makes the
   dynamics overdamped.
-- **The pseudopotential files in the repository are QE-rewritten copies**,
-  with MD5 sums different from the files the runs read.
+- **The repository's pseudopotential files are not byte-identical to the
+  files the runs read.** QE printed MD5 sums Li `d2f1e9ef…` and F `48ea186a…`
+  for the runs; the repository files are Li `4191b14a…` and F `f73bf51f…`.
+  They are differently formatted copies of the same PSLibrary 1.0.0 files, for
+  example in how quotes are escaped.
+- **Both files suggest more than 40 Ry:** 50 Ry for Li and 49 Ry for F.
 
 ## Decision
 
@@ -33,9 +43,13 @@ superseded_by: —
   - Methfessel–Paxton smearing 0.02 Ry for metals;
   - `dt = 10` a.u.;
   - QE 7.4.
-- **Pseudopotential guard:** every job compares the MD5 sums QE prints
-  against the old runs (Li `d2f1e9ef…`, F `48ea186a…`) and stops on a
-  mismatch.
+- **Pseudopotentials:** new jobs use the repository files
+  (`assets/quantum_expresso/pseudo`), and a checksum guard stops any job that
+  reads other files.
+- **Preflight before any MD:** a single point must reproduce the existing
+  40 Ry bulk data at the same configuration: force RMSE ≤ 1 meV/Å, largest
+  deviation ≤ 3 meV/Å, |ΔE| ≤ 1e-4 Ry. The stage 2 analysis repeats the check
+  in every environment.
 - **New MD:** `nraise = 100`. Run one SVR pilot and one Andersen pilot, and
   keep the thermostat that decorrelates forces faster. Every run starts from
   the ideal lattice with independent Gaussian displacements (σ = 0.06 Å).

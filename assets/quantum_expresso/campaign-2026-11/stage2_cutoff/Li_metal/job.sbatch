@@ -19,7 +19,7 @@ for inp in inputs/*.in; do
   name=$(basename "${inp%.in}")
   out="outputs/$name.out"
   if [ -s "$out" ] && grep -q "JOB DONE" "$out"; then continue; fi
-  run_pw "$inp" "$out" "d2f1e9ef3385d70aefdbf456043e54ab" || status=$?
+  run_pw "$inp" "$out" "4191b14a59696d8f3147dc7708df3c20" || status=$?
   [ "$status" -eq 3 ] && exit 3
   # only the text output is needed; drop this point's wavefunctions from scratch
   rm -rf "${ESPRESSO_TMPDIR:?}/$name".*

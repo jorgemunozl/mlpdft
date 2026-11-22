@@ -16,18 +16,36 @@ the ideal lattice with independent random displacements.
 ## Submit
 
 ```bash
-# 1. copy this folder to the cluster, then:
-cp config.env.example config.env      # fill in account, pseudopotential folder, scratch
-./submit.sh stage1_pilot              # 2 jobs, ~18 h each (30 h requested)
-./submit.sh stage2_cutoff             # 4 jobs, 3-9 h requested
+cp config.env.example config.env      # fill in the account and the scratch folder
+./submit.sh all                       # preflight, 2 MD pilots (after the preflight), 4 cutoff jobs
 ```
 
-`ESPRESSO_PSEUDO` must point at the **original** `Li.pbe-sl-kjpaw_psl.1.0.0.UPF`
-and `F.pbe-n-kjpaw_psl.1.0.0.UPF` used for the 40 Ry runs. Each job compares the
-MD5 sums QE prints at start-up with those runs (Li `d2f1e9ef…`, F `48ea186a…`)
-and stops with exit code 3 and a message in `slurm.e*` if they differ. The
-copies under `assets/quantum_expresso/pseudo/` are QE-rewritten files with
-different checksums; do not use them.
+### Pseudopotentials and the preflight
+
+The jobs use the repository's `assets/quantum_expresso/pseudo/` files
+(`config.env.example` points `ESPRESSO_PSEUDO` at `../pseudo`).
+
+These are the same PSLibrary 1.0.0 pseudopotentials as the earlier runs, but
+not byte-identical copies:
+- the earlier runs read files with QE MD5 sums Li `d2f1e9ef…`, F `48ea186a…`;
+- the repository files are Li `4191b14a…`, F `f73bf51f…`;
+- the header text differs, for example in how quotes are escaped.
+
+Two safeguards keep the new labels consistent with the old data:
+
+1. **Checksum guard.** Every job compares the MD5 sums QE prints at start-up
+   with the repository files. On a mismatch it stops with exit code 3 and a
+   message in `slurm.e*`, so all new data come from the same two files.
+2. **Preflight** (`stage0_preflight`, ~5 min). It recomputes the configuration
+   of SCF step 501 of `LIF64_KJPAW_FINAL` at 40 Ry and compares the result
+   with that run's own values in `reference.txt`. It passes only if:
+   - the force RMSE is ≤ 1 meV/Å;
+   - the largest force deviation is ≤ 3 meV/Å;
+   - the energy difference is ≤ 1e-4 Ry.
+
+   `./submit.sh all` makes the MD pilots depend on it (`afterok`), so they
+   never start on a failure. The stage 2 analysis repeats the same check for
+   every environment.
 
 Stage 3 (bulk replicas) and stage 4 (optional F-doped replicas) are generated
 after the pilot has chosen the thermostat:
@@ -53,6 +71,7 @@ Copy these into the dataset folder (`/home/jorge/project/mlpdft/dataset`):
 
 | From | To |
 |---|---|
+| `stage0_preflight/<job>/preflight.log`, `pw.out` | `CUTOFF_CHECK_2026_11/preflight/` |
 | `stage1_pilot/bulk_svr_s101/pw.out` | `LIF64_KJPAW_PILOT_SVR_S101/LIF64_KJPAW_PILOT_SVR_S101.out` |
 | `stage1_pilot/bulk_andersen_s102/pw.out` | `LIF64_KJPAW_PILOT_AND_S102/LIF64_KJPAW_PILOT_AND_S102.out` |
 | `stage2_cutoff/<env>/outputs/` | `CUTOFF_CHECK_2026_11/<env>/outputs/` |

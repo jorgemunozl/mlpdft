@@ -42,20 +42,26 @@ history with it.
 
 | Stage | Jobs | Node-hours (est.) | Wall time, run in parallel | Needs |
 |---|---|---:|---:|---|
-| 1 Thermostat pilot | 2 bulk MD runs × 3,000 steps: SVR and Andersen, `nraise = 100` | ~37 | ~18 h | — |
+| 0 Preflight | 1 bulk single point that must reproduce `LIF64_KJPAW_FINAL` at SCF step 501 | < 0.1 | ~5 min | — |
+| 1 Thermostat pilot | 2 bulk MD runs × 3,000 steps: SVR and Andersen, `nraise = 100` | ~37 | ~18 h | stage 0 passes |
 | 2 Cutoff and k-point check | 4 jobs, 77 single points on existing frames | ~7 | ≤ 9 h | — |
 | 3 Bulk replicas | 5 bulk MD runs × 3,000 steps with the winning thermostat | ~92 | ~18 h | stage 1 decision |
 | 4 F-doped replicas (optional) | 2 MD runs × 3,000 steps | ~110 | ~55 h | stage 1 decision |
 
-Stages 1 and 2 can be submitted now. The total is about 5.6 node-days without
+Stages 0–2 are submitted together with `./submit.sh all`; the pilots wait for
+the preflight. The total is about 5.6 node-days without
 stage 4 and 10 with it. Costs come from the measured 22 s (LiF), 66 s
 (F-doped), 57 s (Li metal) and 246 s (interface) per MD step on one 48-core
 node.
 
 ### Settings (identical to the existing 40 Ry runs)
 
-- PBE; PSLibrary 1.0.0 PAW `Li.pbe-sl-kjpaw`, `F.pbe-n-kjpaw`. Every job checks
-  the MD5 sums QE prints against the old runs.
+- PBE; PSLibrary 1.0.0 PAW `Li.pbe-sl-kjpaw`, `F.pbe-n-kjpaw`, read from the
+  repository (`assets/quantum_expresso/pseudo`) and pinned by checksum.
+  - They are differently formatted copies of the files the old runs read.
+  - So a preflight single point must first reproduce the old 40 Ry bulk data:
+    force RMSE ≤ 1 meV/Å, largest deviation ≤ 3 meV/Å, |ΔE| ≤ 1e-4 Ry.
+  - The MD pilots start only if it passes.
 - `ecutwfc = 40`, `ecutrho = 320`, 3×3×3 Monkhorst–Pack grid, `nosym`.
 - `conv_thr = 1e-8`. `mixing_beta` is 0.7 (LiF), 0.6 (F-doped, interface) or
   0.4 (Li metal).
@@ -106,6 +112,8 @@ python3 src/mlpdft/utils/analyze_cutoff_check.py --stage-dir <stage2_cutoff> \
   40 Ry run, labelled with its SCF step. The new 40 Ry 3×3×3 single points must
   reproduce that run's forces at the same step within 1 meV/Å. If they don't,
   the new jobs differ from the old data in some setting and stage 3 must wait.
+- This check matters: both pseudopotential files suggest more than 40 Ry
+  (Li 50 Ry, F 49 Ry).
 - 40 Ry is accepted if the force RMSE against 80 Ry is ≤ 10 meV/Å in every
   environment. The models' force error is about 30 meV/Å.
 - The same tolerance applies to the 4×4×4 k-point check.
@@ -164,8 +172,12 @@ python3 src/mlpdft/utils/analyze_cutoff_check.py --stage-dir <stage2_cutoff> \
   thermostat noise. Replicas differ through their starting displacements, and
   chaotic divergence separates them within a few hundred steps. Check this by
   correlating forces across replicas.
-- **Wrong pseudopotentials.** Caught by the checksum guard within ~10 minutes
-  of a job's start.
+- **Wrong pseudopotentials.**
+  - Other files are caught by the checksum guard within ~10 minutes of a job's
+    start.
+  - Numerically different copies are caught by the preflight before any MD
+    runs. If it fails, use the cluster's original files (QE MD5 Li
+    `d2f1e9ef…`, F `48ea186a…`) and regenerate the jobs with those checksums.
 - **Time limits.** `max_seconds` stops pw.x cleanly one hour before the SLURM
   limit, and the run can be restarted.
 - **A coherent oscillation survives in the bulk crystal under both
