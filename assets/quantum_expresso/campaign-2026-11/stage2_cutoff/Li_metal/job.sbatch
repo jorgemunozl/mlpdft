@@ -16,9 +16,12 @@ load_qe
 mkdir -p outputs  # git does not keep empty folders
 status=0
 for inp in inputs/*.in; do
-  out="outputs/$(basename "${inp%.in}").out"
+  name=$(basename "${inp%.in}")
+  out="outputs/$name.out"
   if [ -s "$out" ] && grep -q "JOB DONE" "$out"; then continue; fi
   run_pw "$inp" "$out" "d2f1e9ef3385d70aefdbf456043e54ab" || status=$?
   [ "$status" -eq 3 ] && exit 3
+  # only the text output is needed; drop this point's wavefunctions from scratch
+  rm -rf "${ESPRESSO_TMPDIR:?}/$name".*
 done
 exit "$status"
