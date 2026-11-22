@@ -4,6 +4,15 @@ date: 2026-11-21
 owner: jorge
 ---
 
+> **Partly superseded 2026-11-21.** The dataset, splits, environment roles and
+> head allocations below are replaced by the bulk-trained shift-ladder design:
+> [ADR-0007](../decisions/ADR-0007-bulk-trained-shift-ladder.md),
+> [ADR-0008](../decisions/ADR-0008-40ry-labels-and-md-protocol.md) and
+> [`datasets/shift-ladder-40ry/PLAN.md`](../datasets/shift-ladder-40ry/PLAN.md) §4.
+> That design also adds two baselines (LLPR and an NLL shallow ensemble).
+> The common protocol, the arm definitions and the compute notes still apply
+> until this plan is rewritten for the new dataset.
+
 # Three UQ experiments on the interim Li–F dataset
 
 **Status:** planning only. No experiment on this dataset has been launched.

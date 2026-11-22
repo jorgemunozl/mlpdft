@@ -13,8 +13,11 @@ This tree holds the project's durable research record. It is organised by
 
 1. **One canonical document per question.** If a document is replaced, move it
    to `archive/` with a banner and `superseded_by:`. Do not rewrite it in place.
-2. **Decisions are immutable.** An accepted decision record is never edited.
-   Change it by writing a new record that says `supersedes: ADR-000N`.
+2. **Decisions change on the record.** Change an accepted decision by writing
+   a new record that says `supersedes: ADR-000N`, or, with the owner's
+   approval, by revising it in place: add `revised:` to the front matter and a
+   dated note at the top that says what changed and where the original text is
+   in git history.
 3. **Results live with the run.** `experiments/<exp>/RESULTS.md` summarises and
    links; the numbers, figures and logs stay in `experiments/<exp>/runs/<date>/`.
 4. **Every document starts with front matter:**

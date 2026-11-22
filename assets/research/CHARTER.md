@@ -11,20 +11,26 @@ owner: jorge
 We compare three ensemble-based uncertainty-quantification strategies for a
 fine-tuned MACE foundation potential — an independent fine-tuning committee,
 warm-restart snapshots, and a shared-body multi-head committee trained with the
-foundation body frozen — on whether they rank
-held-out DFT error, remain calibrated across chemically distinct Li–F
-environments, and select informative DFT configurations more efficiently than
-random sampling.
+foundation body frozen — against two cheap last-layer baselines (LLPR and an
+NLL-trained shallow ensemble), on whether they rank held-out DFT error, stay
+calibrated as the data move away from the bulk LiF training distribution, and
+select informative DFT configurations more efficiently than random sampling.
 
 ## Why this system
 
 Foundation MLIPs are fine-tuned on small DFT datasets, and users must choose an
-uncertainty estimate at a fixed compute budget. The Li–F data used here provides
-three environments that differ in chemistry and in distance from the bulk
-training distribution: stoichiometric bulk LiF, F-doped Li metal, and a thin
-LiF/Li interface film. The dataset is small, heterogeneous, and fully labeled,
-which makes it a controlled testbed for comparing UQ methods rather than a
-production benchmark.
+uncertainty estimate at a fixed compute budget. The model is fine-tuned on bulk
+LiF only. It is then evaluated along a graded shift
+([ADR-0007](decisions/ADR-0007-bulk-trained-shift-ladder.md)):
+1. independent bulk LiF replicas at 300 K (in distribution);
+2. bulk LiF at ≈ 162 K;
+3. F-doped Li metal and pure Li metal;
+4. a thin LiF/Li film.
+
+All labels use 40/320 Ry
+([ADR-0008](decisions/ADR-0008-40ry-labels-and-md-protocol.md)). The dataset
+is small and fully labeled, which makes it a controlled testbed for comparing
+UQ methods rather than a production benchmark.
 
 The physics is deliberately secondary: the paper's claim is about uncertainty
 quality and label efficiency, not about a battery property.
@@ -32,8 +38,10 @@ quality and label efficiency, not about a battery property.
 ## Question
 
 1. Which arm ranks held-out force and energy error best **within** each
-   environment, not only when environments are pooled?
-2. Which arm is best calibrated, and where does calibration fail?
+   evaluation set (the in-distribution bulk replicas and each shifted
+   environment), not only when the sets are pooled?
+2. Which arm is best calibrated in distribution, and how does its calibration
+   degrade along the shift?
 3. Does uncertainty-driven acquisition beat random acquisition at equal label
    budget on held-out DFT error?
 4. What is the cost–accuracy tradeoff, in GPU-hours per retrain and per
@@ -43,13 +51,14 @@ quality and label efficiency, not about a battery property.
 
 In scope:
 
-- `LIF64`: stoichiometric bulk LiF — crystalline control.
-- `LIWITHF`: 53 Li + 1 F — F-doped Li metal, a compositionally shifted
-  anode-side environment.
-- `LIFINTERFACE`: 86 Li + 36 F — a thin two-layer LiF film on Li metal, used as
-  the OOD interface environment.
-- `BCC54`: pure Li metal — optional anode-side control.
-- `LIWITHBF`, `LIBF4`, `BLI3`: B/salt chemistry — transfer section only.
+- `LIF64`: stoichiometric bulk LiF. It is the training environment. Its
+  calibration and test sets are new independent replicas at 300 K. A colder
+  (≈ 162 K) variable-cell run is the first shift.
+- `LIWITHF`: 53 Li + 1 F, F-doped Li metal. Chemistry shift, evaluation only.
+- `BCC54`: pure Li metal. Chemistry shift, evaluation only.
+- `LIFINTERFACE`: 86 Li + 36 F, a thin two-layer LiF film on Li metal.
+  Structure-shift stress test, evaluation only.
+- `LIWITHBF`, `LIBF4`, `BLI3`: B/salt chemistry. Far shift, appendix only.
 
 Out of scope:
 

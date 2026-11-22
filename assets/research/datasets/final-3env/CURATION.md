@@ -1,8 +1,17 @@
 ---
-status: active
+status: superseded
 date: 2026-11-20
 owner: jorge
+superseded_by: ../shift-ladder-40ry/PLAN.md
 ---
+
+> **Superseded 2026-11-21.** This build mixed 30 Ry (bulk, F-doped) and 40 Ry
+> (interface) labels and split single trajectories in time. It is retired by
+> [ADR-0008](../../decisions/ADR-0008-40ry-labels-and-md-protocol.md) and
+> replaced by
+> [`datasets/shift-ladder-40ry/PLAN.md`](../shift-ladder-40ry/PLAN.md). It is
+> kept in place, not moved to `archive/`, because archived documents link to
+> this path. Do not edit.
 
 # Three-environment UQ dataset — curation build
 

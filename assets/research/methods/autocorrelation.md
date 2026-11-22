@@ -98,9 +98,11 @@ Checks added on 2026-11-21. Any failure sets `stride_reliable: false`:
 - τ_V is still the right variance-of-the-mean factor for the volume itself.
   It is not evidence that frames 30 steps apart are independent
   configurations.
-- *Inference, not tested:* the −406 kbar is mostly basis-set (Pulay) stress
-  from the 30 Ry cutoff. The interface at 40 Ry starts at −8 kbar.
-  Recomputing one frame at 40 Ry and higher would settle it.
+- The −406 kbar is basis-set (Pulay) stress from the 30 Ry cutoff. The
+  identical starting cell (3666.63 bohr³, same positions) is at −406 kbar in
+  the 30 Ry runs (`LIF64_KJPAW_V2`, `_NPT_V3`) and at −35 kbar in the 40 Ry
+  runs (`LIF64_KJPAW_FINAL`, `_NPT_FINAL`). Stage 2 of the 2026-11 campaign
+  checks the forces at 30/40/60/80 Ry.
 
 ### 4.2 F-doped Li and interface: not stationary
 
@@ -117,6 +119,9 @@ Checks added on 2026-11-21. Any failure sets `stride_reliable: false`:
   **1/timestep**. The output reports 54 (F-doped) and 122 (interface)
   collisions at every step, so every velocity is redrawn from the
   Maxwell–Boltzmann distribution every 0.48 fs.
+- The cause is the input: it sets `ion_temperature = 'andersen'` without
+  `nraise`, and QE's default `nraise = 1` gives one collision per atom per
+  step. Every NVT run in the dataset folder has this setting.
 - The short-lag MSD exponent is 1.00–1.01 for Li and F in both runs, instead
   of about 2 for inertial motion. Atoms take a random walk with steps of about
   `v_rms Δt ≈ 0.005 Å`.
@@ -172,28 +177,30 @@ the uncertainty by 2–3×.
    - F-doped and interface: each split is effectively a single block, so
      their coverage numbers are qualitative.
 3. **New data must change the dynamics, not only the seed.** Replicas run
-   with Andersen at 1/Δt would reproduce the same overdamped sampling. Use
-   `ion_temperature = 'svr'` with `nraise ≈ 100` (≈ 48 fs coupling), or
-   Andersen with `nraise ≥ 100`. Then re-measure with `--forces`.
-4. **Bulk needs new data too:** a damped or fixed-cell run at the relaxed
-   volume, with a converged cutoff.
-5. **QE settings differ across environments.** Bulk and F-doped use
-   `ecutwfc = 30 Ry` and the interface uses 40 Ry (all with
-   `ecutrho = 320 Ry`). Labels pooled into one model should come from one
-   setting.
+   with Andersen at 1/Δt would reproduce the same overdamped sampling. The
+   new runs use `nraise = 100`: a 48 fs coupling for SVR, or one collision
+   per atom every ~48 fs for Andersen. A pilot picks between the two
+   ([ADR-0008](../decisions/ADR-0008-40ry-labels-and-md-protocol.md)).
+4. **Bulk needs new data too.** The 30 Ry bulk run is replaced by the 40 Ry
+   NVT run for training and by new 40 Ry replicas for calibration and test.
+5. **QE settings differed across environments.** Bulk and F-doped used
+   `ecutwfc = 30 Ry` and the interface 40 Ry (all with `ecutrho = 320 Ry`).
+   Labels now come from 40 Ry runs only.
 
 ## 7. Effect on the decision records
 
-ADR-0003 (stride from the QE τ) and ADR-0005 (replicas) cite the 2026-11-20
-numbers. Under the decision rules they stay in force until a superseding
-record is written. What no longer holds:
+On 2026-11-21 the owner adopted design C
+([ADR-0007](../decisions/ADR-0007-bulk-trained-shift-ladder.md),
+[ADR-0008](../decisions/ADR-0008-40ry-labels-and-md-protocol.md)) and revised
+the records that cited the 2026-11-20 numbers:
 
 - [ADR-0003](../decisions/ADR-0003-qe-decorrelation-stride.md): the rule
-  `stride = 2 × max(tau_E, tau_V)` and the values 30 / 218 / 375 (§4).
-- [ADR-0005](../decisions/ADR-0005-replicas-over-long-runs.md):
-  - "same … thermostat; only the velocity seed changes" (§4.3);
-  - the replica sizing derived from τ ≈ 109 (§4.4);
-  - "Bulk needs no new data" (§4.1).
+  `stride = 2 × max(tau_E, tau_V)` and the values 30 / 218 / 375 are
+  withdrawn. Training uses a fixed stride; calibration and test come from
+  replicas.
+- [ADR-0005](../decisions/ADR-0005-replicas-over-long-runs.md): the old
+  thermostat, the τ-based sizing and "bulk needs no new data" are withdrawn.
+  The replicas are now bulk LiF runs under a corrected thermostat.
 
 ## 8. Limitations
 
@@ -203,7 +210,6 @@ record is written. What no longer holds:
   half the variance.
 - Each run is a single realization. The F-doped and interface values are lower
   bounds with 80–100 % relative errors.
-- The Pulay-stress explanation for the bulk pressure is an inference.
 
 ## 9. Reproduction
 
@@ -235,12 +241,11 @@ python3 -m unittest discover -s tests -p 'test_estimate*'
 
 ## 10. Next steps
 
-1. Decide whether to supersede ADR-0003 with a fixed training stride and τ
-   kept as a diagnostic.
-2. Recompute one bulk frame at 40 Ry and above to test the Pulay-stress
-   inference. Then rerun bulk with damped or fixed-cell dynamics at the
-   relaxed volume.
-3. Rerun F-doped and the interface with SVR (or Andersen `nraise ≥ 100`),
-   re-measure τ with `--forces`, and size the replicas from that.
+The DFT campaign and dataset build that follow from this note are planned in
+[`datasets/shift-ladder-40ry/PLAN.md`](../datasets/shift-ladder-40ry/PLAN.md):
+
+1. A thermostat pilot on bulk LiF, measured with `--forces`.
+2. A cutoff and k-point check.
+3. Independent bulk replicas for calibration and test.
 4. Once a model exists, compute the ACF of per-frame nonconformity scores and
    size the block bootstrap from it.
