@@ -54,6 +54,15 @@ if labels > len(pool):
 idx = np.unique(np.linspace(0, len(pool) - 1, labels).round().astype(int))
 write(f"{data}/train_rung.extxyz", [pool[i] for i in idx], format="extxyz")
 print(f"training rung: {len(idx)} of {len(pool)} pool frames, evenly spaced")
+# The runner's own evaluation files; capped evenly when UQC_MAX_EVAL_FRAMES is set (smoke runs).
+import os
+cap = int(os.environ.get("UQC_MAX_EVAL_FRAMES", "0") or 0)
+for name, out in (("test_timeblock", "uqc_test"), ("monitor", "uqc_calibration")):
+    frames = read(f"{data}/{name}.extxyz", index=":")
+    if cap and len(frames) > cap:
+        frames = [frames[i] for i in np.unique(np.linspace(0, len(frames) - 1, cap).round().astype(int))]
+    write(f"{data}/{out}.extxyz", frames, format="extxyz")
+    print(f"runner {out}: {len(frames)} frames from {name}")
 EOF
 
 read -r -a groups <<< "$ARM_GROUPS"
@@ -64,7 +73,7 @@ for group in "${groups[@]}"; do
   # shellcheck disable=SC2086  # EXTRA_ARGS holds several options
   "$py" -m mlpdft.uq_compare \
     --train-file "$data/train_rung.extxyz" --valid-file "$data/monitor.extxyz" \
-    --calibration-file "$data/monitor.extxyz" --test-file "$data/test_timeblock.extxyz" \
+    --calibration-file "$data/uqc_calibration.extxyz" --test-file "$data/uqc_test.extxyz" \
     --arms "$group" --seeds "$SEEDS" --output-dir "$root/train" --run-id "${group//,/+}" \
     --device cuda $EXTRA_ARGS
   done_groups=$((done_groups + 1))
@@ -73,7 +82,8 @@ for group in "${groups[@]}"; do
   report "{\"row\":\"timing\",\"m\":{\"arm_group\":\"$group\",\"minutes\":$minutes}}"
 done
 
-"$py" -m mlpdft.uq_evaluate --run-dir "$root/train" --dataset-dir "$data" --device cuda --report-orx
+# shellcheck disable=SC2086  # EVAL_ARGS holds several options
+"$py" -m mlpdft.uq_evaluate --run-dir "$root/train" --dataset-dir "$data" --device cuda --report-orx ${EVAL_ARGS:-}
 
 report '{"phase":"upload"}'
 "$py" - "$root" "$run_id" <<'EOF'

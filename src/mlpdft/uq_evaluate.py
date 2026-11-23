@@ -53,11 +53,11 @@ def member_forces(model_path: Path, head: str | None, frames: list, device: str,
     return np.concatenate(out)
 
 
-def llpr_sigma(spec: dict, run_dir: Path, frames: list) -> np.ndarray:
+def llpr_sigma(spec: dict, run_dir: Path, frames: list, device: str, dtype: str) -> np.ndarray:
     from mlpdft.llpr import predict_force_sigma
 
     sig = predict_force_sigma(run_dir / spec["model_path"], spec.get("head"),
-                              run_dir / spec["covariance"], frames)
+                              run_dir / spec["covariance"], frames, device=device, dtype=dtype)
     return np.concatenate(sig)
 
 
@@ -65,7 +65,7 @@ def predict(arm: dict, run_dir: Path, frames: list, device: str, dtype: str) -> 
     """Mean forces and their uncertainty (None for a single model without UQ)."""
     if arm["kind"] == "llpr":
         mean = member_forces(run_dir / arm["model_path"], arm.get("head"), frames, device, dtype)
-        return mean, llpr_sigma(arm, run_dir, frames)
+        return mean, llpr_sigma(arm, run_dir, frames, device, dtype)
     members = np.stack([member_forces(run_dir / m["model_path"], m.get("head"), frames, device, dtype)
                         for m in arm["members"]])
     if len(members) == 1:
@@ -89,11 +89,20 @@ def load_arms(run_dir: Path) -> dict:
     if not manifests:
         raise SystemExit(f"no arms_manifest.json under {run_dir}")
     arms = {}
+    foundation = None
     for manifest in manifests:
-        for name, arm in json.loads(manifest.read_text()).items():
+        content = json.loads(manifest.read_text())
+        # uq_compare writes {"format_version", "foundation_model", "arms": {...}}
+        foundation = foundation or content.get("foundation_model")
+        for name, arm in content.get("arms", content).items():
+            if not isinstance(arm, dict) or "kind" not in arm:
+                continue
             if name in arms:
                 raise SystemExit(f"arm {name} appears in two runs under {run_dir}")
             arms[name] = {**arm, "_base": str(manifest.parent)}
+    if foundation and "zero-shot" not in arms:  # accuracy reference on every set
+        arms["zero-shot"] = {"kind": "ensemble", "_base": str(run_dir),
+                             "members": [{"name": "foundation", "model_path": foundation, "head": None}]}
     return arms
 
 
@@ -102,7 +111,8 @@ def orx_report(payload: dict) -> None:
 
 
 def evaluate(run_dir: Path, dataset_dir: Path, *, device: str, dtype: str, block_steps: int,
-             n_boot: int, target: float, predictor=predict, report_orx: bool = False) -> dict:
+             n_boot: int, target: float, predictor=predict, report_orx: bool = False,
+             max_frames: int | None = None) -> dict:
     arms = load_arms(run_dir)
     sets = json.loads((dataset_dir / "manifest.json").read_text())["sets"]
     eval_sets = {name: s for name, s in sets.items() if s["role"] not in ("train", "monitor")}
@@ -113,6 +123,9 @@ def evaluate(run_dir: Path, dataset_dir: Path, *, device: str, dtype: str, block
         id_test, id_note = "test_timeblock", "time-block holdout (replicas not yet available)"
 
     frames = {name: read(dataset_dir / f"{name}.extxyz", index=":") for name in eval_sets}
+    if max_frames:  # evenly spaced subset per set (cheap smoke runs)
+        frames = {name: [fr[i] for i in np.unique(np.linspace(0, len(fr) - 1, max_frames).round().astype(int))]
+                  if len(fr) > max_frames else fr for name, fr in frames.items()}
     out_dir = run_dir / "evaluation"
     report: dict = {"calibration_set": calibration, "id_reference_set": id_test, "id_reference_note": id_note,
                     "conformal_target": target, "arms": {}}
@@ -197,10 +210,12 @@ def main() -> None:
     ap.add_argument("--n-boot", type=int, default=1000)
     ap.add_argument("--conformal-target", type=float, default=0.9)
     ap.add_argument("--report-orx", action="store_true", help="print ::orx:: progress and result rows")
+    ap.add_argument("--max-frames-per-set", type=int, default=None,
+                    help="evaluate an evenly spaced subset of each set (smoke runs)")
     args = ap.parse_args()
     report = evaluate(args.run_dir, args.dataset_dir, device=args.device, dtype=args.dtype,
                       block_steps=args.block_steps, n_boot=args.n_boot, target=args.conformal_target,
-                      report_orx=args.report_orx)
+                      report_orx=args.report_orx, max_frames=args.max_frames_per_set)
     print_summary(report)
 
 
