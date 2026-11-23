@@ -6,8 +6,9 @@ owner: jorge
 
 # Literature Review — Uncertainty Quantification and Active Learning for Foundation MACE on Li–F
 
-- **Date:** 2026-10-27
+- **Date:** 2026-11-23
 - **Update 2026-11-23:** the study moved to design C (train on bulk LiF, evaluate along a graded shift; [ADR-0007](../decisions/ADR-0007-bulk-trained-shift-ladder.md), [ADR-0008](../decisions/ADR-0008-40ry-labels-and-md-protocol.md)). §10.5 adds seven references and §12 explains what they change; the rest of the review is unchanged and predates the redesign.
+- **Theory addendum 2026-11-07:** §13 adds the ensemble-spread theory (spread identity, correlation parameter, common-mode blindness, frozen-body and snapshot consequences, online versus retrospective AL) and §10.6 its references. The eight papers whose numbers are quoted there were read in full text. This addendum is independent of the design-C update in §12.
 - **Status:** reframed on 2026-10-29 for the UQ + AL + tier-0 anchor scope; supersedes the 2026-09-13 draft (E₀ and zero-shot property dependence) and the 2026-10-27 transport framing.
 - **Scope:** uncertainty quantification (UQ) for machine-learning interatomic potentials (MLIPs), with emphasis on cheap versus expensive ensemble constructions and uncertainty-guided active learning on a Li–F testbed. Transport is context, not a claimed observable.
 - **Project cross-reference:** [`DESCRIPTION.md`](../CHARTER.md), [`ROUTE.md`](../ROADMAP.md), [`UQ_EXPERIMENT_0.md`](../archive/2026-10-29-uq-protocol-v0.md), [`ACTIVE_LEARNING_PROTOCOL.md`](../experiments/exp-04-active-learning/PROTOCOL.md).
@@ -17,6 +18,8 @@ owner: jorge
 **Evidence basis.** Bibliographic metadata for every reference below was checked against the arXiv API or Crossref on 2026-10-27. Claims are taken from titles and abstracts; no claim-level full-text audit has been performed. This is a bounded review, not a systematic review or a proof that no other relevant paper exists.
 
 **Framing note (2026-10-29).** The Li-ion/LiF transport literature in §7 is retained as testbed justification and as a model-form-uncertainty caveat. It is no longer a validation target: the paper does not report \(D\) or \(E_a\). Passages that still mention a "transport QoI" are read as historical context; the current claims are in `DESCRIPTION.md`.
+
+**Theory addendum (2026-11-07).** §13 adds the ensemble-theory literature: a spread identity that makes committee uncertainty invariant to shared error, a correlation parameter that makes \(\rho\) rather than \(K\) the governing quantity, and the mode-connectivity and common-bias evidence that explains why fine-tuned committees collapse and why out-of-distribution uncertainty inverts. It also bounds the AL claim to retrospective acquisition efficiency.
 
 **Bottom line.** The literature establishes three things: ensemble disagreement is the practical default for MLIP UQ but is expensive and unreliable out of distribution; weight-sharing and single-model alternatives can cut that cost substantially; and better uncertainty does not automatically produce better active learning. It does **not** contain a matched comparison of independent fine-tuning committees, warm-restart snapshot ensembles, and the two multi-head variants (MH-FT and MHC) for a foundation MACE model on a multi-environment Li–F dataset, nor a test of whether those uncertainty signals improve active learning for held-out force error over random acquisition. That is the paper's opening.
 
@@ -460,6 +463,28 @@ Identifiers were checked on 2026-11-23 against alphaXiv (arXiv papers) and OpenA
 31. **Madras, Sokal (1988).** *The pivot algorithm: A highly efficient Monte Carlo method for the self-avoiding walk.* J. Stat. Phys. [DOI:10.1007/BF01022990](https://doi.org/10.1007/BF01022990). Standard source for the self-consistent window of the integrated autocorrelation time and its statistical error, both used in `estimate_qe_correlation.py`.
 32. **Flyvbjerg, Petersen (1989).** *Error estimates on averages of correlated data.* J. Chem. Phys. [DOI:10.1063/1.457480](https://doi.org/10.1063/1.457480). Blocking analysis, used as a cross-check in the correlation review.
 33. **Chodera (2016).** *A simple method for automated equilibration detection in molecular simulations.* J. Chem. Theory Comput. [DOI:10.1021/acs.jctc.5b00784](https://doi.org/10.1021/acs.jctc.5b00784). Picks the burn-in that maximises the number of effective samples; applied to the interface run, where no start point gave a stationary segment.
+### 10.6 Diversity, correlation and theory
+
+34. **Krogh & Vedelsby (1995).** *Neural Network Ensembles, Cross Validation, and Active Learning.* Advances in Neural Information Processing Systems 7. Ambiguity decomposition: ensemble error equals mean member error minus diversity. **Source of the identity in §11.1.**
+35. **Brown, Wyatt, Harris, Yao (2005).** *Diversity creation methods: a survey and categorisation.* Information Fusion 6(1), 5–20. [DOI](https://doi.org/10.1016/j.inffus.2004.04.004). Taxonomy of data, parameter and architecture manipulations that create ensemble diversity.
+36. **Fort, Hu, Lakshminarayanan (2019).** *Deep Ensembles: A Loss Landscape Perspective.* [arXiv:1912.02757](https://arxiv.org/abs/1912.02757). Random initialization explores distinct modes; functions along one trajectory cluster in prediction space; cyclic shared-initialization sampling is less diverse than independent runs. **Mechanism for committee collapse.**
+37. **Neyshabur, Sedghi, Zhang (2020).** *What is being transferred in transfer learning?* [arXiv:2008.11687](https://arxiv.org/abs/2008.11687). Models fine-tuned from one checkpoint stay in the same basin, show no loss barrier, and make similar mistakes. **Direct evidence that shared initialization persists.**
+38. **Garipov, Izmailov, Podoprikhin, Vetrov, Wilson (2018).** *Loss Surfaces, Mode Connectivity, and Fast Ensembling of DNNs.* [arXiv:1802.10026](https://arxiv.org/abs/1802.10026). Low-loss paths connect distinct minima; fast geometric ensembling traverses them at single-run cost.
+39. **Izmailov, Podoprikhin, Garipov, Vetrov, Wilson (2018).** *Averaging Weights Leads to Wider Optima and Better Generalization.* [arXiv:1803.05407](https://arxiv.org/abs/1803.05407). Weight averaging stays inside one basin; a better point estimate, not a committee.
+40. **Frankle, Dziugaite, Roy, Carbin (2020).** *Linear Mode Connectivity and the Lottery Ticket Hypothesis.* [arXiv:1912.05671](https://arxiv.org/abs/1912.05671). Fine-tuned solutions are linearly connected; underpins the same-basin argument.
+41. **Wortsman et al. (2022).** *Model Soups: Averaging Weights of Multiple Fine-Tuned Models Improves Accuracy without Increasing Inference Time.* [arXiv:2203.05482](https://arxiv.org/abs/2203.05482). Averaging independently fine-tuned models from one initialization improves accuracy without a barrier.
+42. **Ainsworth, Hayase, Srinivasa (2023).** *Git Re-Basin: Merging Models modulo Permutation Symmetries.* [arXiv:2209.04836](https://arxiv.org/abs/2209.04836). Permutation symmetries map distinct parameters to identical functions. **Weight-space distance is not functional diversity.**
+43. **Ovadia et al. (2019).** *Can You Trust Your Model's Uncertainty? Evaluating Predictive Uncertainty Under Dataset Shift.* [arXiv:1906.02530](https://arxiv.org/abs/1906.02530). Deep ensembles are the strongest baseline under shift, while all methods degrade.
+44. **Guo, Pleiss, Sun, Weinberger (2017).** *On Calibration of Modern Neural Networks.* [arXiv:1706.04599](https://arxiv.org/abs/1706.04599). Calibration is a property separate from accuracy and degrades with capacity and shift.
+45. **Wilson & Izmailov (2020).** *Bayesian Deep Learning and a Probabilistic Perspective on Generalization.* [arXiv:2002.08791](https://arxiv.org/abs/2002.08791). Deep ensembles as an approximate Bayesian model average over posterior modes.
+46. **Gal & Ghahramani (2016).** *Dropout as a Bayesian Approximation.* [arXiv:1506.02142](https://arxiv.org/abs/1506.02142). The implicit-ensemble analogy Beck et al. invoke for the shared-body committee.
+47. **Carrete, Montes-Campos, Wanzenböck, Heid, Madsen (2023).** *Deep ensembles vs committees for uncertainty estimation in neural-network force fields.* J. Chem. Phys. 158, 204801. [DOI](https://doi.org/10.1063/5.0146905) · [arXiv:2302.08805](https://arxiv.org/abs/2302.08805). Committee matches bootstrap as an error proxy (Spearman 0.90 vs 0.91, SrTiO₃) at far lower cost; descriptors computed once, so inference overhead is small.
+48. **Lu, Ghiringhelli, Carbogno, Wang, Scheffler (2023).** *On the Uncertainty Estimates of Equivariant-Neural-Network-Ensembles Interatomic Potentials.* [arXiv:2309.00195](https://arxiv.org/abs/2309.00195). Ensemble uncertainty is overconfident and can move opposite to error; constant rescaling cannot repair it. **Equivariant-MLIP evidence for common-mode blindness.**
+49. **Kahle & Zipoli (2022).** *Quality of uncertainty estimates from neural network potential ensembles.* Phys. Rev. E 105, 015311. [DOI](https://doi.org/10.1103/PhysRevE.105.015311). Common-bias problem of committee members; cited by Beck et al. as the reason to decorrelate heads.
+50. **Tan, Urata, Goldman, Dietschreit, Gómez-Bombarelli (2023).** *Single-model uncertainty quantification in neural network potentials does not consistently outperform model ensembles.* [arXiv:2305.01754](https://arxiv.org/abs/2305.01754). The committee remains the reference; cheap single-model UQ closes the cost gap but not the quality gap.
+51. **Zamyatin, Indri, Malhotra, Gärtner (2026).** *Is BatchEnsemble a Single Model? On Calibration and Diversity of Efficient Ensembles.* [arXiv:2601.16936](https://arxiv.org/abs/2601.16936). Shared-backbone efficient ensembles reach a measure-zero subset of parameter space, are near-identical in function space, and have JSD 0.002 vs 0.037 for a deep ensemble.
+52. **Jinnouchi, Karsai, Kresse (2019).** *On-the-fly machine learning force field generation: Application to melting points.* Phys. Rev. B 100, 014105. [DOI](https://doi.org/10.1103/PhysRevB.100.014105). Canonical online on-the-fly AL loop; contrast for the retrospective design.
+53. **Vandermause et al. (2020).** *On-the-fly active learning of interpretable Bayesian force fields for atomistic rare events.* npj Comput. Mater. 6, 20. [DOI](https://doi.org/10.1038/s41524-020-0283-z). Online Bayesian AL; second online reference for the scope caveat.
 
 ---
 
@@ -474,7 +499,8 @@ These notes record where the retrieved set does **not** support a convenient cla
 - **Farris et al. is TiO₂, not MACE.** The BNN-vs-ensemble comparison is a methodological sibling, not a foundation-MACE result.
 - **The black-box multi-head paper is not a new committee training method.** Fonea et al. extract a signal from an existing multi-head network; it is relevant to inference cost, not to the training-cost comparison.
 - **Li-ion application papers are not UQ papers.** Alghamdi et al., De Angelis et al., Shaaban Kabakibo et al., Guo et al., Li, Gong et al., and Zhong & Persson establish accuracy, mechanisms, and model-form sensitivity. They do not test ensemble calibration or AL label efficiency.
-- **No full-text audit yet.** The next step, if the paper needs claim-level comparison, is to read the full text of the four load-bearing papers (Beck, Schäfer, Kurniawan, Bi) and extract exact numbers, figures, and limitations. The abstract-level claims above are sufficient for positioning but not for a methods-section critique.
+- **Partial full-text audit now done (2026-11-07).** For the theory addendum the full text of Fort et al. (2019), Neyshabur et al. (2020), Huang et al. (2017), Beck et al. (2025), Kurniawan et al. (2026), Carrete et al. (2023), Lu et al. (2023) and Zamyatin et al. (2026) was read, and the numbers quoted in §13 come from those texts. The remaining §10.6 entries are cited at metadata level and are marked as such in the §13.8 ledger.
+- **Still missing a claim-level audit for the core cost comparison.** Schäfer et al. and Bi et al. remain abstract-level; reading their full text is the next step if the paper needs exact cost and calibration numbers for the shallow-ensemble and LLPR arms.
 
 ---
 
@@ -509,3 +535,83 @@ These notes record where the retrieved set does **not** support a convenient cla
 - Fisher et al., *Multivariate conformal uncertainty propagation in multitask atomistic simulation: Successes and pitfalls*, [arXiv:2609.31384](https://www.alphaxiv.org/abs/2609.31384). Conformal calibration, which our evaluation uses.
 - Stepurko et al., *Out-of-training properties in frozen interatomic potential embeddings are decodable and ordered by physical scale*, [arXiv:2611.21116](https://www.alphaxiv.org/abs/2611.21116). Frozen-body representations, as in the MHC and probe arms.
 - Wong & Yang, *Bias in Universal Machine-Learned Interatomic Potentials and its Effects on Fine-Tuning*, [arXiv:2603.10159](https://www.alphaxiv.org/abs/2603.10159). Fine-tuning from a biased foundation model.
+
+---
+
+## 13. Theory addendum (2026-11): why a spread measures only what members do differently
+
+This section records the theoretical literature added after the main retrieval. Its purpose is narrow: to give the paper a *mechanism* for the correlation, calibration and out-of-distribution failures it reports, rather than treating them as empirical surprises. The central results are two identities and one consequence; everything else is evidence for them.
+
+### 11.1 The spread identity, and invariance to common error
+
+Let \(y(x)\) be the reference and \(f_1,\dots,f_M\) the member predictions, with spread \(s^2 = \frac{1}{M}\sum_m \lVert f_m - \bar f\rVert^2\). Then, exactly, \( \frac{1}{M}\sum_m \lVert f_m - y\rVert^2 = \lVert \bar f - y\rVert^2 + s^2 \). The left side is the mean member error and the first right-hand term is the ensemble error, so \(s^2\) equals the error that averaging removes — the ambiguity decomposition of Krogh and Vedelsby (Krogh & Vedelsby, 1995, NIPS 7). The consequence the paper needs is an invariance: if every member shares an error component \(b\), so that \(e_m = b + u_m\), then \(s^2\) depends only on the \(u_m\) and is **independent of \(b\)**. A shared foundation checkpoint, a frozen body, and a fixed DFT dataset are all shared error channels, and no committee can see them. This is the formal statement behind §2.3 and §5.3.
+
+### 11.2 One correlation parameter governs the committee
+
+For exchangeable members with error variance \(\sigma^2\) and pairwise error correlation \(\rho\), \( \mathbb{E}[s^2] = \sigma^2(1-\rho) \) and \( \mathrm{Var}(\bar f) = \sigma^2(\rho + (1-\rho)/M) \). Both the uncertainty signal and the accuracy advantage of averaging are proportional to \(1-\rho\), and both vanish as \(\rho \to 1\); increasing \(M\) cannot go below the floor \(\rho\sigma^2\). Three consequences for the paper:
+
+- "More seeds" is not a fix. \(\rho\), not \(K\), governs the signal, and \(\rho\) is set by the training protocol.
+- A committee whose members collapse is simultaneously a bad ensemble and a blind sensor; the two failures are one failure.
+- The quantity to report as the mechanistic covariate is \(\rho\) (or function-space disagreement), not ensemble size. This is the quantitative version of the warning already in §3.1 from Vieira et al.
+
+### 11.3 Where diversity comes from, and why fine-tuning closes the channels
+
+Diversity has a catalogued taxonomy of data, parameter and architecture manipulations ([Brown et al., 2005](https://doi.org/10.1016/j.inffus.2004.04.004)), but for deep networks the dominant channel is random initialization. Fort et al. decouple initialization from minibatch order and find initialization dominant, with shuffling contributing only at high learning rates where gradient noise is large; they also show that functions along one optimization trajectory cluster within a single mode in prediction space, and that cyclic sampling from a shared initialization is significantly less diverse than independent runs ([Fort et al., 2019](https://arxiv.org/abs/1912.02757)).
+
+The fine-tuning protocol used in this project closes the channels:
+
+- **Shared initialization persists.** Models trained from pre-trained weights stay in the same basin, show no loss barrier between runs, and make similar mistakes ([Neyshabur et al., 2020](https://arxiv.org/abs/2008.11687)). Solutions fine-tuned from one checkpoint are linearly connected ([Frankle et al., 2020](https://arxiv.org/abs/1912.05671)), which is why averaging them works without a barrier ([Wortsman et al., 2022](https://arxiv.org/abs/2203.05482)).
+- **Annealing removes gradient noise.** SGD-noise temperature scales with learning rate, and every cycle ends at \(\eta_{\min}\).
+- **Data order and subsampling are fixed.** No bootstrap, no per-member partition.
+- **What remains is permutation symmetry**, which changes parameters without changing the function ([Ainsworth et al., 2023](https://arxiv.org/abs/2209.04836)) — so weight-space distance is not evidence of functional diversity.
+
+Mechanistically, the loss landscape supplies the alternatives: minima are joined by low-loss paths traversable at single-run cost by fast geometric ensembling ([Garipov et al., 2018](https://arxiv.org/abs/1802.10026)), while weight averaging deliberately stays inside one basin and trades diversity for a better point estimate ([Izmailov et al., 2018](https://arxiv.org/abs/1803.05407)).
+
+**What this changes in the review.** §3.1's empirical warning that "three seeds does not guarantee three hypotheses" now has a mechanism and a prediction: a committee differing only in seed, from one checkpoint, under an annealed schedule, should have \(\rho \to 1\). The project's own 0.0151 / 0.0150 / 0.0150 eV Å⁻¹ member RMSE is the predicted outcome, not an unlucky draw.
+
+### 11.4 Common-mode blindness and the OOD inversion
+
+Out of distribution the dominant error is usually shared: every member saw the same frames and inherits the same prior, so \(b\) grows while the members agree more. Then \(s^2\) can fall as the error rises, making the spread not merely uninformative but anti-correlated with total error. This is the mechanism behind the pattern in §5.2, and it is reported directly in the MLIP literature:
+
+- Kurniawan et al. find uncertainty plateauing or decreasing as errors grow across bootstrap, dropout, random-initialization and snapshot ensembles ([Kurniawan et al., 2026](https://doi.org/10.1088/2632-2153/ae9fb4)).
+- Lu et al. test an equivariant-network ensemble on out-of-training-domain silicon phases and find the uncertainties "generally overconfident" with "little quantitative predictive power for the actual errors"; they report paths where uncertainty decreases while error increases, and note that this defeats calibration by a constant factor. Their clearest case is a pair of equations of state with the same uncertainty of about 2 meV/atom, one accurate and one qualitatively wrong ([Lu et al., 2023](https://arxiv.org/abs/2309.00195)).
+- Kahle and Zipoli document the common-bias problem of committee members, which Beck et al. cite as the reason to decorrelate heads by disjoint data ([Kahle & Zipoli, 2022](https://doi.org/10.1103/PhysRevE.105.015311)).
+
+Two properties must therefore be reported separately, as §5.4 already argues: coverage is a *scale* property repairable by one fitted factor, while rank correlation is a *shape* property that no rescaling repairs. A pooled correlation mixes the between-environment scale (an environment detector) with the within-environment shape that acquisition needs.
+
+### 11.5 The frozen body is maximal common mode
+
+With \(f_k = h_k(\phi(x))\) and \(\phi\) frozen, the spread lives entirely in the readout. If the heads are linear and the loss strictly convex in them, all heads trained on the same features and targets share a unique minimizer, so \(s^2 \to 0\) at convergence: head diversity must come from under-training or from different data partitions. Beck et al. take the second route and state the reason explicitly — the disjoint partition "increases the diversity between the output heads more strongly, mitigating known problems of a common bias between the committee members" ([Beck et al., 2025](https://doi.org/10.1063/5.0302097)).
+
+Their own calibration makes the hidden term numerical. Rescaling the disagreement by a validation-fitted factor to correct "an underestimation of the true uncertainty due to biases inherent to the models" gives \(\alpha = 1.32\) for a naive committee, \(2.00\) for the disjoint multi-head committee and \(6.94\) for the overlapping one on 3BPA: the shared-body spread is two to seven times smaller than the error it is meant to estimate, and \(\alpha\) is fitted in distribution, so it cannot transfer to the extrapolative regime where the bias is largest. Beck et al. also supply the right analogy — the construction is "conceptually similar to adding a dropout layer to the output blocks" ([Gal & Ghahramani, 2016](https://arxiv.org/abs/1506.02142)) — and the same structural limit is documented outside atomistics: a shared backbone with per-member low-rank perturbations reaches only a measure-zero subset of the parameter space, yields near-identical members, and has an epistemic uncertainty an order of magnitude below a deep ensemble (Jensen–Shannon divergence 0.002 versus 0.037) ([Zamyatin et al., 2026](https://arxiv.org/abs/2601.16936)).
+
+**Prediction for the AL loop.** A frozen body cannot be corrected by acquiring labels, so the MHC arm should saturate at the body's error floor; its acquisitions are those that most excite the readout, not those that most reduce body error.
+
+### 11.6 Snapshots carry a convergence trend, not just basin diversity
+
+Write a snapshot's error as \(e_m = b + u_m + v_m\), where \(u_m\) is basin-to-basin diversity and \(v_m\) is a deterministic function of cycle index measuring distance from convergence. The ensemble mean then carries a bias \(\bar v\) and the spread carries \(\mathrm{Var}(v)\); neither is epistemic uncertainty. Huang et al. are explicit that the construction requires each snapshot to be a converged minimum, and their own diagnostics show early snapshots with much higher error and late snapshots in the same minimum as the final model, with the usable ensemble "comparable with ensembling of 2 independent models" ([Huang et al., 2017](https://arxiv.org/abs/1704.00109)). Kurniawan et al.'s protocol is the practical remedy: discard early cycles as burn-in and snapshot only after the loss plateaus, spaced widely enough to be approximately independent ([Kurniawan et al., 2026](https://doi.org/10.1088/2632-2153/ae9fb4)).
+
+**What this changes in the review.** §3.2's "operational trap" is not merely a checkpoint-selection bug; it is a bias term. The project's 26.9 / 16.1 / 2.67 meV/atom member energy RMSE is \(v_m\), and the 13.11 meV/atom arm-level energy RMSE is \(\bar v\). Any pooled correlation computed on that ensemble is partly a convergence trend aligned with environment difficulty.
+
+### 11.7 Online versus retrospective active learning
+
+The AL literature this review cites is mostly *online*: the model's uncertainty decides which configurations along a running trajectory are labelled ([Jinnouchi et al., 2019](https://doi.org/10.1103/PhysRevB.100.014105); [Vandermause et al., 2020](https://doi.org/10.1038/s41524-020-0283-z)). The project's loop is *retrospective*: labels are revealed from a fixed, pre-labelled pool. That isolates the acquisition function at equal label cost and removes trajectory variance, but it also removes the feedback from acquisition to the distribution the model is later scored on. The paper should therefore claim **retrospective acquisition efficiency**, not closed-loop data efficiency, unless an online check is run.
+
+### 11.8 Claim ledger
+
+| Claim the paper makes | Source | Evidence level |
+|---|---|---|
+| Ensemble spread equals the reducible part of member error | Krogh & Vedelsby 1995; derived identity | Textbook result; derivation in §13.1 |
+| Spread is invariant to shared error | Corollary of the identity | Analytic |
+| \(\rho\), not \(K\), controls committee quality | Standard exchangeable-ensemble algebra | Analytic |
+| Fine-tuning from one checkpoint stays in one basin | Neyshabur et al. 2020; Frankle et al. 2020 | Full text read (Neyshabur); metadata (Frankle) |
+| Random initialization is the dominant diversity channel | Fort et al. 2019 | Full text read |
+| Committees match bootstrap ensembles at lower cost | Carrete et al. 2023 (0.90 vs 0.91 Spearman, SrTiO₃) | Full text read |
+| Shared-body committees underestimate error by 2–7× | Beck et al. 2025 (\(\alpha\) values) | Full text read |
+| Ensembles are overconfident and can invert OOD | Lu et al. 2023; Kurniawan et al. 2026 | Full text read |
+| BatchEnsemble-class methods are near-single-model | Zamyatin et al. 2026 | Full text read |
+| Snapshot ensembles require converged cycle minima | Huang et al. 2017 | Full text read |
+| Single-model UQ does not consistently beat ensembles | Tan et al. 2023 | Metadata only |
+| Ensembles are strongest under shift, but degrade | Ovadia et al. 2019; Guo et al. 2017 | Metadata only |
+
+**Caveat.** The "metadata only" rows are used for framing, not for numbers. The three entries marked full text were read for this addendum; the rest are cited at the level their source supports.
