@@ -7,6 +7,12 @@ optionally the frozen-body multi-head committee (MHC) of Beck et al.
 (arXiv:2508.09907) plus a frozen-body point estimate, then reports DFT test
 errors and uncertainty-ranking metrics.
 
+Two single-model baselines share the frozen body: ``shallow-nll`` (K readout
+heads trained jointly on the full training set with a Gaussian NLL on forces,
+see ``mlpdft.shallow_ensemble``) and ``llpr`` (last-layer prediction rigidity
+on the trained ``frozen-probe`` model, see ``mlpdft.llpr``).  Every run writes
+``arms_manifest.json`` so the trained models can be reloaded elsewhere.
+
 The MHC arm freezes the atomic-environment descriptors (embedding, interaction
 and product blocks) and trains only randomly initialised readout heads on
 overlapping subsets of the training set. Select it with ``--arms mhc``; it does
@@ -16,6 +22,7 @@ not use the released ``multiheads_finetuning`` replay path.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import csv
 import json
 import os
@@ -55,11 +62,18 @@ from mlpdft.config import (
 from mlpdft.constants import (
     DATA_DIR,
     ENERGY_KEY,
+    MODEL_REGISTRY,
     ENERGY_OFFSET,
     FORCE_KEY,
     OUTPUTS_DIR,
     PREFIX_HF,
     XYZ_DIR,
+)
+from mlpdft import llpr as llpr_lib
+from mlpdft.shallow_ensemble import (
+    NLL_VARIANCE_EPS,
+    ShallowConfig,
+    train_shallow_ensemble,
 )
 from mlpdft.uq_calibration import resolve_calibration_file
 
@@ -354,6 +368,7 @@ mace_run_train.get_params_options = _checked_get_params_options
 DEFAULT_SEEDS = (123, 124, 125)
 TARGET_HEADS = ("uq_head_123", "uq_head_124", "uq_head_125")
 MHC_HEAD_TEMPLATE = "mhc_head_{index}"
+SHALLOW_HEAD_TEMPLATE = "shallow_head_{index}"
 FROZEN_BODY_LAYERS = 6
 # Frozen-body readouts start from random weights and must absorb a large
 # cohesive-energy offset, so the 1:1 energy:force objective is energy-dominated
@@ -519,7 +534,8 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help=(
             "Comma-separated arms to train/evaluate: committee, snapshots, "
-            "multihead-bootstrap, mhc, frozen-probe, zero-shot. Defaults to "
+            "multihead-bootstrap, mhc, frozen-probe, shallow-nll, llpr, "
+            "zero-shot. Defaults to "
             "mhc,frozen-probe (Experiment 3). Pass committee,snapshots,"
             "multihead-bootstrap to reproduce Experiment 2."
         ),
@@ -561,6 +577,57 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=600,
         help="Epoch budget for the frozen-body single-head point estimate",
+    )
+    parser.add_argument(
+        "--shallow-heads",
+        type=int,
+        default=4,
+        help="Heads of the NLL-trained shallow ensemble (shallow-nll arm)",
+    )
+    parser.add_argument(
+        "--shallow-epochs",
+        type=int,
+        default=120,
+        help=(
+            "Epochs of the shallow-nll arm (default: 120, as --mhc-epochs). An "
+            "epoch is one pass over the full training set; every step runs all "
+            "heads, so it costs about --shallow-heads frozen-head updates"
+        ),
+    )
+    parser.add_argument(
+        "--shallow-warmup-fraction",
+        type=float,
+        default=0.2,
+        help="Fraction of shallow-nll epochs trained with per-head force MSE before the NLL",
+    )
+    parser.add_argument(
+        "--shallow-patience",
+        type=int,
+        default=FROZEN_PATIENCE,
+        help="NLL-phase epochs without validation-NLL improvement before stopping",
+    )
+    parser.add_argument(
+        "--llpr-max-train-frames",
+        type=int,
+        default=300,
+        help="Training frames used to build the LLPR covariance (random subset if more)",
+    )
+    parser.add_argument(
+        "--llpr-energy-weight",
+        type=float,
+        default=0.0,
+        help="Weight of the energy term f f^T in the LLPR covariance (default off)",
+    )
+    parser.add_argument(
+        "--llpr-model",
+        type=Path,
+        default=None,
+        help="Trained frozen-probe model for the llpr arm when frozen-probe is not run",
+    )
+    parser.add_argument(
+        "--llpr-head",
+        default=None,
+        help="Head of --llpr-model (default: its only head)",
     )
     parser.add_argument(
         "--split-seed",
@@ -606,6 +673,8 @@ ALL_ARMS = (
     "multihead-bootstrap",
     "mhc",
     "frozen-probe",
+    "shallow-nll",
+    "llpr",
     "zero-shot",
 )
 DEFAULT_ARMS = ("mhc", "frozen-probe")
@@ -1415,8 +1484,104 @@ def _evaluate_method(
         print(f"Evaluated {method} member {member_name}")
 
     energy_matrix = np.stack(member_energies, axis=0)
-    energy_mean = np.mean(energy_matrix, axis=0)
-    energy_std_per_atom = np.std(energy_matrix, axis=0) / np.asarray(
+    force_means: list[np.ndarray] = []
+    force_sigmas: list[np.ndarray] = []
+    for index in range(len(test_frames)):
+        predicted_forces = np.stack(
+            [member[index] for member in member_forces], axis=0
+        )
+        force_means.append(np.mean(predicted_forces, axis=0))
+        force_sigmas.append(np.std(predicted_forces, axis=0))
+    calibration_inputs = None
+    if calibration_frames and len(members) > 1:
+        cal_energy_matrix = np.stack(member_cal_energies, axis=0)
+        cal_force_means: list[np.ndarray] = []
+        cal_force_sigmas: list[np.ndarray] = []
+        for frame_index in range(len(calibration_frames)):
+            stack = np.stack(
+                [member[frame_index] for member in member_cal_forces], axis=0
+            )
+            cal_force_means.append(np.mean(stack, axis=0))
+            cal_force_sigmas.append(np.std(stack, axis=0))
+        calibration_inputs = {
+            "frames": calibration_frames,
+            "energy_mean": np.mean(cal_energy_matrix, axis=0),
+            "energy_sigma": np.std(cal_energy_matrix, axis=0),
+            "force_means": cal_force_means,
+            "force_sigmas": cal_force_sigmas,
+        }
+    all_indices = list(range(len(test_frames)))
+    member_metrics = []
+    for member_index, (member_name, _, head_name) in enumerate(members):
+        single_force_errors = [
+            member_forces[member_index][index]
+            - np.asarray(test_frames[index].arrays[FORCE_KEY], dtype=float)
+            for index in all_indices
+        ]
+        single_energy_errors = np.asarray(
+            [
+                (member_energies[member_index][index] - float(atoms.info[ENERGY_KEY]))
+                / len(atoms)
+                for index, atoms in enumerate(test_frames)
+            ]
+        )
+        member_metrics.append(
+            {
+                "member": member_name,
+                "head": head_name,
+                "energy_rmse_mev_per_atom": float(
+                    np.sqrt(np.mean(single_energy_errors**2)) * 1000
+                ),
+                "force_rmse_ev_per_angstrom": float(
+                    np.sqrt(
+                        np.mean(
+                            np.concatenate(
+                                [error.ravel() for error in single_force_errors]
+                            )
+                            ** 2
+                        )
+                    )
+                ),
+            }
+        )
+
+    return _summarize_predictions(
+        method,
+        test_frames,
+        output_dir,
+        energy_mean=np.mean(energy_matrix, axis=0),
+        energy_sigma=np.std(energy_matrix, axis=0),
+        force_means=force_means,
+        force_sigmas=force_sigmas,
+        member_metrics=member_metrics,
+        member_count=len(members),
+        has_uncertainty=len(members) > 1,
+        calibration_inputs=calibration_inputs,
+    )
+
+
+def _summarize_predictions(
+    method: str,
+    test_frames: list[Atoms],
+    output_dir: Path,
+    *,
+    energy_mean: np.ndarray,
+    energy_sigma: np.ndarray,
+    force_means: list[np.ndarray],
+    force_sigmas: list[np.ndarray],
+    member_metrics: list[dict[str, Any]],
+    member_count: int,
+    has_uncertainty: bool,
+    calibration_inputs: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Write ``{method}_predictions.csv``/``_atom_level.npz`` and summarise.
+
+    ``energy_sigma`` (eV per frame) and ``force_sigmas`` (eV/A per component)
+    are the method's uncertainties: the member standard deviation for an
+    ensemble, the LLPR sigma for ``llpr``.  ``calibration_inputs`` holds the
+    same quantities on the calibration frames.
+    """
+    energy_std_per_atom = energy_sigma / np.asarray(
         [len(atoms) for atoms in test_frames]
     )
     n_frames = len(test_frames)
@@ -1448,11 +1613,8 @@ def _evaluate_method(
         )
         writer.writeheader()
         for index, atoms in enumerate(test_frames):
-            predicted_forces = np.stack(
-                [member[index] for member in member_forces], axis=0
-            )
-            mean_forces = np.mean(predicted_forces, axis=0)
-            component_std = np.std(predicted_forces, axis=0)
+            mean_forces = force_means[index]
+            component_std = force_sigmas[index]
             force_uncertainty[index] = float(np.sqrt(np.mean(component_std**2)))
             ref_forces = np.asarray(atoms.arrays[FORCE_KEY], dtype=float)
             frame_force_error = mean_forces - ref_forces
@@ -1510,12 +1672,12 @@ def _evaluate_method(
         )
 
     calibration = None
-    if calibration_frames and len(members) > 1:
+    if calibration_inputs is not None:
+        calibration_frames = calibration_inputs["frames"]
         atom_counts = np.asarray([len(atoms) for atoms in calibration_frames])
-        cal_energy_matrix = np.stack(member_cal_energies, axis=0)
-        cal_energy_std = np.std(cal_energy_matrix, axis=0) / atom_counts
+        cal_energy_std = calibration_inputs["energy_sigma"] / atom_counts
         cal_energy_error = (
-            np.mean(cal_energy_matrix, axis=0)
+            calibration_inputs["energy_mean"]
             - np.asarray(
                 [float(atoms.info[ENERGY_KEY]) for atoms in calibration_frames]
             )
@@ -1527,11 +1689,8 @@ def _evaluate_method(
         force_square_sum = 0.0
         component_count = 0
         for frame_index, atoms in enumerate(calibration_frames):
-            stack = np.stack(
-                [member[frame_index] for member in member_cal_forces], axis=0
-            )
-            sigma = np.std(stack, axis=0)
-            error = np.mean(stack, axis=0) - np.asarray(
+            sigma = calibration_inputs["force_sigmas"][frame_index]
+            error = calibration_inputs["force_means"][frame_index] - np.asarray(
                 atoms.arrays[FORCE_KEY], dtype=float
             )
             force_ratio_sum += float(np.sum(error**2 / (sigma**2 + 1e-12)))
@@ -1548,43 +1707,9 @@ def _evaluate_method(
                 "on the calibration frames"
             ),
         }
-    member_metrics = []
-    for member_index, (member_name, _, head_name) in enumerate(members):
-        single_force_errors = [
-            member_forces[member_index][index]
-            - np.asarray(test_frames[index].arrays[FORCE_KEY], dtype=float)
-            for index in all_indices
-        ]
-        single_energy_errors = np.asarray(
-            [
-                (member_energies[member_index][index] - float(atoms.info[ENERGY_KEY]))
-                / len(atoms)
-                for index, atoms in enumerate(test_frames)
-            ]
-        )
-        member_metrics.append(
-            {
-                "member": member_name,
-                "head": head_name,
-                "energy_rmse_mev_per_atom": float(
-                    np.sqrt(np.mean(single_energy_errors**2)) * 1000
-                ),
-                "force_rmse_ev_per_angstrom": float(
-                    np.sqrt(
-                        np.mean(
-                            np.concatenate(
-                                [error.ravel() for error in single_force_errors]
-                            )
-                            ** 2
-                        )
-                    )
-                ),
-            }
-        )
-
     summary = {
         "method": method,
-        "member_count": len(members),
+        "member_count": member_count,
         "prediction_file": str(csv_path),
         "overall": _summarize_subset(
             all_indices,
@@ -1655,7 +1780,7 @@ def _evaluate_method(
                 ],
             }
         )
-    if len(members) < 2:
+    if not has_uncertainty:
         # A single point estimate has no disagreement, so ranking metrics are
         # undefined rather than zero.
         summary["overall"]["low_uncertainty_risk_coverage_force_rmse"] = None
@@ -1907,6 +2032,254 @@ def _learning_gate(
     )
     return result
 
+@contextlib.contextmanager
+def _skip_mace_optimisation():
+    """Run MACE's ``run_train`` without its optimisation loop.
+
+    Used to build the shallow-ensemble starting model through the same
+    ``configure_model`` path (and frozen-body checks) as the MHC arm; the
+    saved model is the randomly initialised multi-head model.
+    """
+    original = mace_run_train.tools.train
+    mace_run_train.tools.train = lambda *args, **kwargs: None
+    try:
+        yield
+    finally:
+        mace_run_train.tools.train = original
+
+
+def _train_shallow_nll_arm(
+    options: argparse.Namespace,
+    run_root: Path,
+    train_file: Path,
+    valid_file: Path,
+    test_file: Path,
+    epochs: int,
+) -> tuple[list[tuple[str, Path, str | None]], dict[str, Any]]:
+    """Frozen body + K random readout heads, trained jointly with a force NLL."""
+    head_names = [
+        SHALLOW_HEAD_TEMPLATE.format(index=index)
+        for index in range(options.shallow_heads)
+    ]
+    name = "shallow_nll"
+    arm_dir = run_root / name
+    started = time.perf_counter()
+    with _skip_mace_optimisation():
+        init_model = _run_training(
+            options,
+            f"{name}_init",
+            arm_dir / "init",
+            train_file,
+            valid_file,
+            test_file,
+            options.seeds[0],
+            epochs,
+            head_files={head: train_file for head in head_names},
+            freeze=FROZEN_BODY_LAYERS,
+            foundation_filter_elements=False,
+            epochs=epochs,
+        )
+    _cleanup_checkpoints(arm_dir / "init")
+    config = ShallowConfig(
+        epochs=epochs,
+        warmup_fraction=options.shallow_warmup_fraction,
+        lr=options.learning_rate if options.learning_rate is not None else FROZEN_LEARNING_RATE,
+        batch_size=options.batch_size,
+        eps=NLL_VARIANCE_EPS,
+        patience=options.shallow_patience,
+        seed=options.seeds[0],
+    )
+    model_path = arm_dir / "models" / f"{name}.model"
+    record = train_shallow_ensemble(
+        init_model,
+        _read_frames(train_file),
+        _read_frames(valid_file),
+        model_path,
+        config,
+        device=options.device,
+        dtype=options.dtype,
+        log_path=arm_dir / "shallow_nll_train.jsonl",
+    )
+    record.update(
+        {
+            "name": name,
+            "arm": "shallow-nll",
+            "seconds": time.perf_counter() - started,
+            "init_model": str(init_model),
+            "freeze": FROZEN_BODY_LAYERS,
+            "foundation_filter_elements": False,
+            "energy_weight": 0.0,
+            "loss": "per-head force MSE warm-up, then Gaussian NLL of force components",
+        }
+    )
+    (arm_dir / "shallow_nll_record.json").write_text(
+        json.dumps(record, indent=2), encoding="utf-8"
+    )
+    return [(head, model_path, head) for head in head_names], record
+
+
+def _fit_llpr_arm(
+    options: argparse.Namespace,
+    run_root: Path,
+    model_path: Path,
+    head: str | None,
+    train_frames: list[Atoms],
+    calibration_frames: list[Atoms],
+) -> dict[str, Any]:
+    arm_dir = run_root / "llpr"
+    started = time.perf_counter()
+    record = llpr_lib.fit_llpr(
+        model_path,
+        head,
+        train_frames,
+        calibration_frames,
+        arm_dir / "llpr_covariance.npz",
+        device=options.device,
+        dtype=options.dtype,
+        energy_weight=options.llpr_energy_weight,
+        max_train_frames=options.llpr_max_train_frames,
+        seed=options.split_seed,
+    )
+    record.update(
+        {
+            "name": "llpr",
+            "arm": "llpr",
+            "model": str(model_path),
+            "head": head,
+            "seconds": time.perf_counter() - started,
+        }
+    )
+    (arm_dir / "llpr_record.json").write_text(
+        json.dumps(record, indent=2), encoding="utf-8"
+    )
+    return record
+
+
+def _evaluate_llpr(
+    method: str,
+    model_path: Path,
+    head: str | None,
+    covariance_file: Path,
+    test_frames: list[Atoms],
+    options: argparse.Namespace,
+    output_dir: Path,
+    calibration_frames: list[Atoms] | None = None,
+) -> dict[str, Any]:
+    """Point prediction of the probe with LLPR sigmas, in the ensemble format."""
+    test = llpr_lib.predict(
+        model_path, head, covariance_file, test_frames, options.device, options.dtype
+    )
+    calibration_inputs = None
+    if calibration_frames:
+        cal = llpr_lib.predict(
+            model_path, head, covariance_file, calibration_frames,
+            options.device, options.dtype,
+        )
+        calibration_inputs = {
+            "frames": calibration_frames,
+            "energy_mean": np.asarray([item["energy"] for item in cal]),
+            "energy_sigma": np.asarray([item["energy_sigma"] for item in cal]),
+            "force_means": [item["forces"] for item in cal],
+            "force_sigmas": [item["force_sigma"] for item in cal],
+        }
+    energies = np.asarray([item["energy"] for item in test])
+    force_errors = np.concatenate(
+        [
+            (item["forces"] - np.asarray(atoms.arrays[FORCE_KEY], dtype=float)).ravel()
+            for item, atoms in zip(test, test_frames)
+        ]
+    )
+    energy_errors = np.asarray(
+        [
+            (item["energy"] - float(atoms.info[ENERGY_KEY])) / len(atoms)
+            for item, atoms in zip(test, test_frames)
+        ]
+    )
+    member_metrics = [
+        {
+            "member": "llpr_model",
+            "head": head,
+            "energy_rmse_mev_per_atom": float(np.sqrt(np.mean(energy_errors**2)) * 1000),
+            "force_rmse_ev_per_angstrom": float(np.sqrt(np.mean(force_errors**2))),
+        }
+    ]
+    summary = _summarize_predictions(
+        method,
+        test_frames,
+        output_dir,
+        energy_mean=energies,
+        energy_sigma=np.asarray([item["energy_sigma"] for item in test]),
+        force_means=[item["forces"] for item in test],
+        force_sigmas=[item["force_sigma"] for item in test],
+        member_metrics=member_metrics,
+        member_count=1,
+        has_uncertainty=True,
+        calibration_inputs=calibration_inputs,
+    )
+    summary["uncertainty_source"] = (
+        "LLPR sigma (already calibrated: alpha, varsigma fitted on the "
+        "calibration NLL), not member disagreement"
+    )
+    summary["covariance_file"] = str(covariance_file)
+    return summary
+
+
+ENSEMBLE_ARM_METHODS = {
+    "committee": "independent_committee",
+    "snapshots": "warm_snapshots",
+    "multihead-bootstrap": "multihead_bootstrap",
+    "mhc": "frozen_mhc",
+    "frozen-probe": "frozen_probe",
+    "shallow-nll": "shallow_nll",
+}
+
+
+def _relative_to(path: Path, root: Path) -> str:
+    return os.path.relpath(Path(path).resolve(), root.resolve())
+
+
+def _write_arms_manifest(
+    run_root: Path,
+    methods: dict[str, list[tuple[str, Path, str | None]]],
+    llpr_entry: dict[str, Any] | None,
+    foundation_model: Path | None = None,
+) -> Path:
+    """Describe every trained arm so a separate evaluator can reload it.
+
+    Paths are relative to ``run_root``.  ``head: null`` means the model's only
+    head (pass no ``head=`` to ``MACECalculator``).
+    """
+    arms: dict[str, Any] = {}
+    for arm, method in ENSEMBLE_ARM_METHODS.items():
+        if method not in methods:
+            continue
+        arms[arm] = {
+            "kind": "ensemble",
+            "method": method,
+            "members": [
+                {"name": name, "model_path": _relative_to(path, run_root), "head": head}
+                for name, path, head in methods[method]
+            ],
+        }
+    if llpr_entry is not None:
+        arms["llpr"] = {
+            "kind": "llpr",
+            "method": "llpr",
+            "model_path": _relative_to(llpr_entry["model"], run_root),
+            "head": llpr_entry["head"],
+            "covariance": _relative_to(llpr_entry["covariance_file"], run_root),
+            "predict": "mlpdft.llpr.predict_force_sigma(model_path, head, covariance, frames)",
+        }
+    manifest = {
+        "format_version": 1,
+        "paths_relative_to": "run directory (this file's folder)",
+        "foundation_model": str(foundation_model) if foundation_model else None,
+        "arms": arms,
+    }
+    path = run_root / "arms_manifest.json"
+    path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return path
+
 
 def main() -> None:
     options = parse_args()
@@ -1938,6 +2311,12 @@ def main() -> None:
         raise SystemExit("The multihead-bootstrap arm requires three --seeds")
     if options.mhc_heads < 2:
         raise SystemExit("--mhc-heads must be at least 2")
+    if "shallow-nll" in arms and options.shallow_heads < 2:
+        raise SystemExit("--shallow-heads must be at least 2")
+    if not 0.0 <= options.shallow_warmup_fraction <= 1.0:
+        raise SystemExit("--shallow-warmup-fraction must be in [0, 1]")
+    if "llpr" in arms and "frozen-probe" not in arms and options.llpr_model is None:
+        raise SystemExit("The llpr arm needs the frozen-probe arm or --llpr-model")
     if not 0.0 < options.mhc_overlap <= 1.0:
         raise SystemExit("--mhc-overlap must be in (0, 1]")
     if options.smoke_test:
@@ -1989,6 +2368,9 @@ def main() -> None:
     mhc_epochs = options.smoke_epochs if options.smoke_test else options.mhc_epochs
     probe_epochs = (
         options.smoke_epochs if options.smoke_test else options.probe_epochs
+    )
+    shallow_epochs = (
+        options.smoke_epochs if options.smoke_test else options.shallow_epochs
     )
     eval_frames = (
         test_frames[: options.smoke_frames] if options.smoke_test else test_frames
@@ -2239,6 +2621,38 @@ def main() -> None:
             }
         )
 
+    if "shallow-nll" in arms:
+        shallow_members, shallow_record = _train_shallow_nll_arm(
+            options, run_root, train_file, valid_file, test_file, shallow_epochs
+        )
+        methods["shallow_nll"] = shallow_members
+        run_records.append(shallow_record)
+
+    llpr_entry: dict[str, Any] | None = None
+    if "llpr" in arms:
+        if options.llpr_model is not None:
+            llpr_model = options.llpr_model.expanduser().resolve()
+            llpr_head = options.llpr_head
+        else:
+            llpr_model = methods["frozen_probe"][0][1]
+            llpr_head = methods["frozen_probe"][0][2]
+        llpr_entry = _fit_llpr_arm(
+            options,
+            run_root,
+            llpr_model,
+            llpr_head,
+            train_frames[: options.smoke_frames] if options.smoke_test else train_frames,
+            calibration_frames,
+        )
+        run_records.append(llpr_entry)
+
+    _write_arms_manifest(
+        run_root,
+        methods,
+        llpr_entry,
+        foundation_model=MODEL_REGISTRY[options.model_key].path,
+    )
+
     if not options.skip_evaluation:
         if options.reference_mhc_model is not None:
             reference_model = options.reference_mhc_model.expanduser().resolve()
@@ -2271,6 +2685,17 @@ def main() -> None:
             summaries[method] = _evaluate_method(
                 method,
                 members,
+                eval_frames,
+                options,
+                evaluation_dir,
+                calibration_frames=calibration_frames,
+            )
+        if llpr_entry is not None:
+            summaries["llpr"] = _evaluate_llpr(
+                "llpr",
+                Path(llpr_entry["model"]),
+                llpr_entry["head"],
+                Path(llpr_entry["covariance_file"]),
                 eval_frames,
                 options,
                 evaluation_dir,
@@ -2309,6 +2734,13 @@ def main() -> None:
         "mhc_epochs": mhc_epochs,
         "probe_epochs": probe_epochs,
         "mhc_heads": options.mhc_heads,
+        "shallow_heads": options.shallow_heads,
+        "shallow_epochs": shallow_epochs,
+        "shallow_warmup_fraction": options.shallow_warmup_fraction,
+        "shallow_nll_variance_eps": NLL_VARIANCE_EPS,
+        "llpr_max_train_frames": options.llpr_max_train_frames,
+        "llpr_energy_weight": options.llpr_energy_weight,
+        "llpr_model": str(options.llpr_model) if options.llpr_model else None,
         "frozen_body_layers": FROZEN_BODY_LAYERS,
         "split_seed": options.split_seed,
         "snapshot_count": options.snapshot_count,
