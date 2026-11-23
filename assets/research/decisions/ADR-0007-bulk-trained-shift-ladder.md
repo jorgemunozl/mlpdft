@@ -1,11 +1,17 @@
 ---
 status: accepted
 date: 2026-11-21
+revised: 2026-11-23
 phase: 2
 owner: jorge
 supersedes: —
 superseded_by: —
 ---
+
+> **Revised 2026-11-23:** the first shift was described as "bulk LiF at
+> ≈ 162 K". Its frames have larger forces than the 300 K run, so it is now
+> described as a variable-cell, unthermostatted state shift. Nothing else
+> changed.
 
 # ADR-0007: Train on bulk LiF and evaluate along a graded shift
 
@@ -37,7 +43,9 @@ The project owner chose C on 2026-11-21.
   replicas at 300 K (three each), split by replica
   ([ADR-0005](ADR-0005-replicas-over-long-runs.md)).
 - **Evaluation-only shift ladder.** No training or calibration on these sets:
-  1. temperature and density: bulk LiF at ≈ 162 K, `LIF64_KJPAW_NPT_FINAL`;
+  1. thermodynamic state: bulk LiF from a variable-cell run without a
+     thermostat (`LIF64_KJPAW_NPT_FINAL`; kinetic ≈ 160 K, 2 % denser, yet
+     larger forces than the 300 K run);
   2. chemistry: F-doped Li (`LIWITHF_KJPAW_FINAL`, plus 2 optional replicas)
      and Li metal (`BCC_54_KJPAW_FINAL`);
   3. structure: the LiF/Li film (`LIFINTERFACE_KJPAW_V2`), as a stress test;

@@ -23,7 +23,8 @@ uncertainty estimate at a fixed compute budget. The model is fine-tuned on bulk
 LiF only. It is then evaluated along a graded shift
 ([ADR-0007](decisions/ADR-0007-bulk-trained-shift-ladder.md)):
 1. independent bulk LiF replicas at 300 K (in distribution);
-2. bulk LiF at ≈ 162 K;
+2. bulk LiF from a variable-cell run without a thermostat (a shift in density
+   and thermal state);
 3. F-doped Li metal and pure Li metal;
 4. a thin LiF/Li film.
 
@@ -52,8 +53,9 @@ quality and label efficiency, not about a battery property.
 In scope:
 
 - `LIF64`: stoichiometric bulk LiF. It is the training environment. Its
-  calibration and test sets are new independent replicas at 300 K. A colder
-  (≈ 162 K) variable-cell run is the first shift.
+  calibration and test sets are new independent replicas at 300 K. A
+  variable-cell run without a thermostat (kinetic ≈ 160 K, 2 % denser) is the
+  first shift.
 - `LIWITHF`: 53 Li + 1 F, F-doped Li metal. Chemistry shift, evaluation only.
 - `BCC54`: pure Li metal. Chemistry shift, evaluation only.
 - `LIFINTERFACE`: 86 Li + 36 F, a thin two-layer LiF film on Li metal.

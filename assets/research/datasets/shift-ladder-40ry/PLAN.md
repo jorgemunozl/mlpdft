@@ -24,7 +24,7 @@ Job folders: [`assets/quantum_expresso/campaign-2026-11/`](../../../quantum_expr
 | Training pool | `LIF64_KJPAW_FINAL`: bulk LiF, NVT 300 K, 18,980 steps | yes; re-extract from the log |
 | Calibration, in distribution | 3 new bulk LiF replicas (300 K) | stages 1 and 3 |
 | Test, in distribution | 3 more new bulk LiF replicas (300 K) | stages 1 and 3 |
-| Shift 1, temperature and density | `LIF64_KJPAW_NPT_FINAL`: bulk LiF, no thermostat, ≈ 162 K, V ≈ 531 Å³ | yes |
+| Shift 1, thermodynamic state | `LIF64_KJPAW_NPT_FINAL`: bulk LiF, variable cell, no thermostat; kinetic ≈ 160 K and V ≈ 531 Å³, yet larger forces than the 300 K run (rms 0.445 vs 0.403 eV/Å) | yes |
 | Shift 2, chemistry | `LIWITHF_KJPAW_FINAL` (F-doped Li), `BCC_54_KJPAW_FINAL` (Li metal); optional 2 F-doped replicas | yes / stage 4 |
 | Shift 3, structure | `LIFINTERFACE_KJPAW_V2` after step 586 (LiF/Li film; drifting stress test) | yes |
 | Shift 4, appendix only | `LIBF4_FINAL`, `BLI3_*`, `LIWITHBF_*` (boron) | yes |
