@@ -24,7 +24,7 @@ All arms start from MACE-OMAT-medium.
 
 | Arm | Training | Uncertainty |
 |---|---|---|
-| `committee` | 4 independent full fine-tunes (different seeds) | spread of members |
+| `committee` | 3 independent full fine-tunes (different seeds; the runner's maximum) | spread of members |
 | `snapshots` | one full fine-tune with warm restarts, 3 snapshots | spread of snapshots |
 | `mhc` | frozen body, 4 random heads on disjoint quarters of the pool ([ADR-0001](../decisions/ADR-0001-four-head-disjoint.md)) | spread of heads |
 | `shallow-nll` | frozen body, 4 heads on all frames, trained jointly with a Gaussian NLL | spread of heads |
@@ -61,6 +61,9 @@ All arms start from MACE-OMAT-medium.
 | Does σ flag the shift? | AUROC of per-frame σ, in-distribution test vs each shift set |
 | Leakage from single-trajectory splits | the same metrics on `test_timeblock` vs the test replicas |
 | Cost | GPU-hours per arm, rung and seed set |
+
+Ensembles differ in size (3 members, 3 snapshots, 4 heads), which the
+results report next to every comparison.
 
 Intervals come from a block bootstrap:
 - in distribution: replicas are the blocks;
