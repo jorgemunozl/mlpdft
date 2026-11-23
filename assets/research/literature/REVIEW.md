@@ -7,6 +7,7 @@ owner: jorge
 # Literature Review — Uncertainty Quantification and Active Learning for Foundation MACE on Li–F
 
 - **Date:** 2026-10-27
+- **Update 2026-11-23:** the study moved to design C (train on bulk LiF, evaluate along a graded shift; [ADR-0007](../decisions/ADR-0007-bulk-trained-shift-ladder.md), [ADR-0008](../decisions/ADR-0008-40ry-labels-and-md-protocol.md)). §10.5 adds seven references and §12 explains what they change; the rest of the review is unchanged and predates the redesign.
 - **Status:** reframed on 2026-10-29 for the UQ + AL + tier-0 anchor scope; supersedes the 2026-09-13 draft (E₀ and zero-shot property dependence) and the 2026-10-27 transport framing.
 - **Scope:** uncertainty quantification (UQ) for machine-learning interatomic potentials (MLIPs), with emphasis on cheap versus expensive ensemble constructions and uncertainty-guided active learning on a Li–F testbed. Transport is context, not a claimed observable.
 - **Project cross-reference:** [`DESCRIPTION.md`](../CHARTER.md), [`ROUTE.md`](../ROADMAP.md), [`UQ_EXPERIMENT_0.md`](../archive/2026-10-29-uq-protocol-v0.md), [`ACTIVE_LEARNING_PROTOCOL.md`](../experiments/exp-04-active-learning/PROTOCOL.md).
@@ -448,6 +449,18 @@ References are grouped by role. The first group is the core comparison set most 
 25. **Huang, Li, Pleiss, Liu, Hopcroft, Weinberger (2017).** *Snapshot Ensembles: Train 1, get M for free.* [arXiv:1704.00109](https://arxiv.org/abs/1704.00109). Cyclic-learning-rate snapshots as a cheap ensemble; generic deep-learning origin of the warm-restart idea.
 26. **Lakshminarayanan, Pritzel, Blundell (2017).** *Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles.* [arXiv:1612.01474](https://arxiv.org/abs/1612.01474). Deep ensembles as a practical predictive-uncertainty baseline.
 
+### 10.5 Added 2026-11-23 (design C)
+
+Identifiers were checked on 2026-11-23 against alphaXiv (arXiv papers) and OpenAlex (DOIs). The "Read" note says how much of each paper was read.
+
+27. **Schmid, Setzer, Scheurer (2026).** *Towards Out-of-Distribution Uncertainty Quantification for Machine-Learned Interatomic Potentials via Pre-Training.* [arXiv:2610.41801](https://www.alphaxiv.org/abs/2610.41801). Post-hoc uncertainty estimators (latent-space distance, mean-variance estimation, shallow ensembles) are pre-trained on large materials datasets. They give zero-shot uncertainty across datasets, and fine-tuning yields positive uncertainty–error correlations even on the hardest sets. Read: abstract and introduction. **Evidence that out-of-distribution evaluation is the open gap.**
+28. **Bigi, Chong, Ceriotti, Grasselli (2024).** *A prediction rigidity formalism for low-cost uncertainties in trained neural networks.* [arXiv:2403.02251](https://www.alphaxiv.org/abs/2403.02251). The paper defines prediction rigidities from a constrained optimisation, connects them to Bayesian inference, and gives a last-layer approximation that needs no change to the network or its training. Read: abstract. **Method behind the `llpr` arm.**
+29. **Andersen (1980).** *Molecular dynamics simulations at constant pressure and/or temperature.* J. Chem. Phys. [DOI:10.1063/1.439486](https://doi.org/10.1063/1.439486). Stochastic-collision thermostat. The existing NVT runs used it with a collision for every atom at every step. **Lineage of the thermostat finding.**
+30. **Bussi, Donadio, Parrinello (2007).** *Canonical sampling through velocity rescaling.* J. Chem. Phys. [DOI:10.1063/1.2408420](https://doi.org/10.1063/1.2408420). The stochastic velocity-rescaling (SVR) thermostat, one of the two candidates in the QE pilot.
+31. **Madras, Sokal (1988).** *The pivot algorithm: A highly efficient Monte Carlo method for the self-avoiding walk.* J. Stat. Phys. [DOI:10.1007/BF01022990](https://doi.org/10.1007/BF01022990). Standard source for the self-consistent window of the integrated autocorrelation time and its statistical error, both used in `estimate_qe_correlation.py`.
+32. **Flyvbjerg, Petersen (1989).** *Error estimates on averages of correlated data.* J. Chem. Phys. [DOI:10.1063/1.457480](https://doi.org/10.1063/1.457480). Blocking analysis, used as a cross-check in the correlation review.
+33. **Chodera (2016).** *A simple method for automated equilibration detection in molecular simulations.* J. Chem. Theory Comput. [DOI:10.1021/acs.jctc.5b00784](https://doi.org/10.1021/acs.jctc.5b00784). Picks the burn-in that maximises the number of effective samples; applied to the interface run, where no start point gave a stationary segment.
+
 ---
 
 ## 11. Verification and scope notes
@@ -462,3 +475,37 @@ These notes record where the retrieved set does **not** support a convenient cla
 - **The black-box multi-head paper is not a new committee training method.** Fonea et al. extract a signal from an existing multi-head network; it is relevant to inference cost, not to the training-cost comparison.
 - **Li-ion application papers are not UQ papers.** Alghamdi et al., De Angelis et al., Shaaban Kabakibo et al., Guo et al., Li, Gong et al., and Zhong & Persson establish accuracy, mechanisms, and model-form sensitivity. They do not test ensemble calibration or AL label efficiency.
 - **No full-text audit yet.** The next step, if the paper needs claim-level comparison, is to read the full text of the four load-bearing papers (Beck, Schäfer, Kurniawan, Bi) and extract exact numbers, figures, and limitations. The abstract-level claims above are sufficient for positioning but not for a methods-section critique.
+
+---
+
+## 12. Update 2026-11-23: what design C changes
+
+**What changed.**
+- The fine-tuned arms are trained on bulk LiF only, then calibrated and tested on independent bulk replicas.
+- They are evaluated along a graded shift: variable-cell bulk, then F-doped Li and Li metal, then the LiF/Li film, with the boron systems in an appendix.
+- LLPR and an NLL-trained shallow ensemble join the comparison as baselines.
+- Labels are 40/320 Ry only ([ADR-0007](../decisions/ADR-0007-bulk-trained-shift-ladder.md), [ADR-0008](../decisions/ADR-0008-40ry-labels-and-md-protocol.md)).
+
+**What the new references change.**
+
+- **The gap moves to distribution shift.** Schmid et al. observe that "for a vast majority of cases, post-hoc UQ models are trained and evaluated on specific (mostly in-domain) datasets, which also often consist of only thousands of training examples (see Figure 1)." ([Schmid et al., p. 3](https://www.alphaxiv.org/pdf/2610.41801?page=3)). The gap statement in §8.3 narrows accordingly: we found no study that compares ensemble and last-layer UQ for a fine-tuned foundation MACE model along a graded distribution shift, with calibration and test sets drawn from independent trajectories.
+- **Shallow ensembles and LLPR become arms, not only related work.** §3.3 and §4.1 cite them as neighbours; they are now implemented as `shallow-nll` (ref. 2) and `llpr` (refs. 4 and 28).
+  - The frozen-body MHC has the same structure as a shallow ensemble: a frozen body with separate heads.
+  - It differs in training each head on a disjoint quarter of the data with MSE, instead of all heads jointly with an NLL. Comparing the two arms isolates those two choices.
+  - The caution in §11 still holds: neither is evidence about warm-restart snapshots.
+- **Independence is now a requirement reviewers will check.** The data decisions (ADR-0003, ADR-0005, ADR-0008) rest on refs. 29–33:
+  - the integrated autocorrelation time and its error (Madras & Sokal);
+  - blocking analysis (Flyvbjerg & Petersen);
+  - equilibration detection (Chodera);
+  - the two thermostats (Andersen; Bussi et al.).
+
+  The project's own analysis is [methods/autocorrelation.md](../methods/autocorrelation.md).
+
+**Found, not yet read.** These are titles only; do not cite them before reading. Each note says why the paper may matter, judged from its title.
+
+- Lysogorskiy et al., *A latent-space extrapolation grade built into graph atomic cluster expansion foundation potentials*, [arXiv:2609.40060](https://www.alphaxiv.org/abs/2609.40060). An out-of-distribution signal built into a foundation potential.
+- Lortaraprasert et al., *Does System Size Matter in Uncertainty Quantification for Machine Learning Interatomic Potentials?*, [arXiv:2610.40126](https://www.alphaxiv.org/abs/2610.40126). Our evaluation sets range from 18 to 122 atoms.
+- Su et al., *EPIC: Differentiable Energy-Force Consistent Uncertainty Quantification and Propagation for Machine-Learned Interatomic Potentials*, [arXiv:2611.00942](https://www.alphaxiv.org/abs/2611.00942). Another UQ method a reviewer may ask about.
+- Fisher et al., *Multivariate conformal uncertainty propagation in multitask atomistic simulation: Successes and pitfalls*, [arXiv:2609.31384](https://www.alphaxiv.org/abs/2609.31384). Conformal calibration, which our evaluation uses.
+- Stepurko et al., *Out-of-training properties in frozen interatomic potential embeddings are decodable and ordered by physical scale*, [arXiv:2611.21116](https://www.alphaxiv.org/abs/2611.21116). Frozen-body representations, as in the MHC and probe arms.
+- Wong & Yang, *Bias in Universal Machine-Learned Interatomic Potentials and its Effects on Fine-Tuning*, [arXiv:2603.10159](https://www.alphaxiv.org/abs/2603.10159). Fine-tuning from a biased foundation model.
