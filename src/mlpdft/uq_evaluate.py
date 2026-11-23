@@ -82,9 +82,28 @@ def blocks_for(frames: list, block_steps: int) -> tuple[np.ndarray, str]:
     return steps // block_steps, f"time blocks of {block_steps} steps"
 
 
+def load_arms(run_dir: Path) -> dict:
+    """Arms of one run directory, or of every sub-run below it that has a manifest."""
+    manifests = [run_dir / "arms_manifest.json"] if (run_dir / "arms_manifest.json").exists() \
+        else sorted(run_dir.glob("*/arms_manifest.json"))
+    if not manifests:
+        raise SystemExit(f"no arms_manifest.json under {run_dir}")
+    arms = {}
+    for manifest in manifests:
+        for name, arm in json.loads(manifest.read_text()).items():
+            if name in arms:
+                raise SystemExit(f"arm {name} appears in two runs under {run_dir}")
+            arms[name] = {**arm, "_base": str(manifest.parent)}
+    return arms
+
+
+def orx_report(payload: dict) -> None:
+    print("::orx:: " + json.dumps(payload), flush=True)
+
+
 def evaluate(run_dir: Path, dataset_dir: Path, *, device: str, dtype: str, block_steps: int,
-             n_boot: int, target: float, predictor=predict) -> dict:
-    arms = json.loads((run_dir / "arms_manifest.json").read_text())
+             n_boot: int, target: float, predictor=predict, report_orx: bool = False) -> dict:
+    arms = load_arms(run_dir)
     sets = json.loads((dataset_dir / "manifest.json").read_text())["sets"]
     eval_sets = {name: s for name, s in sets.items() if s["role"] not in ("train", "monitor")}
     calibration = next((n for n, s in eval_sets.items() if s["role"] == "calibration"), None)
@@ -97,11 +116,17 @@ def evaluate(run_dir: Path, dataset_dir: Path, *, device: str, dtype: str, block
     out_dir = run_dir / "evaluation"
     report: dict = {"calibration_set": calibration, "id_reference_set": id_test, "id_reference_note": id_note,
                     "conformal_target": target, "arms": {}}
+    total, done = len(arms) * len(frames), 0
+    if report_orx:
+        orx_report({"phase": "evaluate", "step": 0, "of": total, "unit": "arm x set"})
     for arm_name, arm in arms.items():
         preds = {}
         for name, fr in frames.items():
             ref = np.concatenate([a.arrays[FORCES_KEY] for a in fr])
-            mean, sigma = predictor(arm, run_dir, fr, device, dtype)
+            mean, sigma = predictor(arm, Path(arm.get("_base", run_dir)), fr, device, dtype)
+            done += 1
+            if report_orx:
+                orx_report({"step": done})
             frame = np.repeat(np.arange(len(fr)), [len(a) for a in fr])
             preds[name] = (mean - ref, sigma, frame)
             (out_dir / arm_name).mkdir(parents=True, exist_ok=True)
@@ -128,6 +153,21 @@ def evaluate(run_dir: Path, dataset_dir: Path, *, device: str, dtype: str, block
                     row["shift_auroc_vs_id"] = uq_metrics.shift_auroc(s_id, f_id, sigma, frame)
             row.update({"role": eval_sets[name]["role"], "blocks": block_kind})
             arm_report["sets"][name] = row
+            if report_orx:
+                p = row.get("point", row)
+                m = {"arm": arm_name, "set": name, "force_rmse_meV": round(1000 * p["force_rmse"], 3)}
+                if "spearman_frame" in p:
+                    m.update({"rho_frame": round(p["spearman_frame"], 4), "rho_atom": round(p["spearman_atom"], 4),
+                              "miscal": round(p.get("miscal_area_cal", p["miscal_area_raw"]), 4)})
+                if "shift_auroc_vs_id" in row:
+                    m["auroc"] = round(row["shift_auroc_vs_id"], 4)
+                orx_report({"row": "results", "m": m})
+                if name == id_test:
+                    key = arm_name.replace("-", "_")
+                    signals = {f"force_rmse_{key}": m["force_rmse_meV"]}
+                    if "rho_frame" in m:
+                        signals[f"rho_frame_{key}"] = m["rho_frame"]
+                    orx_report({"m": signals})
         report["arms"][arm_name] = arm_report
     (out_dir / "metrics.json").write_text(json.dumps(report, indent=2))
     return report
@@ -156,9 +196,11 @@ def main() -> None:
     ap.add_argument("--block-steps", type=int, default=1000)
     ap.add_argument("--n-boot", type=int, default=1000)
     ap.add_argument("--conformal-target", type=float, default=0.9)
+    ap.add_argument("--report-orx", action="store_true", help="print ::orx:: progress and result rows")
     args = ap.parse_args()
     report = evaluate(args.run_dir, args.dataset_dir, device=args.device, dtype=args.dtype,
-                      block_steps=args.block_steps, n_boot=args.n_boot, target=args.conformal_target)
+                      block_steps=args.block_steps, n_boot=args.n_boot, target=args.conformal_target,
+                      report_orx=args.report_orx)
     print_summary(report)
 
 
