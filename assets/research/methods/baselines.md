@@ -235,6 +235,12 @@ What to check:
 
 ## 6. Expected GPU cost (projection, unmeasured)
 
+> **Superseded 2026-11-24.** The shift-ladder runs use float32, 15 shallow-nll
+> epochs and batched LLPR Jacobian rows (`--llpr-jacobian-chunk 16`). The smoke
+> run measures the cost and projects the baseline
+> (`experiments/PLAN.md`, Compute). The figures below are the original float64
+> projection.
+
 The figures use the Exp 3 design's projection of ≈3.2 s per frozen-head update
 at batch 16 ([`exp-03-mhc/DESIGN.md`](../experiments/exp-03-mhc/DESIGN.md) §11),
 on 1,000 training frames. Replace it with the smoke timing.

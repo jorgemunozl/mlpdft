@@ -116,6 +116,23 @@ class ToyMaceLLPRTest(unittest.TestCase):
             vjp = llpr.frame_features(self.model, spec, data, jacobian=False)
             np.testing.assert_allclose(vjp["wJ"], (spec.weights @ feats["J"]).reshape(-1, 3), atol=1e-12)
 
+    def test_batched_jacobian_rows_match_one_row_passes(self):
+        spec = llpr.last_layer(self.model, "h0")
+        data = frames_to_data(self.model, self.frames[:1], "h0")[0]
+        saved = llpr.JACOBIAN_CHUNK, llpr._BATCHED_ROWS_OK
+        try:
+            llpr.JACOBIAN_CHUNK, llpr._BATCHED_ROWS_OK = 1, None
+            one_row = llpr.frame_features(self.model, spec, data)["J"]
+            llpr.JACOBIAN_CHUNK = 4
+            checked = llpr.frame_features(self.model, spec, data)["J"]  # runs the self-check
+            self.assertIsNotNone(llpr._BATCHED_ROWS_OK)
+            llpr._BATCHED_ROWS_OK = True  # force the vmap path whatever its speed here
+            batched = llpr.frame_features(self.model, spec, data)["J"]
+        finally:
+            llpr.JACOBIAN_CHUNK, llpr._BATCHED_ROWS_OK = saved
+        np.testing.assert_allclose(checked, one_row, atol=1e-12)
+        np.testing.assert_allclose(batched, one_row, atol=1e-10)
+
     def test_fit_and_predict_give_finite_positive_sigmas(self):
         with tempfile.TemporaryDirectory() as tmp:
             model_path = Path(tmp) / "toy.model"
@@ -222,6 +239,26 @@ class ToyShallowEnsembleTest(unittest.TestCase):
                 np.testing.assert_allclose(joint[index].detach().numpy(), forces[head], atol=1e-10)
 
 
+    def test_fixed_budget_keeps_the_last_epoch_and_validates_once(self):
+        model = toy_model(heads=("s0", "s1"))
+        frames = lif_frames(4, seed=4)
+        with tempfile.TemporaryDirectory() as tmp:
+            init_path, out_path = Path(tmp) / "init.model", Path(tmp) / "out.model"
+            torch.save(model, init_path)
+            # patience=1 would stop the legacy mode early; the fixed budget ignores it.
+            config = ShallowConfig(epochs=3, warmup_fraction=0.34, batch_size=2, patience=1, seed=5,
+                                   validate_each_epoch=False)
+            record = train_shallow_ensemble(init_path, frames[:3], frames[3:], out_path, config,
+                                            log_path=Path(tmp) / "log.jsonl", log=lambda *_: None)
+            log = [json.loads(line) for line in (Path(tmp) / "log.jsonl").read_text().splitlines()]
+        self.assertEqual([item["epoch"] for item in log], [0, 1, 2])
+        self.assertEqual(["valid_nll" in item for item in log], [False, False, True])
+        self.assertEqual(record["selected_epoch"], 2)
+        self.assertIn("last epoch", record["selection"])
+        self.assertEqual(record["optimizer_steps"], 6)
+        self.assertIn("valid_nll", record["final_valid"])
+
+
 @unittest.skipUnless(os.path.isfile(FOUNDATION_MODEL), "foundation model not available")
 class FoundationReconstructionTest(unittest.TestCase):
     """One forward + one VJP of MACE-OMAT-medium on an 8-atom LiF cell (~2 s)."""
@@ -301,6 +338,84 @@ class RunnerIntegrationTest(unittest.TestCase):
             self.assertEqual(sorted(npz.files), sorted(ref_npz.files))
             with open(out / "llpr_predictions.csv") as a, open(out / "ens_predictions.csv") as b:
                 self.assertEqual(next(csv.reader(a)), next(csv.reader(b)))
+
+
+class EndValidationModeTest(unittest.TestCase):
+    """MACE configuration of the fixed-budget mode (MACE itself is mocked)."""
+
+    def _train(self, validation, epochs, scheduler_t0, freeze=None):
+        from types import SimpleNamespace
+
+        from ase.io import write
+
+        import mlpdft.uq_compare as uc
+
+        captured = {}
+
+        def fake_run(args):
+            captured["args"] = args
+            captured["active"] = None if uc._ACTIVE_CHECKPOINT_EPOCHS is None else set(uc._ACTIVE_CHECKPOINT_EPOCHS)
+            Path(args.model_dir).mkdir(parents=True, exist_ok=True)
+            (Path(args.model_dir) / f"{args.name}.model").write_text("model")
+
+        class FakeConfig:
+            def __init__(self, model_key, device, dtype, hyperparams, metadata):
+                self.model = SimpleNamespace(path=Path("/foundation.model"))
+                self.device, self.dtype, self.hyperparams, self.metadata = device, dtype, hyperparams, metadata
+
+            def write_config_train(self):
+                pass
+
+        options = argparse.Namespace(
+            forces_weight=None, energy_weight=None, learning_rate=None, patience=None, epochs=epochs,
+            validation=validation, dtype="float32", device="cpu", model_key="mace_omat_medium",
+            num_workers=0, batch_size=16, valid_batch_size=16, pt_train_file=None)
+        with tempfile.TemporaryDirectory() as tmp, patch.object(uc, "run", fake_run), \
+                patch.object(uc, "Mace_TrainerConfig", FakeConfig):
+            paths = []
+            for name in ("train", "valid", "test"):
+                path = Path(tmp) / f"{name}.extxyz"
+                write(path, lif_frames(2), format="extxyz")
+                paths.append(path)
+            uc._run_training(options, "job", Path(tmp) / "job", *paths, seed=1, scheduler_t0=scheduler_t0,
+                             freeze=freeze, epochs=epochs if freeze else None)
+        return captured["args"], captured["active"]
+
+    def test_fixed_budget_validates_and_saves_only_the_last_epoch(self):
+        args, active = self._train("end", epochs=5, scheduler_t0=5, freeze=6)
+        self.assertEqual((args.eval_interval, args.patience), (4, 6))
+        self.assertTrue(args.save_all_checkpoints)
+        self.assertEqual(active, {4})
+        self.assertEqual(args.default_dtype, "float32")
+
+    def test_fixed_budget_snapshot_run_keeps_every_cycle_end(self):
+        args, active = self._train("end", epochs=6, scheduler_t0=2)
+        self.assertEqual((args.eval_interval, args.patience), (1, 7))
+        self.assertTrue(args.save_all_checkpoints)
+        self.assertEqual(active, {1, 3, 5})
+
+    def test_legacy_mode_is_unchanged(self):
+        args, active = self._train("epoch", epochs=5, scheduler_t0=5, freeze=6)
+        self.assertEqual((args.eval_interval, args.patience), (1, 50))
+        self.assertFalse(args.save_all_checkpoints)
+        self.assertIsNone(active)
+
+    def test_epoch_timing_line(self):
+        import contextlib
+        import io
+        from types import SimpleNamespace
+
+        import mlpdft.uq_compare as uc
+        from mlpdft import timing
+
+        loader = SimpleNamespace(dataset=list(range(7)))
+        buffer = io.StringIO()
+        with patch.object(uc, "_original_train_one_epoch", lambda **kwargs: None), \
+                contextlib.redirect_stdout(buffer):
+            uc._timed_train_one_epoch(data_loader=loader, epoch=2)
+        record = timing.parse(buffer.getvalue().splitlines())[0]
+        self.assertEqual((record["kind"], record["epoch"], record["samples"]), ("mace_epoch", 2, 7))
+        self.assertGreaterEqual(record["seconds"], 0.0)
 
 
 if __name__ == "__main__":

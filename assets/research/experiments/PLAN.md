@@ -40,10 +40,18 @@ All arms start from MACE-OMAT-medium.
 - **Pool:** `train_pool`, 1,536 frames.
 - **Label rungs:** 250, 500, 1,000 and 1,536 frames, evenly spaced through
   the pool.
-- **Recipes:**
-  - fixed epochs, with the `monitor` slice used only for curves (ADR-0004);
-  - frozen-body arms: force-only, lr 1e-3, batch 16;
-  - full fine-tunes keep the runner's defaults.
+- **Recipes** (revised 2026-11-24 for cost; `configs/shift_ladder/node.env`):
+  - float32 for every arm;
+  - fixed budgets and the last epoch is the model, with no per-epoch
+    validation (ADR-0004, revised 2026-11-24);
+  - full fine-tunes: 51 epochs, lr 5e-4. These are the committee members and
+    the snapshot run, which is 3 cycles of 17 epochs;
+  - frozen-body arms: force-only, lr 1e-3, batch 16. At 1,000 labels each
+    head gets about 940 optimizer steps: MHC 60 epochs (250 frames per head),
+    shallow-nll and probe 15 epochs (all frames). MHC and shallow-nll
+    therefore get the same compute;
+  - other rungs keep the number of optimizer steps, not the number of epochs,
+    so small rungs are not under-trained (set before those runs).
 - **Seeds:** three seed sets per arm and rung.
 
 ## Evaluation
@@ -90,8 +98,14 @@ Arms are compared pairwise on the same frames.
 
 ## Compute
 
-- One A40-class GPU per run. GPU-hours per rung are measured on the baseline
-  run before the rest is scheduled.
+- One A40-class GPU per run.
+- **Baseline:** on a rented A40 within 12 h. A 30-minute smoke run
+  (`configs/shift_ladder/smoke.env`) checks every arm and projects the
+  baseline time from measured timings. The baseline itself takes about 8 h and
+  stops at a 10.5 h deadline. Each arm group is uploaded as soon as it
+  finishes. Runbook: `assets/runs/run_shift_ladder_runpod.md`.
+- **The other 11 runs** (rungs and seed sets) are scheduled from the
+  baseline's measured cost, on the cluster or later rentals.
 - Nothing heavy runs on the local machine.
 - The GitHub repository is public, so the datasets are not committed. They
   reach the GPU through the transport chosen with the backend.

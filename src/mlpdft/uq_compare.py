@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import csv
+import importlib
 import json
 import os
 import re
@@ -70,6 +71,7 @@ from mlpdft.constants import (
     XYZ_DIR,
 )
 from mlpdft import llpr as llpr_lib
+from mlpdft import timing
 from mlpdft.shallow_ensemble import (
     NLL_VARIANCE_EPS,
     ShallowConfig,
@@ -126,6 +128,28 @@ def _selective_checkpoint_save(self, checkpoint, epochs, keep_last=False):
 
 
 _CheckpointIO.save = _selective_checkpoint_save
+
+
+# --- Epoch timing -----------------------------------------------------------
+# MACE's ``train`` calls the module-level ``train_one_epoch`` once per epoch.
+# Wrapping it prints the training cost of every epoch (validation excluded) as
+# a ``[timing]`` line, which the smoke run turns into a projection.
+# ``mace.tools`` re-exports the function ``train`` under the submodule's name,
+# so the module object has to come from importlib.
+_mace_train = importlib.import_module("mace.tools.train")
+_TIMING_RUN: str | None = None
+_original_train_one_epoch = _mace_train.train_one_epoch
+
+
+def _timed_train_one_epoch(*args, **kwargs):
+    loader = kwargs.get("data_loader")
+    samples = len(loader.dataset) if loader is not None and hasattr(loader, "dataset") else None
+    with timing.timed({"kind": "mace_epoch", "run": _TIMING_RUN,
+                       "epoch": kwargs.get("epoch"), "samples": samples}):
+        return _original_train_one_epoch(*args, **kwargs)
+
+
+_mace_train.train_one_epoch = _timed_train_one_epoch
 
 
 # --- Frozen-body guards -----------------------------------------------------
@@ -664,6 +688,26 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--skip-multihead", action="store_true")
     parser.add_argument("--skip-evaluation", action="store_true")
+    parser.add_argument(
+        "--validation",
+        choices=("epoch", "end"),
+        default="epoch",
+        help=(
+            "'epoch' (legacy): validate every epoch, keep the best-validation "
+            "checkpoint and stop early on patience. 'end': fixed epoch budget, "
+            "the last epoch is the model (ADR-0004); MACE validates only on the "
+            "epochs whose checkpoint is kept, and shallow-nll only once at the end."
+        ),
+    )
+    parser.add_argument(
+        "--llpr-jacobian-chunk",
+        type=int,
+        default=1,
+        help=(
+            "Feature rows per LLPR backward pass (>1 batches them with vmap; "
+            "falls back to 1 if the batched rows fail a check on the first frame)"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -940,6 +984,7 @@ def _make_hyperparams(
     energy_weight: float | None = None,
     patience: int | None = None,
     lr: float | None = None,
+    eval_interval: int = 1,
 ):
     max_epochs = epochs or args.epochs
     values: dict[str, Any] = {
@@ -948,7 +993,7 @@ def _make_hyperparams(
         "batch_size": args.batch_size,
         "valid_batch_size": args.valid_batch_size,
         "patience": patience if patience is not None else max_epochs + 1,
-        "eval_interval": 1,
+        "eval_interval": eval_interval,
         "valid_frac": 0.1,
         "loss": "universal",
         "forces_weight": forces_weight if forces_weight is not None else 1.0,
@@ -986,6 +1031,7 @@ def _configure_run(
     foundation_filter_elements: bool | None = None,
     checkpoint_epochs: set[int] | None = None,
     energy_offset: dict[int, float] | None = None,
+    save_all_checkpoints: bool | None = None,
 ) -> None:
     global _ACTIVE_CHECKPOINT_EPOCHS
     _ACTIVE_CHECKPOINT_EPOCHS = checkpoint_epochs
@@ -1043,7 +1089,12 @@ def _configure_run(
     args.log_dir = str(run_dir / "logs")
     save_snapshot_checkpoints = scheduler_t0 < hp.max_num_epochs
     args.keep_checkpoints = save_snapshot_checkpoints
-    args.save_all_checkpoints = save_snapshot_checkpoints
+    # MACE writes a checkpoint only on validation epochs, and otherwise only
+    # when the validation loss improves; ``save_all_checkpoints`` makes it
+    # write the scheduled epochs (``checkpoint_epochs``) whatever the loss.
+    args.save_all_checkpoints = (
+        save_snapshot_checkpoints if save_all_checkpoints is None else save_all_checkpoints
+    )
     args.scheduler = "CosineAnnealingWarmRestarts"
     args.cosine_T_0 = scheduler_t0
     args.cosine_T_mult = 1
@@ -1088,22 +1139,33 @@ def _run_training(
     learning_rate = getattr(options, "learning_rate", None)
     if learning_rate is None:
         learning_rate = FROZEN_LEARNING_RATE if frozen else 5e-4
+    budget = epochs or options.epochs
+    # "end": a fixed epoch budget and the last epoch's model (ADR-0004).  MACE
+    # still needs a validation pass to write a checkpoint, so it validates
+    # only on the epochs whose checkpoint is kept: the last one, or every
+    # epoch of a warm-restart run (its cycle ends are not evenly divisible).
+    end_only = getattr(options, "validation", "epoch") == "end"
+    snapshot_run = scheduler_t0 < budget
     patience = getattr(options, "patience", None)
-    if patience is None:
+    if end_only:
+        patience = budget + 1
+    elif patience is None:
         patience = FROZEN_PATIENCE if frozen else None
+    eval_interval = 1 if (snapshot_run or not end_only) else max(1, budget - 1)
     if warm_start_readout and energy_weight != 0.0:
         raise RuntimeError(
             "warm-start readout is force-only; pass --energy-weight 0"
         )
-    if frozen and patience is not None and patience >= (epochs or options.epochs):
+    if not end_only and frozen and patience is not None and patience >= budget:
         print(
             f"[uq_compare] warning: patience={patience} is not below the epoch "
-            f"budget {epochs or options.epochs}; early stopping will not trigger"
+            f"budget {budget}; early stopping will not trigger"
         )
     print(
         f"[uq_compare] {run_name}: forces_weight={force_weight:g}, "
         f"energy_weight={energy_weight:g}, lr={learning_rate:g}, "
-        f"patience={patience}"
+        f"patience={patience}, epochs={budget}, dtype={options.dtype}, "
+        f"validation={'end' if end_only else 'every epoch'} (eval_interval={eval_interval})"
     )
     hyperparams = _make_hyperparams(
         options,
@@ -1114,6 +1176,7 @@ def _run_training(
         energy_weight=energy_weight,
         patience=patience,
         lr=learning_rate,
+        eval_interval=eval_interval,
     )
     config = Mace_TrainerConfig(
         model_key=options.model_key,
@@ -1134,6 +1197,8 @@ def _run_training(
             min(index * scheduler_t0 - 1, total_epochs - 1)
             for index in range(1, cycles + 1)
         }
+    elif end_only:
+        checkpoint_epochs = {total_epochs - 1}
 
     parser = build_default_arg_parser()
     mace_args = parser.parse_args(["--name", run_name])
@@ -1151,6 +1216,7 @@ def _run_training(
         foundation_filter_elements=foundation_filter_elements,
         checkpoint_epochs=checkpoint_epochs,
         energy_offset=energy_offset,
+        save_all_checkpoints=True if end_only else None,
     )
     mace_args.num_workers = options.num_workers
     mace_args._uq_warm_start_readout = bool(warm_start_readout)
@@ -1219,12 +1285,15 @@ def _run_training(
     )
 
     print(f"\nTraining {run_name} on {train_file}")
+    global _TIMING_RUN
+    _TIMING_RUN = run_name
     old_cwd = Path.cwd()
     try:
         os.chdir(run_dir)
         run(mace_args)
     finally:
         os.chdir(old_cwd)
+        _TIMING_RUN = None
     config.write_config_train()
 
     model_path = run_dir / "models" / f"{run_name}.model"
@@ -2088,6 +2157,7 @@ def _train_shallow_nll_arm(
         eps=NLL_VARIANCE_EPS,
         patience=options.shallow_patience,
         seed=options.seeds[0],
+        validate_each_epoch=getattr(options, "validation", "epoch") == "epoch",
     )
     model_path = arm_dir / "models" / f"{name}.model"
     record = train_shallow_ensemble(
@@ -2293,7 +2363,20 @@ def main() -> None:
     )
     if options.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA was requested but is not available on this node")
+    # Full float32 matmuls: TF32 would add ~1e-3 relative error, comparable to
+    # the spread between heads that the UQ arms measure.
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+    if options.llpr_jacobian_chunk < 1:
+        raise SystemExit("--llpr-jacobian-chunk must be at least 1")
+    llpr_lib.JACOBIAN_CHUNK = options.llpr_jacobian_chunk
     print(f"UQ run '{options.run_id}': arms = {','.join(arms)}")
+    print(
+        f"[uq_compare] dtype={options.dtype}, validation={options.validation}, "
+        f"epochs: full={options.epochs}, mhc={options.mhc_epochs}, "
+        f"probe={options.probe_epochs}, shallow={options.shallow_epochs}; "
+        f"llpr jacobian chunk={options.llpr_jacobian_chunk}"
+    )
     if options.warm_start_readout and "frozen-probe" not in arms:
         raise SystemExit("--warm-start-readout requires the frozen-probe arm")
     if options.warm_start_readout and options.energy_weight not in (None, 0.0):
@@ -2646,6 +2729,16 @@ def main() -> None:
         )
         run_records.append(llpr_entry)
 
+    if not MODEL_REGISTRY[options.model_key].path.exists():
+        # Downloads the foundation model: a group without training (zero-shot)
+        # never builds a trainer config, and the evaluator loads it from here.
+        Mace_TrainerConfig(
+            model_key=options.model_key,
+            device=options.device,
+            dtype=options.dtype,
+            hyperparams=_make_hyperparams(options, train_file, valid_file),
+            metadata=MaceTrainingMetadata(experiment_name="foundation_download", seed=0),
+        )
     _write_arms_manifest(
         run_root,
         methods,
@@ -2729,6 +2822,8 @@ def main() -> None:
         "model_key": options.model_key,
         "device": options.device,
         "dtype": options.dtype,
+        "validation": options.validation,
+        "llpr_jacobian_chunk": options.llpr_jacobian_chunk,
         "seeds": options.seeds,
         "epochs": options.epochs,
         "mhc_epochs": mhc_epochs,

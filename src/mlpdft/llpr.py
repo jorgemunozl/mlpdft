@@ -33,6 +33,7 @@ errors on a calibration set.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence
@@ -41,6 +42,7 @@ import numpy as np
 import torch
 from ase import Atoms
 
+from mlpdft import timing
 from mlpdft.mace_batches import (
     collate,
     frames_to_data,
@@ -213,13 +215,12 @@ def last_layer(model, head: str | None = None) -> LastLayer:
 
 
 JACOBIAN_CHUNK = 1  # rows per backward pass; >1 uses vmap (memory x chunk)
+# Batched rows are checked once per process against one-row passes (values and
+# speed); None = not checked yet, True = use them, False = one row per pass.
+_BATCHED_ROWS_OK: bool | None = None
 
 
-def _jacobian_rows(outputs: torch.Tensor, positions: torch.Tensor,
-                   chunk: int | None = None) -> torch.Tensor:
-    """-d outputs / d positions, shape (len(outputs), 3N): one backward per row
-    (or per ``chunk`` rows through ``is_grads_batched``)."""
-    chunk = chunk or JACOBIAN_CHUNK
+def _rows(outputs: torch.Tensor, positions: torch.Tensor, chunk: int) -> torch.Tensor:
     d = outputs.shape[0]
     rows = []
     eye = torch.eye(d, dtype=outputs.dtype, device=outputs.device)
@@ -232,6 +233,52 @@ def _jacobian_rows(outputs: torch.Tensor, positions: torch.Tensor,
             rows.append(torch.autograd.grad(outputs, positions, grad_outputs=eye[start:stop],
                                             is_grads_batched=True, retain_graph=True)[0])
     return -torch.cat(rows).reshape(d, -1)
+
+
+def _sync(device: torch.device) -> None:
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+
+
+def _jacobian_rows(outputs: torch.Tensor, positions: torch.Tensor,
+                   chunk: int | None = None) -> torch.Tensor:
+    """-d outputs / d positions, shape (len(outputs), 3N): one backward per row
+    (or per ``chunk`` rows through ``is_grads_batched``).
+
+    The first batched call is checked against one-row passes on the same
+    frame; batching stays on only if it gives the same rows and is faster.
+    """
+    global _BATCHED_ROWS_OK
+    chunk = chunk or JACOBIAN_CHUNK
+    if chunk <= 1 or _BATCHED_ROWS_OK is False:
+        return _rows(outputs, positions, 1)
+    if _BATCHED_ROWS_OK:
+        return _rows(outputs, positions, chunk)
+    device = outputs.device
+    _sync(device)
+    start = time.perf_counter()
+    reference = _rows(outputs, positions, 1)
+    _sync(device)
+    one_row = time.perf_counter() - start
+    try:
+        _rows(outputs, positions, chunk)  # warm-up of the vmap path
+        _sync(device)
+        start = time.perf_counter()
+        batched = _rows(outputs, positions, chunk)
+        _sync(device)
+        batched_time = time.perf_counter() - start
+        scale = float(torch.max(torch.abs(reference))) or 1.0
+        diff = float(torch.max(torch.abs(batched - reference)))
+        tolerance = (1e-4 if outputs.dtype == torch.float32 else 1e-9) * scale
+        _BATCHED_ROWS_OK = diff <= tolerance and batched_time < 0.8 * one_row
+        detail = (f"max |diff| {diff:.2e} (tolerance {tolerance:.1e}), "
+                  f"{batched_time:.3f} s vs {one_row:.3f} s per frame")
+    except RuntimeError as exc:  # an operator without a batching rule
+        _BATCHED_ROWS_OK = False
+        detail = f"failed: {str(exc).splitlines()[0][:200]}"
+    print(f"[llpr] batched Jacobian rows, chunk {chunk}: "
+          f"{'on' if _BATCHED_ROWS_OK else 'off (one row per backward pass)'}; {detail}", flush=True)
+    return reference
 
 
 def frame_features(model, spec: LastLayer, data, device: str = "cpu",
@@ -340,23 +387,28 @@ def fit_llpr(model_path: str | Path, head: str | None, train_frames: Sequence[At
     cov = np.zeros((spec.dim, spec.dim))
     worst_force = 0.0
     worst_energy = 0.0
-    for count, data in enumerate(train_data):
-        feats = frame_features(model, spec, data, device, jacobian=True, check=count == 0)
-        cov += feats["J"] @ feats["J"].T
-        if energy_weight:
-            cov += energy_weight * np.outer(feats["f"], feats["f"])
-        force_rec = (spec.weights @ feats["J"]).reshape(-1, 3) + feats["F_rest"]
-        worst_force = max(worst_force, float(np.max(np.abs(force_rec - feats["forces"]))))
-        worst_energy = max(worst_energy, abs(spec.weights @ feats["f"] + feats["E_rest"] - feats["energy"]))
+    train_selected = [train_frames[i] for i in indices]
+    with timing.timed({"kind": "llpr_frames", "phase": "covariance", "frames": len(train_data),
+                       "atoms": int(sum(len(a) for a in train_selected))}):
+        for count, data in enumerate(train_data):
+            feats = frame_features(model, spec, data, device, jacobian=True, check=count == 0)
+            cov += feats["J"] @ feats["J"].T
+            if energy_weight:
+                cov += energy_weight * np.outer(feats["f"], feats["f"])
+            force_rec = (spec.weights @ feats["J"]).reshape(-1, 3) + feats["F_rest"]
+            worst_force = max(worst_force, float(np.max(np.abs(force_rec - feats["forces"]))))
+            worst_energy = max(worst_energy, abs(spec.weights @ feats["f"] + feats["E_rest"] - feats["energy"]))
     log(f"[llpr] reconstruction on training frames: max|F - (w^T J + F_rest)| = "
         f"{worst_force:.3e} eV/A, max|E - (w.f + E_rest)| = {worst_energy:.3e} eV")
     eigen = Eigen.of(cov)
     cal_data = frames_to_data(model, calibration_frames, spec.head)
     jacs, errors = [], []
-    for data, ref in zip(cal_data, reference_forces(calibration_frames)):
-        feats = frame_features(model, spec, data, device, jacobian=True)
-        jacs.append(feats["J"])
-        errors.append((feats["forces"] - ref).ravel())
+    with timing.timed({"kind": "llpr_frames", "phase": "calibration", "frames": len(cal_data),
+                       "atoms": int(sum(len(a) for a in calibration_frames))}):
+        for data, ref in zip(cal_data, reference_forces(calibration_frames)):
+            feats = frame_features(model, spec, data, device, jacobian=True)
+            jacs.append(feats["J"])
+            errors.append((feats["forces"] - ref).ravel())
     fit = fit_calibration(eigen, jacs, errors)
     log(f"[llpr] calibration on {len(calibration_frames)} frames: varsigma^2="
         f"{fit['varsigma2']:.3e}, alpha^2={fit['alpha2']:.3e}, NLL={fit['nll']:.4f}"
@@ -418,16 +470,18 @@ def predict(model_path: str | Path, head: str | None, cov_npz: str | Path,
     if not np.allclose(spec.weights, stored["weights"], rtol=1e-10, atol=1e-12):
         raise ValueError("Covariance file was built for different readout weights")
     results = []
-    for atoms, data in zip(frames, frames_to_data(model, frames, spec.head)):
-        feats = frame_features(model, spec, data, device, jacobian=True)
-        u = eigen.quad(feats["J"], varsigma2)
-        u_energy = eigen.quad(feats["f"][:, None], varsigma2)[0]
-        results.append({
-            "energy": feats["energy"],
-            "forces": feats["forces"],
-            "force_sigma": np.sqrt(alpha2 * u).reshape(len(atoms), 3),
-            "energy_sigma": float(np.sqrt(alpha2 * u_energy)),
-        })
+    with timing.timed({"kind": "llpr_frames", "phase": "predict", "frames": len(frames),
+                       "atoms": int(sum(len(a) for a in frames))}):
+        for atoms, data in zip(frames, frames_to_data(model, frames, spec.head)):
+            feats = frame_features(model, spec, data, device, jacobian=True)
+            u = eigen.quad(feats["J"], varsigma2)
+            u_energy = eigen.quad(feats["f"][:, None], varsigma2)[0]
+            results.append({
+                "energy": feats["energy"],
+                "forces": feats["forces"],
+                "force_sigma": np.sqrt(alpha2 * u).reshape(len(atoms), 3),
+                "energy_sigma": float(np.sqrt(alpha2 * u_energy)),
+            })
     return results
 
 

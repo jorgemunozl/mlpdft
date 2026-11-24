@@ -37,6 +37,7 @@ import numpy as np
 import torch
 from ase import Atoms
 
+from mlpdft import timing
 from mlpdft.mace_batches import collate, frames_to_data, load_model, model_heads, with_head
 from mlpdft.constants import FORCE_KEY
 
@@ -88,6 +89,9 @@ class ShallowConfig:
     eta_min: float = 1e-6
     seed: int = 123
     max_steps: int | None = None  # testing only: stop after this many optimiser steps
+    # False: fixed budget, no per-epoch validation and no early stopping; the
+    # last epoch is the model (ADR-0004) and validation runs once at the end.
+    validate_each_epoch: bool = True
 
     @property
     def warmup_epochs(self) -> int:
@@ -172,29 +176,43 @@ def train_shallow_ensemble(init_model_path: str | Path, train_frames: Sequence[A
             model.train()
             loss_sum, n_batches = 0.0, 0
             order = rng.permutation(len(train_data))
-            for batch, target in _batches(train_data, train_targets, config.batch_size, order, device):
-                pred = head_forces(model, batch, n_heads, training=True)
-                loss = per_head_mse(pred, target) if phase == "mse" else ensemble_nll(pred, target, config.eps)
-                optimizer.zero_grad(set_to_none=True)
-                loss.backward()
-                if config.clip_grad:
-                    torch.nn.utils.clip_grad_norm_(trainable, config.clip_grad)
-                optimizer.step()
-                loss_sum += float(loss.detach())
-                n_batches += 1
-                steps += 1
-                if config.max_steps is not None and steps >= config.max_steps:
-                    break
+            with timing.timed({"kind": "shallow_epoch", "epoch": epoch, "samples": len(train_data),
+                               "heads": n_heads}):
+                for batch, target in _batches(train_data, train_targets, config.batch_size, order, device):
+                    pred = head_forces(model, batch, n_heads, training=True)
+                    loss = per_head_mse(pred, target) if phase == "mse" else ensemble_nll(pred, target, config.eps)
+                    optimizer.zero_grad(set_to_none=True)
+                    loss.backward()
+                    if config.clip_grad:
+                        torch.nn.utils.clip_grad_norm_(trainable, config.clip_grad)
+                    optimizer.step()
+                    loss_sum += float(loss.detach())
+                    n_batches += 1
+                    steps += 1
+                    if config.max_steps is not None and steps >= config.max_steps:
+                        break
             scheduler.step()
-            model.eval()
-            metrics = _evaluate(model, valid_data, valid_targets, n_heads,
-                                config.batch_size, device, config.eps)
+            last = epoch == config.epochs - 1 or (config.max_steps is not None and steps >= config.max_steps)
             record = {"epoch": epoch, "phase": phase, "train_loss": loss_sum / max(1, n_batches),
-                      "lr": optimizer.param_groups[0]["lr"], **{f"valid_{k}": v for k, v in metrics.items()}}
+                      "lr": optimizer.param_groups[0]["lr"]}
+            if config.validate_each_epoch or last:
+                model.eval()
+                metrics = _evaluate(model, valid_data, valid_targets, n_heads,
+                                    config.batch_size, device, config.eps)
+                record.update({f"valid_{k}": v for k, v in metrics.items()})
             history.append(record)
             if log_file:
                 log_file.write(json.dumps(record) + "\n")
                 log_file.flush()
+            if not config.validate_each_epoch:
+                message = f"[shallow-nll] epoch {epoch} {phase}: train {record['train_loss']:.4g}"
+                if "valid_nll" in record:
+                    message += (f", final valid NLL {record['valid_nll']:.4f}, RMSE "
+                                f"{record['valid_rmse_mean_force']:.4f}, rms sigma {record['valid_rms_sigma']:.4f}")
+                log(message)
+                if last:
+                    break
+                continue
             improved = phase == "nll" and metrics["nll"] < best["nll"]
             if improved:
                 best = {"epoch": epoch, "nll": metrics["nll"],
@@ -231,7 +249,9 @@ def train_shallow_ensemble(init_model_path: str | Path, train_frames: Sequence[A
         "heads": heads,
         "config": asdict(config) | {"warmup_epochs": config.warmup_epochs},
         "selected_epoch": selected,
-        "selection": "lowest validation NLL among NLL-phase epochs (last epoch if none)",
+        "selection": ("lowest validation NLL among NLL-phase epochs (last epoch if none)"
+                      if config.validate_each_epoch else
+                      "last epoch of a fixed budget (ADR-0004); validation computed once, at the end"),
         "epochs_run": len(history),
         "optimizer_steps": steps,
         "seconds": time.perf_counter() - started,

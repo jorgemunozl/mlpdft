@@ -24,7 +24,7 @@ All sets are 40/320 Ry and read the same pseudopotential files as the old runs
 | Set | Role | Source run | SCF steps (stride) | Frames | Atoms | Force rms (eV/Å) |
 |---|---|---|---|---:|---:|---:|
 | `train_pool` | training | `LIF64_KJPAW_FINAL` (NVT 300 K) | 500–15,850 (10) | 1,536 | 64 | 0.403 |
-| `monitor` | monitor only (ADR-0004) | same | 505–15,805 (150), offset from the pool | 103 | 64 | 0.403 |
+| `monitor` | MACE's checkpoint validation and the interim LLPR calibration; never reported (ADR-0004) | same | 505–15,805 (150), offset from the pool | 103 | 64 | 0.403 |
 | `test_timeblock` | time-block holdout | same | 15,980–18,970 (10), after a 120-step guard | 300 | 64 | 0.409 |
 | `shift_bulk_npt` | state shift | `LIF64_KJPAW_NPT_FINAL` (variable cell, no thermostat) | 500–9,975 (25) | 380 | 64 | 0.445 |
 | `shift_fdoped` | chemistry shift | `LIWITHF_KJPAW_FINAL` | 500–8,700 (20) | 411 | 54 | 0.231 |
