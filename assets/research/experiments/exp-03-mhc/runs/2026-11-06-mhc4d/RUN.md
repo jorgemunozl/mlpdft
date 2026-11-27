@@ -1,6 +1,7 @@
 ---
 status: active
 date: 2026-11-07
+revised: 2026-11-27
 owner: jorge
 ---
 
@@ -9,7 +10,7 @@ owner: jorge
 **Status:** completed 2026-11-07 (run `mhc4d_a40_001`); results in
 [`2026-11-06-mhc4d/README.md`](README.md).
 This document applies the design in
-[`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](../../DESIGN.md) to the
+[`exp-03-mhc/DESIGN.md`](../../DESIGN.md) to the
 user's approximately eight-hour compute budget.
 
 ## Objective and scope
@@ -92,6 +93,9 @@ those models evaluated on the same frames; this run alone cannot establish
 superiority over them.
 
 ## Result (2026-11-07)
+
+> The interpretation of this result is corrected in [`README.md`](README.md)
+> (2026-11-27).
 
 Run `mhc4d_a40_001` completed 90/90 epochs. On the 200-frame test split, force
 RMSE is **33.25 meV/Å** overall (bulk 39.75, F-doped 23.30). Same-frame

@@ -1,15 +1,42 @@
 ---
 status: active
 date: 2026-10-29
+revised: 2026-11-27
 owner: jorge
 ---
+
+> **Correction 2026-11-27** (review of 2026-11-25, project artifacts `reviews/past-experiments-review.md`).
+> Every number below traces to the saved outputs, and the labels are 40/320 Ry
+> throughout. What holds: on these 178 correlated frames and one seed, snapshot
+> σ ranks force errors within bulk and F-doped Li at least as well as the
+> committee's, at about a third of the training cost; this survives removing a
+> linear time trend. What does not hold:
+> - "best calibrator": no α, RLL or coverage was computed, so §3 measures
+>   ranking (discrimination), not calibration;
+> - "CIs excluding zero in every group" and the interface intervals in §3: the
+>   interface has 18 frames, fewer than one block, and those intervals cannot
+>   be traced;
+> - p = 0.002 (§8, §9) as evidence that the arms separate: it needs blocks of
+>   20 frames or more, which drop the interface and leave four blocks per group;
+>   5- and 10-frame blocks give p = 0.11 and 0.18;
+> - "OOD separation is now clean" and "multi-head collapses at the interface":
+>   the interface test is the last 18 frames of a trajectory that is in
+>   training, and after a linear detrend multi-head's interface ρ is 0.70;
+> - the H1–H3 implications in §7.
+>
+> Two confounds the text does not state. The splits are contiguous with no
+> buffer, so fine-tuned test errors rise ×1.15–1.62 along each bulk and F-doped
+> test block while zero-shot error stays flat (temporal leakage). Committee
+> members and multi-head were restored at their best-validation epochs
+> (144/149/148 and 108), the snapshots at fixed epochs 49/99/149.
 
 # UQ Experiment 2 — Results
 
 **Date:** 2026-10-29
-**Status:** ✅ completed — results analyzed.
-**Source:** `outputs/outputs_v3/` (local copy of the cluster run
-`lif_uq_001`; raw outputs under `src/mlpdft/outputs/uq_diffusion_comparison/`).
+**Status:** completed; analyzed 2026-10-29, corrected 2026-11-27.
+**Source:** cluster run `lif_uq_001`; local copy `outputs/outputs_v3/` in the main
+checkout (git-ignored). Evaluation outputs, manifest and logs are archived in
+project artifacts `runs-archive/2026-10-27-exp02-lif_uq_001/`.
 **Predecessor:** [`exp-01-committee/DESIGN.md`](../exp-01-committee/DESIGN.md).
 **Feeds:** [`exp-04-active-learning/PROTOCOL.md`](../exp-04-active-learning/PROTOCOL.md) (the
 AL leg; ceiling RMSE fixed here).
@@ -66,23 +93,20 @@ Per-group Spearman with moving-block bootstrap 95% CIs (block ≈ 20, 2000 resam
 
 | method | 10% | 25% | 50% | 75% | 100% | monotonic? |
 |---|---|---|---|---|---|---|
-| independent committee | 0.0024 | 0.0025 | 0.0032 | 0.0052 | 0.0076 | ✓ |
-| warm snapshots | 0.0025 | 0.0027 | 0.0036 | 0.0059 | 0.0089 | ✓ |
-| multi-head bootstrap | 0.0045 | 0.0062 | 0.0074 | 0.0075 | 0.0081 | ✓ (flat tail) |
+| independent committee | 0.0024 | 0.0025 | 0.0031 | 0.0050 | 0.0087 | yes |
+| warm snapshots | 0.0025 | 0.0027 | 0.0035 | 0.0057 | 0.0101 | yes |
+| multi-head bootstrap | 0.0044 | 0.0061 | 0.0072 | 0.0073 | 0.0089 | yes (flat tail) |
 
 All three are now monotonic (in experiment 1 only snapshots were), but the
 snapshot and committee low-error tails are much steeper than multi-head's
-(0.0024–0.0025 vs 0.0045 at the 10% quantile).
+(0.0024–0.0025 vs 0.0044 at the 10% quantile).
 
-> **Correction (code fix, not yet applied to this table).** These rows were
-> computed by averaging per-frame RMSEs, which up-weights frames with few atoms.
-> That is why the 100% row does not reproduce the overall force RMSE
-> (committee 0.0076 vs 0.0087). `uq_compare.py` now uses the atom-weighted
-> formula (`sum of squared errors / number of components`), which makes the
-> 100% row identical to the overall RMSE. Regenerate this table from the saved
-> `*_predictions.csv` files before quoting the 10–75% values; the qualitative
-> ordering (steep committee/snapshot tails, flat multi-head tail) is expected to
-> hold but the numbers will move.
+> **Regenerated 2026-11-27** from the saved `*_predictions.csv` with the
+> atom-weighted formula of `uq_compare.py` (sum of squared errors over the
+> number of components), so the 100% column equals the overall force RMSE. The
+> earlier rows averaged per-frame RMSEs (committee 100% point 0.0076). The
+> ordering did not change. The curve is pooled over environments; §9 shows that
+> within an environment it is much flatter.
 
 ## 4. Cost (from the manifest, seconds)
 
@@ -150,7 +174,7 @@ the OOD conclusion is qualitative there, as already flagged in the protocol.
 ## 8. Expected results — where they are answered
 
 This section maps each outcome anticipated in
-[`UQ_EXPERIMENT_2.md`](DESIGN.md) and the pre-registered protocol to
+[`DESIGN.md`](DESIGN.md) and the pre-registered protocol to
 the evidence in this report.
 
 | Expected result | Answered in | Status |
@@ -176,12 +200,11 @@ the evidence in this report.
   block bootstrap; the marginal per-group CIs in this report are not a test of
   the ranking.
 
-**Where the numbers come from:** `outputs/outputs_v3/evaluation/uq_summary.json`
-and the four `*_predictions.csv` files. The headline force RMSE is
-atom-weighted. The risk–coverage table above predates the atom-weighting fix and
-is frame-RMS, so its 100% endpoint is 0.0076 (committee) rather than the 0.0087
-headline; the runner now uses the atom-weighted formula, whose 100% endpoint
-equals the headline. Regenerate that table before quoting it.
+**Where the numbers come from:** the run's `evaluation/uq_summary.json` and its
+four `*_predictions.csv` files, archived in project artifacts
+`runs-archive/2026-10-27-exp02-lif_uq_001/`. The headline force RMSE is
+atom-weighted, and since 2026-11-27 so is the risk–coverage table: its 100%
+endpoint equals the headline.
 
 ---
 

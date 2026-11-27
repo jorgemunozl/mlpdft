@@ -1,13 +1,35 @@
 ---
 status: active
 date: 2026-10-20
+revised: 2026-11-27
 owner: jorge
 ---
 
+> **Correction 2026-11-27** (review of 2026-11-25, project artifacts `reviews/past-experiments-review.md`).
+> The accuracy table, the snapshot-timing diagnosis and the reference-energy
+> correction hold. The uncertainty conclusions do not:
+> - the interface and NPT groups are held-out tail blocks of trajectories that
+>   are also in training, not out-of-distribution sets;
+> - multi-head's −0.98 in `LIWITHF_KJPAW_FINAL` is a time trend (σ falls and
+>   the error rises along the block), not an OOD inversion;
+> - there is no committee bulk advantage: in `LIF64_KJPAW_FINAL` the snapshot
+>   (0.937) and multi-head (0.877) rank errors better than the committee (0.824);
+> - τ = 4.7–33, N_eff ≈ 44, the block-bootstrap conclusions and the snapshot
+>   σ of 0.0053 cannot be traced to any saved output (the CSV gives a mean of
+>   0.0063 and a median of 0.0032);
+> - the aligned zero-shot energy subtracts per-group offsets fitted on the test
+>   frames themselves.
+>
+> Labels are 40/320 Ry throughout. Committee members and multi-head were
+> restored at their best-validation epochs (81/83/79 and 84), the snapshots at
+> fixed epochs. Outputs: project artifacts
+> `runs-archive/2026-10-16-exp01-lif_uq_001/`. Apart from its status lines,
+> the text below is the original record.
+
 # UQ Experiment 1 — First Fine-Tuning Run
 
-**Status:** ✅ **completed & reviewed** (analysis 2026-10-20).
-**Next:** [`UQ_EXPERIMENT_2.md`](../exp-02-snapshots/DESIGN.md) — the corrected rerun, now running.
+**Status:** completed 2026-10-16; reviewed 2026-10-20 and 2026-11-25.
+**Next:** [`exp-02-snapshots/DESIGN.md`](../exp-02-snapshots/DESIGN.md), the corrected rerun (completed 2026-10-27).
 
 ## Goal
 

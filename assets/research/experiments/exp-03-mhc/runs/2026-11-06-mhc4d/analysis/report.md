@@ -1,8 +1,15 @@
 ---
 status: active
 date: 2026-11-06
+revised: 2026-11-27
 owner: jorge
 ---
+
+> **Correction 2026-11-27.** The interpretation below is withdrawn; see the
+> note in [`../README.md`](../README.md). Two statements are also inaccurate:
+> at epoch 20 the heads were at 37.2–45.0 meV/Å, not about 33, and every head's
+> validation minimum is at its final epoch (89), so the curves had not
+> plateaued. The figures and tidy CSVs are unaffected.
 
 # MHC-4D on the two-environment Li–F candidate
 

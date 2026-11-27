@@ -1,7 +1,7 @@
 ---
 status: accepted
 date: 2026-11-20
-revised: 2026-11-21
+revised: 2026-11-27
 phase: 2
 owner: jorge
 supersedes: —
@@ -12,6 +12,12 @@ superseded_by: —
 > LiF only ([ADR-0007](ADR-0007-bulk-trained-shift-ladder.md)). The evidence
 > below comes from the retired interim dataset, which used 20–30 Ry labels, and
 > is kept as history. Original text: commit `402298a`.
+>
+> **Corrected 2026-11-27.** The evidence run used 30 Ry labels in both
+> environments (bulk from `LIF64_KJPAW_NPT_V3` only), fails the design's H3 rule
+> (RLL < 0) and had no comparator. It is a development record, not evidence for
+> this decision, which rests on the design reasoning in
+> [`exp-03-mhc/DESIGN.md`](../experiments/exp-03-mhc/DESIGN.md) §2.
 
 # ADR-0001: Four disjoint heads on a frozen foundation body
 
@@ -39,7 +45,7 @@ reproduction of its foundation recipe.
 ## Evidence
 
 Run `mhc4d_a40_001`, 1,000 labels, on the retired interim two-environment
-dataset (bulk from 20 and 30 Ry runs, F-doped Li at 30 Ry):
+dataset (bulk from the 30 Ry `LIF64_KJPAW_NPT_V3` run, F-doped Li at 30 Ry):
 
 - test force RMSE 33.25 meV/Å (members 32.72–34.49); the ensemble is no better
   than its best member;

@@ -1,8 +1,17 @@
 ---
-status: active
+status: superseded
 date: 2026-11-21
 owner: jorge
+superseded_by: ../experiments/exp-03-mhc/DESIGN.md
 ---
+
+> **Archived 2026-11-27.** Superseded by
+> [`experiments/exp-03-mhc/DESIGN.md`](../experiments/exp-03-mhc/DESIGN.md) for
+> the first MHC run, and by design C
+> ([ADR-0001](../decisions/ADR-0001-four-head-disjoint.md)) after that. It
+> describes an 8-head, 80%-overlapping recipe on the 214-frame split that was
+> never run. It names MACE-MP-0; every run used MACE-OMAT medium. Its links
+> were repointed after the move; otherwise kept for provenance, do not edit.
 
 # Experiment 3 — frozen-body MHC runbook
 
@@ -16,7 +25,7 @@ split, force-focused frozen arms).
 > pilot split and an 8-head, 80%-overlapping recipe. The first full MHC run
 > uses **4 heads, disjoint**, on the 1,000-frame two-environment interim
 > candidate: see
-> [`UQ_MHC_4HEAD_DISJOINT_DESIGN.md`](DESIGN.md) for the
+> [`experiments/exp-03-mhc/DESIGN.md`](../experiments/exp-03-mhc/DESIGN.md) for the
 > rationale, exact command and gates. Use that document, not this runbook, to
 > launch the MHC arm.
 

@@ -1,8 +1,15 @@
 ---
-status: active
+status: superseded
 date: 2026-11-06
+revised: 2026-11-27
 owner: jorge
+superseded_by: DIAGNOSIS.md
 ---
+
+> **Numbers corrected 2026-11-27.** The 150-epoch per-group ρ are 0.497 /
+> 0.606 / −0.195 (bulk / F-doped / interface), as in
+> `mhc150_s123/analysis/uq_analysis.json`; earlier versions printed 0.501 /
+> 0.610 / −0.201. The group mean (0.302) and every conclusion are unchanged.
 
 # Experiment 3 — 150-epoch rerun and probe attribution (pilot)
 
@@ -47,9 +54,9 @@ probe, 150 epochs, standard loss), on the 214 / 53 / 178 split.
 | Overall ratio vs A | 1.00 | **1.220** | 1.182 | both inside 1.25 |
 | Within-group mean ρ | 0.656 | **0.302** | 0.457 | 150 is much worse |
 | Bulk force ratio | 1.00 | **1.360** | 1.641 | 150 better |
-| Bulk ρ | 0.741 | 0.501 | 0.573 | — |
-| F-doped ρ | 0.634 | 0.610 | 0.713 | — |
-| Interface ρ (n=18) | 0.593 | **−0.201** | 0.084 | sign flip |
+| Bulk ρ | 0.741 | 0.497 | 0.573 | — |
+| F-doped ρ | 0.634 | 0.606 | 0.713 | — |
+| Interface ρ (n=18) | 0.593 | **−0.195** | 0.084 | sign flip |
 | Pooled ρ | 0.943 | **0.917** | 0.858 | pooled hides it |
 | Energy RMSE (meV/atom) | 0.099 | 2468.5 | 2205.1 | both broken |
 | Median error / spread | 4.45× | 17.4× | 16.1× | under-scaled |
@@ -63,9 +70,9 @@ point estimate swings across zero (n = 18, no interval) and the mean follows it.
 
 | Group | n | MHC force | Committee | Ratio | MHC ρ | Committee ρ | MHC e/σ |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Bulk LiF | 80 | 0.003640 | 0.002678 | **1.360** | 0.501 | 0.741 | 15.1× |
-| F-doped Li | 80 | 0.009468 | 0.007973 | 1.188 | 0.610 | 0.634 | 27.2× |
-| Interface | 18 | 0.019601 | 0.015985 | 1.226 | **−0.201** | 0.593 | 17.0× |
+| Bulk LiF | 80 | 0.003640 | 0.002678 | **1.360** | 0.497 | 0.741 | 15.1× |
+| F-doped Li | 80 | 0.009468 | 0.007973 | 1.188 | 0.606 | 0.634 | 27.2× |
+| Interface | 18 | 0.019601 | 0.015985 | 1.226 | **−0.195** | 0.593 | 17.0× |
 
 ## Probe attribution: C − D and D − A
 

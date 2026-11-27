@@ -76,8 +76,10 @@ Data roles, stages and costs:
 - Cross-environment calibration is measured as degradation under shift, not
   as in-distribution calibration in each environment. The charter's questions
   are reworded accordingly.
-- Every model result so far used bulk and F-doped labels at 20–30 Ry and must
-  be rerun. This costs GPU time, not DFT.
+- Every model result so far must be rerun. This costs GPU time, not DFT.
+  (Corrected 2026-11-27: only MHC-4D used 30 Ry labels. exp-01, exp-02 and
+  the pilot used 40 Ry labels, but trained on F-doped and interface frames and
+  split single trajectories in time.)
 - [ADR-0001](ADR-0001-four-head-disjoint.md) changes: the heads train on bulk
   only.
 - [ADR-0006](ADR-0006-interface-in-scope.md) changes: the interface becomes a

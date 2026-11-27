@@ -1,7 +1,8 @@
 ---
-status: active
+status: superseded
 date: 2026-11-05
 owner: jorge
+superseded_by: DIAGNOSIS.md
 ---
 
 # Experiment 3 — frozen MHC gate report (pilot)

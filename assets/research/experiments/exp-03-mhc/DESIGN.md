@@ -1,16 +1,28 @@
 ---
 status: active
 date: 2026-11-03
+revised: 2026-11-27
 owner: jorge
 ---
+
+> **Outcome note 2026-11-27.** The run of this design (`mhc4d_a40_001`,
+> [run record](runs/2026-11-06-mhc4d/README.md)) fails its own H3 rule
+> (RLL = −0.394 < 0) and cannot evaluate H1, H2 or H4: no committee or probe was
+> trained on its frames and no intervals were computed. Its bulk frames are the
+> 30 Ry `LIF64_KJPAW_NPT_V3` run, with compressed cells (median edge 7.69 Å
+> against 8.16 Å at 40 Ry). The implementation computes α, coverage and RLL with
+> a per-component σ, not the per-atom σ_i of §4. In design C the heads train on
+> bulk LiF only ([ADR-0001](../../decisions/ADR-0001-four-head-disjoint.md),
+> rev. 2026-11-21).
 
 # MHC-4D: four-head disjoint committee
 
 **Experiment design and theoretical rationale for the first MHC run**
 
-**Status:** design frozen before training. Supersedes the 8-head,
-80%-overlapping configuration in [`UQ_EXPERIMENT_3.md`](../../archive/2026-11-03-exp3-eight-head-overlap.md) and
-[`EXPERIMENT_3_RUNBOOK.md`](RUNBOOK.md) for this experiment.
+**Status:** design frozen before training; run 2026-11-06 as `mhc4d_a40_001`.
+Supersedes the 8-head, 80%-overlapping configuration in
+[`archive/2026-11-03-exp3-eight-head-overlap.md`](../../archive/2026-11-03-exp3-eight-head-overlap.md) and
+[`archive/2026-11-05-exp3-runbook-8head.md`](../../archive/2026-11-05-exp3-runbook-8head.md) for this experiment.
 **Date:** 2026-11-06.
 **Method:** Beck et al., *Multi-head committees enable direct uncertainty
 prediction for atomistic foundation models*,
@@ -21,7 +33,7 @@ prediction for atomistic foundation models*,
 (500 bulk LiF + 500 F-doped Li). The interface is excluded.
 **Code:** `src/mlpdft/uq_compare.py`, arm `mhc`.
 
-> **Dataset caveat.** [`UQ_TWO_ENVIRONMENT_CURATION.md`](../../archive/2026-11-06-two-env-dataset.md)
+> **Dataset caveat.** [`archive/2026-11-06-two-env-dataset.md`](../../archive/2026-11-06-two-env-dataset.md)
 > marks this candidate *development only, not cleared for production UQ
 > comparisons*: F-doped burn-in is unverified and the temporal diagnostics hit
 > their lag limit. Unless those gates close first, this run is a development
@@ -357,6 +369,6 @@ size, not the MHC arm.
    models*, [arXiv:2508.09907](https://arxiv.org/abs/2508.09907).
 2. [`DIAGNOSIS.md`](runs/2026-11-05-mhc-pilot/DIAGNOSIS.md) — why
    the four-head pilot failed.
-3. [`UQ_TWO_ENVIRONMENT_CURATION.md`](../../archive/2026-11-06-two-env-dataset.md) — current
+3. [`archive/2026-11-06-two-env-dataset.md`](../../archive/2026-11-06-two-env-dataset.md) — current
    dataset composition and unresolved gates.
-4. [`UQ_EXPERIMENT_3.md`](../../archive/2026-11-03-exp3-eight-head-overlap.md) — broader Experiment 3 protocol.
+4. [`archive/2026-11-03-exp3-eight-head-overlap.md`](../../archive/2026-11-03-exp3-eight-head-overlap.md) — broader Experiment 3 protocol.

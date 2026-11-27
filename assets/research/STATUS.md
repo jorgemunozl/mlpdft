@@ -35,7 +35,8 @@ decision is taken or a gate changes; leave history to the ADRs and run folders.
 - **Basis-set stress:** the same bulk LiF cell is at −406 kbar at 30 Ry and
   −35 kbar at 40 Ry. All 20–30 Ry runs are therefore excluded
   ([ADR-0008](decisions/ADR-0008-40ry-labels-and-md-protocol.md)).
-- **MHC-4D at 1,000 labels** (retired interim dataset, 20–30 Ry labels):
+- **MHC-4D at 1,000 labels** (retired interim dataset, 30 Ry labels; fails its
+  own H3 calibration rule):
   - 33.25 meV/Å test force RMSE;
   - within-group Spearman 0.589 (bulk) / 0.106 (F-doped).
 

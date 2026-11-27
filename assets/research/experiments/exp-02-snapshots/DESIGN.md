@@ -1,14 +1,15 @@
 ---
 status: active
 date: 2026-10-27
+revised: 2026-11-27
 owner: jorge
 ---
 
 # UQ Experiment 2 — Corrected Calibration Run
 
-**Status:** 🔵 **running** on the private external cluster (as of 2026-10-27; results arrive as
-pasted logs — not tracked in `orx`).
-**Predecessor:** [`UQ_EXPERIMENT_1.md`](../exp-01-committee/DESIGN.md) — the run whose confounds this one fixes.
+**Status:** completed 2026-10-27 on the private external cluster (not tracked in `orx`);
+results in [`RESULTS.md`](RESULTS.md).
+**Predecessor:** [`exp-01-committee/DESIGN.md`](../exp-01-committee/DESIGN.md) — the run whose confounds this one fixes.
 
 ## Purpose
 
@@ -31,7 +32,7 @@ Rerun the three-way comparison with the experiment-1 confounds fixed, and freeze
 Same foundation checkpoint (MACE-OMAT medium), same three methods (independent committee,
 multi-head, warm snapshots), K = 3, seeds 123/124/125. Frozen, leak-free splits (from
 `build_uq_splits.py`): train **214**, validation **53**, locked test **178** frames — the same
-split set `ACTIVE_LEARNING_PROTOCOL.md` uses as pool/valid/test, so the ceiling RMSE is directly
+split set [`exp-04-active-learning/PROTOCOL.md`](../exp-04-active-learning/PROTOCOL.md) uses as pool/valid/test, so the ceiling RMSE is directly
 comparable to the AL loop.
 
 ## Deliverables → feeds the active-learning loop

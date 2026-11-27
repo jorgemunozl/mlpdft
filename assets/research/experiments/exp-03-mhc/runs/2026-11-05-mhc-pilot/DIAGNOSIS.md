@@ -1,8 +1,16 @@
 ---
 status: active
 date: 2026-11-21
+revised: 2026-11-27
 owner: jorge
 ---
+
+> **Revised 2026-11-27.** Every run used MACE-OMAT medium (`mace_omat_medium`);
+> two mentions of MACE-MP-0 are corrected. The 150-epoch α (51.6), coverage and
+> RLL were fitted on the 53-frame validation split that also chose the
+> checkpoint; a separate calibration split exists from commit `6154c7d`. The
+> frozen arms' test errors also grow along each test block (ρ(time, error)
+> 0.78–0.92), the same leakage as Experiment 2.
 
 # Experiment 3 — why the frozen-body MHC pilot fails
 
@@ -78,7 +86,7 @@ is a different method.
 ### 2. The E0 reference is inconsistent with the warm-started readout
 
 The run uses QE isolated-atom energies (log: Li −205.7175 eV, F −795.4213 eV).
-The foundation readout was trained against MACE-MP-0's own E0s. Warm-starting
+The foundation readout (MACE-OMAT medium) was trained against its own E0s. Warm-starting
 the readout while swapping E0s leaves a species-dependent residual: the energy
 error is 2.2–2.5 eV/atom for the whole run, four orders of magnitude above the
 committee's 0.1 meV/atom.
@@ -178,7 +186,7 @@ force-only single-head ablation.
 
 If the clean random-init, overlapping-head run still has bulk force > 1.25× the
 committee and within-group ρ below the committee, then the negative result is
-real for this testbed: a frozen MACE-MP-0 representation is insufficient for
+real for this testbed: a frozen MACE-OMAT representation is insufficient for
 QE Li–F, and body adaptation is required. That is a defensible claim about
 domain shift, not a failure of the published MHC.
 

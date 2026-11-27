@@ -1,8 +1,29 @@
 ---
 status: active
 date: 2026-11-07
+revised: 2026-11-27
 owner: jorge
 ---
+
+> **Correction 2026-11-27** (review of 2026-11-25, project artifacts `reviews/past-experiments-review.md`).
+> The numbers below trace to the saved outputs, but the interpretation does
+> not hold:
+> - the bulk frames are the 30 Ry `LIF64_KJPAW_NPT_V3` run in every split, with
+>   compressed cells (test edge 7.24–8.09 Å, median 7.69 Å, against 8.16 Å at
+>   40 Ry); zero-shot bulk RMSE is 59.3 meV/Å here against 7.3 meV/Å on 40 Ry
+>   bulk, so the 33 meV/Å level cannot be attributed to the frozen body or to
+>   250 frames per head;
+> - the improvement over the pilot is confounded: the pilot was trained on
+>   40 Ry labels from other trajectories and is scored here on 30 Ry labels;
+> - by the design's own H3 rule the run is unusable (RLL < 0), and H1, H2 and
+>   H4 cannot be evaluated without a comparator or intervals;
+> - validation error was still falling at epoch 89 for every head, so the
+>   plateau is not established;
+> - in F-doped Li, σ follows time along the test block (ρ = 0.95) while the
+>   error does not (ρ = 0.03).
+>
+> Treat the run as a development record of a working MHC implementation, not
+> as evidence about the method.
 
 # MHC-4D A40 run — `mhc4d_a40_001`
 

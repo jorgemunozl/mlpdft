@@ -1,16 +1,33 @@
 ---
 status: active
 date: 2026-11-21
+revised: 2026-11-27
 owner: jorge
 ---
 
+> **Correction 2026-11-27** (review of 2026-11-25, project artifacts `reviews/past-experiments-review.md`).
+> The paired result is not robust, so read the paired differences as
+> descriptive:
+> - with 5- or 10-frame blocks the interface stays in and committee − snapshot
+>   gives p = 0.11 and 0.18; p = 0.002 needs blocks of 20 frames or more;
+> - with four blocks per group the percentile bootstrap is biased (snapshot −
+>   multi-head at block 40: Δ = +0.087, CI [+0.088, +0.364]);
+> - the per-group error series has an effective sample size of about 3–5 per
+>   80 frames.
+>
+> Two implementation details: `risk_coverage` in `uq_analysis.py` returns the
+> atom-weighted mean of per-frame RMSEs, not an RMSE, and the bootstrap of the
+> three-group mean holds the 18-frame interface fixed in every replicate, so
+> that interval is too narrow.
+
 # Experiment 2 — environment-resolved re-analysis
 
-Pilot analysis of the 214-frame run in
-`/home/jorge/project/mlpdft/outputs/outputs_v3/` (178 locked test frames:
-80 bulk LiF, 80 F-doped Li, 18 interface). It closes the statistical gaps in
-`UQ_EXPERIMENT_2_RESULTS.md`: within-environment risk–coverage, a paired test
-of method differences, and a scale (coverage) diagnostic.
+Pilot analysis of the 214-frame run (178 locked test frames: 80 bulk LiF,
+80 F-doped Li, 18 interface). Its inputs are archived in project artifacts
+`runs-archive/2026-10-27-exp02-lif_uq_001/evaluation/`. It closes the
+statistical gaps in [`RESULTS.md`](../RESULTS.md): within-environment
+risk–coverage, a paired test of method differences, and a scale (coverage)
+diagnostic.
 
 **These are pilot numbers.** The final numbers are regenerated on the frozen
 post-generation splits with the same commands.
@@ -31,7 +48,7 @@ manifest once the loop has run; it is not available for this pilot.
 Regenerate with:
 
 ```bash
-D=/home/jorge/project/mlpdft/outputs/outputs_v3/evaluation
+D=<project artifacts>/runs-archive/2026-10-27-exp02-lif_uq_001/evaluation
 python src/mlpdft/utils/uq_analysis.py \
   --prediction committee=$D/independent_committee_predictions.csv \
   --prediction snapshot=$D/warm_snapshots_predictions.csv \
