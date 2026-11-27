@@ -86,8 +86,9 @@ it touches is then labelled exploratory.
    the ID test after α. Secondary: NLL, 1σ and 2σ coverage, and the
    split-conformal 90 % coverage.
    - Usable as an error bar only if the calibrated NLL is lower than the NLL of
-     a constant σ equal to the calibration-set force RMSE, and the conformal
-     90 % coverage on the ID test lies between 0.85 and 0.95. An arm that
+     a constant σ equal to the calibration-set force RMSE (the upper bound of
+     the interval of the difference is below 0), and the point estimate of the
+     conformal 90 % coverage on the ID test lies between 0.85 and 0.95. An arm that
      fails may still rank errors; it is then reported as not calibrated.
    - Against the committee: the paired difference in miscalibration area, with
      the verdicts of rule 3.
@@ -195,7 +196,10 @@ cell term.
   design, and the paper says so.
 - The paper's claims are limited to the primary family and the rules above;
   any other pattern is exploratory.
-- The evaluator's verdicts need a post-processing step across the seed-set
-  runs, since each run holds one seed set.
+- The verdicts need a post-processing step across the seed-set runs, since
+  each run holds one seed set: `src/mlpdft/uq_inference.py`, on branch
+  `feat/design-c-inference` (a child of the design-C run branch). It covers
+  rules 2–5, 7, 9 and 10; cost (rule 6) and label-rung trends (rule 8) are
+  computed separately.
 - The cost of being wrong in the other direction is small: a rule that turns
   out too strict only costs a weaker claim, never a false one.
