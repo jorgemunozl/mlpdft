@@ -47,6 +47,7 @@ decision is taken or a gate changes; leave history to the ADRs and run folders.
 
 | Question | Why it is open | Next action |
 |---|---|---|
+| Are the decision rules and intervals fixed before any result? | [ADR-0009](decisions/ADR-0009-design-c-decision-rules.md) is proposed; the evaluator has no paired, seed-pooled interval yet | Accept ADR-0009; add the post-processing step across seed-set runs |
 | Which thermostat decorrelates bulk LiF faster at `nraise = 100`? | Stage 1 pilot not run yet | Submit stage 1; apply the decision rule in the [plan](datasets/shift-ladder-40ry/PLAN.md) |
 | Is 40 Ry converged enough for forces? | No cutoff or k-point check exists | Submit stage 2; accept if the force RMSE vs 80 Ry is ≤ 10 meV/Å |
 | Is the frozen body or the head split the bottleneck? | No committee or frozen probe trained yet | Train both on the 40 Ry bulk pool |
