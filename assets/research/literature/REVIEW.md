@@ -1,12 +1,13 @@
 ---
 status: active
-date: 2026-11-23
+date: 2026-11-27
 owner: jorge
 ---
 
 # Literature Review — Uncertainty Quantification and Active Learning for Foundation MACE on Li–F
 
-- **Date:** 2026-11-23
+- **Date:** 2026-11-27
+- **Update 2026-11-27:** §14 explains why the warm-restart snapshots ranked errors at least as well as the fine-tuned committee in exp-02: a committee fine-tuned from one checkpoint is a local ensemble, and part of the snapshot spread is a convergence trend. §10.7 adds its two references. The consequences for each design-C arm are in [methods/ensemble-diversity.md](../methods/ensemble-diversity.md).
 - **Update 2026-11-23:** the study moved to design C (train on bulk LiF, evaluate along a graded shift; [ADR-0007](../decisions/ADR-0007-bulk-trained-shift-ladder.md), [ADR-0008](../decisions/ADR-0008-40ry-labels-and-md-protocol.md)). §10.5 adds seven references and §12 explains what they change; the rest of the review is unchanged and predates the redesign.
 - **Theory addendum 2026-11-07:** §13 adds the ensemble-spread theory (spread identity, correlation parameter, common-mode blindness, frozen-body and snapshot consequences, online versus retrospective AL) and §10.6 its references. The eight papers whose numbers are quoted there were read in full text. This addendum is independent of the design-C update in §12.
 - **Status:** reframed on 2026-10-29 for the UQ + AL + tier-0 anchor scope; supersedes the 2026-09-13 draft (E₀ and zero-shot property dependence) and the 2026-10-27 transport framing.
@@ -120,6 +121,8 @@ Kurniawan et al. include random-initialization and bootstrap ensembles in their 
 
 The project's own first run is consistent with the broader warning: committee members can be highly correlated when they share a foundation checkpoint and training recipe, so "three seeds" does not guarantee three independent hypotheses ([`UQ_EXPERIMENT_1.md`](../experiments/exp-01-committee/DESIGN.md)). The literature on GNN epistemic collapse offers a plausible mechanism, though it is not an MLIP-specific result ([Vieira et al., 2026](https://arxiv.org/abs/2605.22593)). The practical lesson is to report member-to-member diversity, not just ensemble size.
 
+Note 2026-11-27: every committee in this project is fine-tuned from the same MACE-OMAT-0 checkpoint, so it is what Sadrtdinov et al. call a local deep ensemble, not the from-scratch deep ensemble the "gold standard" label refers to. §14 gives the evidence and what it means for the comparison with snapshots.
+
 **Role in this paper:** reference construction for cost and accuracy; the method that must be beaten or matched on discrimination, calibration, and label efficiency.
 
 ### 3.2 Warm-restart snapshots: cheap, plausible, and under-evidenced
@@ -139,6 +142,8 @@ These are not the same thing. A shallow ensemble shares most weights across memb
 There is also an operational trap. A checkpoint taken at an arbitrary epoch is not an ensemble member; it may be a loss-spiked model just after a restart. The members should be taken at **cycle minima**, and the selection rule should be fixed before looking at test performance. The project's first run collected snapshots at evenly spaced epochs that coincided with restart boundaries, and two of the three members were loss-spiked just after a restart; the corrected run uses cycle-end checkpoints ([`UQ_EXPERIMENT_1.md`](../experiments/exp-01-committee/DESIGN.md), [`UQ_EXPERIMENT_2.md`](../experiments/exp-02-snapshots/DESIGN.md)). This is a concrete design lesson, not a literature result: the snapshot recipe is only as good as its checkpoint-selection rule.
 
 **Role in this paper:** the low-training-cost candidate. The hypothesis is not that snapshots are intrinsically better, but that they may reach comparable discrimination and transport-QoI uncertainty at a fraction of the fine-tuning cost. The risk is that their members are too correlated, or that the cycle-end checkpoints are not diverse enough to represent epistemic uncertainty.
+
+Note 2026-11-27: exp-02 showed the opposite risk. The snapshot spread was 1.2–2.8 times the committee's, and part of it is a convergence trend between cycles rather than diversity between minima (§14.4).
 
 ### 3.3 Multi-head committees: the strongest cost-reduction evidence
 
@@ -486,6 +491,13 @@ Identifiers were checked on 2026-11-23 against alphaXiv (arXiv papers) and OpenA
 52. **Jinnouchi, Karsai, Kresse (2019).** *On-the-fly machine learning force field generation: Application to melting points.* Phys. Rev. B 100, 014105. [DOI](https://doi.org/10.1103/PhysRevB.100.014105). Canonical online on-the-fly AL loop; contrast for the retrospective design.
 53. **Vandermause et al. (2020).** *On-the-fly active learning of interpretable Bayesian force fields for atomistic rare events.* npj Comput. Mater. 6, 20. [DOI](https://doi.org/10.1038/s41524-020-0283-z). Online Bayesian AL; second online reference for the scope caveat.
 
+### 10.7 Added 2026-11-27 (committee versus snapshot diversity)
+
+Both were found by retrieval on 2026-11-27 and read in full text.
+
+54. **Sadrtdinov, Pozdeev, Vetrov, Lobacheva (2023).** *To Stay or Not to Stay in the Pre-train Basin: Insights on Ensembling in Transfer Learning.* NeurIPS 2023. [arXiv:2303.03374](https://www.alphaxiv.org/abs/2303.03374). Models fine-tuned from one pre-trained checkpoint form a "local" deep ensemble in one basin; a snapshot ensemble with a tuned cyclic schedule matches or beats it but does not reach an ensemble fine-tuned from different pre-trained checkpoints. Image classification (ResNet-50, CLIP), not MLIPs. **Main source for §14.2.**
+55. **Ashukha, Lyzhov, Molchanov, Vetrov (2020).** *Pitfalls of In-Domain Uncertainty Estimation and Ensembling in Deep Learning.* ICLR 2020. [arXiv:2002.06470](https://www.alphaxiv.org/abs/2002.06470). Defines the deep ensemble equivalent (DEE): the number of independently trained networks that match a method's calibrated log-likelihood. Trained from scratch, snapshot ensembles come second only to deep ensembles. **The from-scratch baseline that §14.2 contrasts with.**
+
 ---
 
 ## 11. Verification and scope notes
@@ -615,3 +627,56 @@ The AL literature this review cites is mostly *online*: the model's uncertainty 
 | Ensembles are strongest under shift, but degrade | Ovadia et al. 2019; Guo et al. 2017 | Metadata only |
 
 **Caveat.** The "metadata only" rows are used for framing, not for numbers. The three entries marked full text were read for this addendum; the rest are cited at the level their source supports.
+
+---
+
+## 14. Update 2026-11-27: why the snapshots matched the committee
+
+### 14.1 The observation
+
+In exp-02, the warm-restart snapshot ensemble ranked force errors within the bulk and F-doped test blocks at least as well as the bootstrapped three-member committee, at a third of its training cost (within-environment Spearman 0.834 against 0.656; 4,996 s against 14,975 s; [exp-02 RESULTS](../experiments/exp-02-snapshots/RESULTS.md)). The expectation had been the reverse, because independent ensembles are the reference construction (§3.1). The 2026-11-25 review limits what the run supports: one seed, 178 time-correlated frames, about 3–5 effective samples per environment, and a paired test that separates the arms only with 20-frame blocks. "At least as good" survives; "better" is not established.
+
+### 14.2 A committee fine-tuned from one checkpoint is a local ensemble
+
+The expectation holds for networks trained from scratch. There, members start from different random weights and end in different basins, and the cheaper constructions fall short of them: "SSE and cSGLD outperform all other techniques except deep ensembles and enjoy a near-linear scaling of DEE with the number of samples on CIFAR datasets." ([Ashukha et al., p. 8](https://www.alphaxiv.org/pdf/2002.06470?page=8)). SSE is the snapshot ensemble, cSGLD a cyclic Langevin sampler, and DEE the deep ensemble equivalent (ref. 55).
+
+A MACE fine-tune has no random initialisation: every weight comes from the foundation checkpoint. In exp-02 the committee members differed only in data order and bootstrap draw, and all annealed on one cosine schedule to a learning rate of 1e-6. Sadrtdinov et al. study exactly this situation in transfer learning. Models fine-tuned from one checkpoint "end up in the same basin of the loss landscape, which we call the pre-train basin, and thus have limited diversity" ([p. 1](https://www.alphaxiv.org/pdf/2303.03374?page=1)), and they call such a committee a local deep ensemble. A snapshot ensemble whose restarts are tuned to explore that basin can match it: "Overall, SSE with optimally chosen hyperparameters can construct an ensemble of similar, and in some cases even better, quality than Local DE but is not able to close the gap with Global DE (see Table 1)." ([p. 6](https://www.alphaxiv.org/pdf/2303.03374?page=6)). Global DE means members fine-tuned from different pre-trained checkpoints. In their Table 1, at five members, the tuned snapshot ensemble beats the local ensemble clearly in two of six settings, ties in two and loses in two; its advantage is largest at two or three members (their Figure 1).
+
+Two limits. Their evidence is classification accuracy, not ranking of force errors. And their snapshot members get worse with each cycle, because they drift away from the pre-trained checkpoint and overfit the target data ([p. 7](https://www.alphaxiv.org/pdf/2303.03374?page=7)); exp-02's members got better with each cycle (§14.4). No MLIP paper found so far compares snapshots with a committee for a fine-tuned foundation model; §11 already noted the gap.
+
+### 14.3 What exp-02's saved predictions show
+
+Recomputed from the per-frame predictions of exp-02 (`outputs/outputs_v3/evaluation/*_predictions.csv`) with `src/mlpdft/utils/exp02_spread_diagnostics.py`. ρ is the Spearman correlation over frames within one environment; σ is the per-frame force spread.
+
+| | Bulk LiF (80) | F-doped Li (80) | Interface (18) |
+|---|---|---|---|
+| Median σ, committee / snapshot (meV/Å) | 0.62 / 0.77 | 1.24 / 3.50 | 3.72 / 5.73 |
+| Median per-frame ratio σ_snapshot / σ_committee | 1.2 | 2.8 | 1.5 |
+| Median error/σ, committee / snapshot | 4.2 / 3.7 | 6.4 / 2.7 | 4.3 / 3.2 |
+| ρ(snapshot error, committee error) | 0.98 | 0.99 | 0.91 |
+| ρ(committee σ, committee error) | 0.74 | 0.63 | 0.59 |
+| ρ(snapshot σ, committee error) | 0.92 | 0.82 | 0.61 |
+
+The two arms err on nearly the same frames, which is what a shared checkpoint and shared data predict (§13.1). They differ in the spread: the snapshot spread is larger, and it ranks the committee's own errors better than the committee's spread does. The per-frame correlations carry the same time trend as the rest of exp-02 (contiguous splits), so they are descriptive.
+
+### 14.4 Part of the snapshot spread is a convergence trend
+
+The snapshot members are not exchangeable. Their energy RMSE falls from 0.188 to 0.099 to 0.066 meV/atom over epochs 49, 99 and 149, and the three-member mean has a worse force RMSE (0.0101 eV/Å) than the last member alone (0.0082 eV/Å). The epoch-49 member is partly a less-trained model, so σ contains the distance between an early and a late model: the term \(v_m\) of §13.6.
+
+Inference, not measured: the frames that the fine-tune was still changing at epoch 49 are plausibly the frames it still gets wrong at epoch 149, which would make this term rank errors well. It is not uncertainty about which model is right, it costs accuracy when the ensemble mean is used, and nothing shows that it survives a distribution shift. The saved outputs cannot separate it from diversity between minima: no run saved per-member predictions, and the exp-02 copy lacks the epoch-49 and epoch-149 members.
+
+### 14.5 Consequences for design C
+
+- The committee arm is a local ensemble by construction. Its weakness relative to snapshots is a property of fine-tuning from one checkpoint, and the paper should present it that way, with the member diversity measured, not assumed.
+- The snapshot arm needs converged members, so that its spread is diversity and not a trend. Discarding the first cycle and holding the optimiser steps per cycle fixed across label rungs are the two remedies.
+- The per-arm review, the diagnostics and the changes adopted are in [methods/ensemble-diversity.md](../methods/ensemble-diversity.md) and the 2026-11-27 note in [ADR-0007](../decisions/ADR-0007-bulk-trained-shift-ladder.md).
+
+### 14.6 Claim ledger additions
+
+| Claim | Source | Evidence level |
+|---|---|---|
+| Models fine-tuned from one checkpoint form a low-diversity local ensemble | Sadrtdinov et al. 2023; Neyshabur et al. 2020 | Full text read |
+| A tuned snapshot ensemble can match a local ensemble, not a global one | Sadrtdinov et al. 2023 (accuracy, image classification) | Full text read |
+| Trained from scratch, snapshot ensembles come second to deep ensembles | Ashukha et al. 2020 | Full text read |
+| In exp-02 the snapshot spread ranked errors at least as well as the committee's | Project data, §14.3 | One seed, correlated frames |
+| Part of exp-02's snapshot spread is a convergence trend | Member errors and ensemble-mean penalty, §14.4 | Inference |
