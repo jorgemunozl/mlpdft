@@ -49,6 +49,7 @@ from mace.calculators.mace import MACECalculator
 from mace.tools.scripts_utils import remove_pt_head
 
 from mlpdft.constants import DATA_DIR, FORCE_KEY, OUTPUTS_DIR, XYZ_DIR
+from mlpdft.snapshot_schedule import snapshot_schedule
 from mlpdft.uq_compare import (
     DEFAULT_SEEDS,
     _cleanup_checkpoints,
@@ -98,6 +99,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--learning-rate", type=float, default=5e-4)
     parser.add_argument("--seeds", default=",".join(map(str, DEFAULT_SEEDS)))
     parser.add_argument("--snapshot-count", type=int, default=3)
+    parser.add_argument("--snapshot-burn-in-cycles", type=int, default=0,
+                        help="warm-restart cycles trained and discarded before the kept ones")
+    parser.add_argument("--snapshot-cycle-epochs", type=int, default=None,
+                        help="epochs per warm-restart cycle (default: --epochs // --snapshot-count)")
     parser.add_argument("--bootstrap-block-size", type=int, default=5)
     parser.add_argument(
         "--no-bootstrap-committee",
@@ -330,6 +335,12 @@ def _train_ensemble(
     elif strategy == "snapshot":
         name = "warm_snapshots"
         run_dir = iteration_dir / name
+        schedule = snapshot_schedule(
+            options.epochs,
+            options.snapshot_count,
+            options.snapshot_burn_in_cycles,
+            options.snapshot_cycle_epochs,
+        )
         final_model = _run_training(
             options,
             name,
@@ -338,11 +349,10 @@ def _train_ensemble(
             valid_file,
             test_file,
             options.seeds[0],
-            max(2, options.epochs // options.snapshot_count),
+            schedule.cycle_epochs,
+            epochs=schedule.total_epochs,
         )
-        snapshots = _export_snapshot_models(
-            run_dir, name, final_model, options.epochs, options.snapshot_count
-        )
+        snapshots = _export_snapshot_models(run_dir, name, final_model, schedule)
         _cleanup_checkpoints(run_dir)
         members = [(path.stem, path, None) for path in snapshots]
     elif strategy == "multihead":

@@ -394,6 +394,28 @@ class EndValidationModeTest(unittest.TestCase):
         self.assertTrue(args.save_all_checkpoints)
         self.assertEqual(active, {1, 3, 5})
 
+    def test_snapshot_export_skips_the_burn_in_cycle(self):
+        import mlpdft.uq_compare as uc
+        from mlpdft.snapshot_schedule import snapshot_schedule
+
+        schedule = snapshot_schedule(51, 3, burn_in_cycles=1)
+        model = toy_model(heads=("h0",))
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "checkpoints").mkdir()
+            final = run_dir / "final.model"
+            torch.save(model, final)
+            for epoch in (16, 33, 50, 67):  # every cycle end of a 4 x 17 run
+                torch.save({"model": model.state_dict()}, run_dir / "checkpoints" / f"snap_run-1_epoch-{epoch}.pt")
+            paths = uc._export_snapshot_models(run_dir, "snap", final, schedule)
+            self.assertEqual([p.name for p in paths],
+                             ["snap_epoch_33.model", "snap_epoch_50.model", "snap_epoch_67.model"])
+            (run_dir / "checkpoints" / "snap_run-1_epoch-67.pt").unlink()
+            for path in paths:
+                path.unlink()
+            with self.assertRaises(FileNotFoundError):  # never falls back to the burn-in member
+                uc._export_snapshot_models(run_dir, "snap", final, snapshot_schedule(51, 3, burn_in_cycles=2))
+
     def test_legacy_mode_is_unchanged(self):
         args, active = self._train("epoch", epochs=5, scheduler_t0=5, freeze=6)
         self.assertEqual((args.eval_interval, args.patience), (1, 50))

@@ -72,6 +72,7 @@ from mlpdft.constants import (
 )
 from mlpdft import llpr as llpr_lib
 from mlpdft import timing
+from mlpdft.snapshot_schedule import SnapshotSchedule, snapshot_schedule
 from mlpdft.shallow_ensemble import (
     NLL_VARIANCE_EPS,
     ShallowConfig,
@@ -544,6 +545,24 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument("--snapshot-count", type=int, default=3)
+    parser.add_argument(
+        "--snapshot-burn-in-cycles",
+        type=int,
+        default=0,
+        help=(
+            "Warm-restart cycles trained before the kept ones and discarded, so "
+            "every snapshot member comes from a converged cycle (default: 0)"
+        ),
+    )
+    parser.add_argument(
+        "--snapshot-cycle-epochs",
+        type=int,
+        default=None,
+        help=(
+            "Epochs per warm-restart cycle (default: --epochs // --snapshot-count). "
+            "Set per label rung to hold the optimiser steps per cycle fixed."
+        ),
+    )
     parser.add_argument("--bootstrap-block-size", type=int, default=5)
     parser.add_argument(
         "--no-bootstrap-committee",
@@ -1311,8 +1330,7 @@ def _export_snapshot_models(
     run_dir: Path,
     run_name: str,
     final_model_path: Path,
-    epochs: int,
-    count: int,
+    schedule: SnapshotSchedule,
 ) -> list[Path]:
     checkpoint_dir = run_dir / "checkpoints"
     checkpoints = [
@@ -1328,18 +1346,32 @@ def _export_snapshot_models(
     exported_dir.mkdir(parents=True, exist_ok=True)
     exported: list[Path] = []
     used_epochs: set[int] = set()
+    # Burn-in cycles are trained and discarded: no member may come from them.
+    first_epoch = schedule.burn_in_cycles * schedule.cycle_epochs
 
-    for index in range(1, count + 1):
+    for target_epoch in schedule.member_epochs:
         # Collect at the END of each SGDR cycle (one epoch before the next
         # warm restart), where the LR is at its minimum and the member is
         # converged.  Even spacing across the run lands on the restart
         # boundaries and captures the loss-spiked, just-kicked model.
-        cycle_length = epochs // count
-        target_epoch = min(index * cycle_length - 1, epochs - 1)
-        candidates = [item for item in checkpoints if item[0] not in used_epochs]
+        candidates = [
+            item
+            for item in checkpoints
+            if item[0] not in used_epochs and item[0] >= first_epoch
+        ]
+        if not candidates:
+            raise FileNotFoundError(
+                f"No checkpoint after the burn-in (epoch >= {first_epoch}) is left "
+                f"for the snapshot at epoch {target_epoch} in {checkpoint_dir}"
+            )
         epoch, checkpoint_path = min(
             candidates, key=lambda item: abs(item[0] - target_epoch)
         )
+        if epoch != target_epoch:
+            print(
+                f"[uq_compare] warning: no checkpoint at cycle end {target_epoch}; "
+                f"using epoch {epoch}"
+            )
         checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
         model.load_state_dict(checkpoint["model"])
         model_path = exported_dir / f"{run_name}_epoch_{epoch}.model"
@@ -2515,6 +2547,18 @@ def main() -> None:
     if "snapshots" in arms:
         snapshot_name = "warm_snapshots"
         snapshot_dir = run_root / snapshot_name
+        schedule = snapshot_schedule(
+            options.epochs,
+            options.snapshot_count,
+            options.snapshot_burn_in_cycles,
+            options.snapshot_cycle_epochs,
+        )
+        print(
+            f"[uq_compare] snapshots: {schedule.burn_in_cycles} burn-in + "
+            f"{options.snapshot_count} kept cycles of {schedule.cycle_epochs} epochs "
+            f"({schedule.total_epochs} epochs); members at epochs "
+            f"{list(schedule.member_epochs)}"
+        )
         started = time.perf_counter()
         snapshot_final = _run_training(
             options,
@@ -2524,14 +2568,14 @@ def main() -> None:
             valid_file,
             test_file,
             options.seeds[0],
-            max(2, options.epochs // options.snapshot_count),
+            schedule.cycle_epochs,
+            epochs=schedule.total_epochs,
         )
         snapshot_paths = _export_snapshot_models(
             snapshot_dir,
             snapshot_name,
             snapshot_final,
-            options.epochs,
-            options.snapshot_count,
+            schedule,
         )
         elapsed = time.perf_counter() - started
         _cleanup_checkpoints(snapshot_dir)
@@ -2544,6 +2588,10 @@ def main() -> None:
                 "seconds": elapsed,
                 "model": str(snapshot_final),
                 "snapshot_models": [str(path) for path in snapshot_paths],
+                "cycle_epochs": schedule.cycle_epochs,
+                "total_epochs": schedule.total_epochs,
+                "burn_in_cycles": schedule.burn_in_cycles,
+                "member_epochs": list(schedule.member_epochs),
             }
         )
 
@@ -2839,6 +2887,8 @@ def main() -> None:
         "frozen_body_layers": FROZEN_BODY_LAYERS,
         "split_seed": options.split_seed,
         "snapshot_count": options.snapshot_count,
+        "snapshot_burn_in_cycles": options.snapshot_burn_in_cycles,
+        "snapshot_cycle_epochs": options.snapshot_cycle_epochs,
         "bootstrap_block_size": options.bootstrap_block_size,
         "committee_bootstrapped": options.bootstrap_committee,
         "multihead_enabled": "multihead-bootstrap" in arms

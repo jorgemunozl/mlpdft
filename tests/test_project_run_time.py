@@ -55,6 +55,7 @@ class ProjectionTest(unittest.TestCase):
         data = prt.Data(train_atoms=64, monitor_frames=103, monitor_atoms=64, eval_sets=[(300, 64), (100, 18)])
         rows = prt.project(measured, smoke, target, data)
         self.assertAlmostEqual(rows["committee"]["train"], 3 * 51 * 1000 * 0.05)
+        self.assertAlmostEqual(rows["snapshots"]["train"], 51 * 1000 * 0.05)
         self.assertAlmostEqual(rows["mhc"]["train"], 60 * 1000 * 0.04)
         self.assertAlmostEqual(rows["shallow-nll"]["train"], 15 * 1000 * 0.2)
         eval_atoms = 300 * 64 + 100 * 18
@@ -63,6 +64,15 @@ class ProjectionTest(unittest.TestCase):
         text = prt.report(measured, smoke, target, data, target_path, deadline_minutes=630)
         self.assertIn("TOTAL", text)
         self.assertIn("deadline 630 min", text)
+
+        # One discarded burn-in cycle: four 17-epoch cycles instead of three.
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "node.env"
+            path.write_text(TARGET.replace('--epochs 51 ', '--epochs 51 --snapshot-burn-in-cycles 1 '))
+            burn_in = prt.settings(prt.read_env(path))
+        self.assertEqual(burn_in.snapshot_burn_in_cycles, 1)
+        rows = prt.project(measured, smoke, burn_in, data)
+        self.assertAlmostEqual(rows["snapshots"]["train"], 68 * 1000 * 0.05)
 
 
 if __name__ == "__main__":

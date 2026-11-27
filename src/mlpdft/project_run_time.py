@@ -28,6 +28,7 @@ from pathlib import Path
 import numpy as np
 
 from mlpdft import timing
+from mlpdft.snapshot_schedule import snapshot_schedule
 
 CONTINGENCY = 0.10  # added to the projected total
 FINAL_SECONDS = 300  # merging the metrics and the last upload
@@ -60,6 +61,8 @@ class Settings:
     n_boot: int
     max_frames_per_set: int | None
     cal_frames: int  # 0 = every monitor frame
+    snapshot_burn_in_cycles: int = 0
+    snapshot_cycle_epochs: int | None = None
 
 
 def settings(env: dict[str, str]) -> Settings:
@@ -68,6 +71,8 @@ def settings(env: dict[str, str]) -> Settings:
                           ("--shallow-epochs", 120), ("--mhc-heads", 8), ("--shallow-heads", 4),
                           ("--snapshot-count", 3), ("--llpr-max-train-frames", 300)):
         train.add_argument(flag, type=int, default=default)
+    train.add_argument("--snapshot-burn-in-cycles", type=int, default=0)
+    train.add_argument("--snapshot-cycle-epochs", type=int, default=None)
     t, _ = train.parse_known_args(shlex.split(env.get("EXTRA_ARGS", "")))
     evaluation = argparse.ArgumentParser(add_help=False)
     evaluation.add_argument("--n-boot", type=int, default=1000)
@@ -78,7 +83,8 @@ def settings(env: dict[str, str]) -> Settings:
                     mhc_epochs=t.mhc_epochs, probe_epochs=t.probe_epochs, shallow_epochs=t.shallow_epochs,
                     mhc_heads=t.mhc_heads, shallow_heads=t.shallow_heads, snapshot_count=t.snapshot_count,
                     llpr_train_frames=min(t.llpr_max_train_frames, labels), n_boot=e.n_boot,
-                    max_frames_per_set=e.max_frames_per_set, cal_frames=int(env.get("UQC_CAL_FRAMES", "0") or 0))
+                    max_frames_per_set=e.max_frames_per_set, cal_frames=int(env.get("UQC_CAL_FRAMES", "0") or 0),
+                    snapshot_burn_in_cycles=t.snapshot_burn_in_cycles, snapshot_cycle_epochs=t.snapshot_cycle_epochs)
 
 
 @dataclass
@@ -194,7 +200,10 @@ def project(measured: dict, smoke: Settings, target: Settings, data: Data) -> di
                 train += 3 * target.epochs * target.labels * (rate.get("full") or 0.0)
                 evaluations, graph_builds = evaluations + 3, graph_builds + 1
             elif arm == "snapshots":
-                train += target.epochs * target.labels * (rate.get("full") or 0.0)
+                snapshot_epochs = snapshot_schedule(target.epochs, target.snapshot_count,
+                                                    target.snapshot_burn_in_cycles,
+                                                    target.snapshot_cycle_epochs).total_epochs
+                train += snapshot_epochs * target.labels * (rate.get("full") or 0.0)
                 evaluations, graph_builds = evaluations + target.snapshot_count, graph_builds + 1
             elif arm == "mhc":
                 train += target.mhc_epochs * target.labels * (rate.get("mhc") or 0.0)

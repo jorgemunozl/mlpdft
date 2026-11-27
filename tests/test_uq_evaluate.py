@@ -63,6 +63,45 @@ class EvaluateTests(unittest.TestCase):
             self.assertTrue((run / "evaluation" / "ens" / "shift_far.npz").exists())
 
 
+class MemberDiversityTest(unittest.TestCase):
+    def test_ensemble_members_are_saved_and_summarised(self):
+        rng = np.random.default_rng(1)
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            data, run = tmp / "data", tmp / "run"
+            data.mkdir()
+            run.mkdir()
+            sets = {"cal_replicas": ("calibration", frames(30, ["r1", "r2"], rng)),
+                    "test_replicas": ("test", frames(30, ["r3", "r4"], rng)),
+                    "shift_far": ("shift_far", frames(30, ["s"], rng, scale=3.0))}
+            manifest = {"sets": {}}
+            for name, (role, fr) in sets.items():
+                write(data / f"{name}.extxyz", fr, format="extxyz")
+                manifest["sets"][name] = {"role": role}
+            (data / "manifest.json").write_text(json.dumps(manifest))
+            member = {"name": "m", "model_path": "x", "head": None}
+            (run / "arms_manifest.json").write_text(json.dumps({"ens": {"kind": "ensemble", "members": [member] * 3}}))
+
+            def mock(arm, run_dir, fr, device, dtype):
+                ref = np.concatenate([a.arrays["REF_forces"] for a in fr])
+                scale = np.concatenate([np.full((len(a), 3), a.info["shift_scale"]) for a in fr])
+                # a shared error that grows with the shift, and a small own error per member
+                shared = rng.normal(0.0, 0.2 * scale)
+                members = np.stack([ref + shared + rng.normal(0.0, 0.05, size=ref.shape) for _ in range(3)])
+                return members.mean(axis=0), members.std(axis=0, ddof=1), members
+
+            report = uq_evaluate.evaluate(run, data, device="cpu", dtype="float64", block_steps=100,
+                                          n_boot=20, target=0.9, predictor=mock, zero_shot=False)
+            rows = report["arms"]["ens"]["sets"]
+            diversity = rows["test_replicas"]["diversity"]
+            self.assertEqual(diversity["members"], 3)
+            self.assertGreater(diversity["error_correlation"], 0.8)
+            self.assertNotIn("shift_growth", rows["test_replicas"])
+            self.assertLess(rows["shift_far"]["shift_growth"]["common_mode_index"], 0.5)
+            saved = np.load(run / "evaluation" / "ens" / "test_replicas.npz")
+            self.assertEqual(saved["member_err"].shape, (3, 30 * 4, 3))
+            np.testing.assert_allclose(saved["member_err"].mean(axis=0), saved["err"], atol=1e-6)
+
 class EvaluatorPartsTest(unittest.TestCase):
     def test_batched_forces_match_the_calculator_for_every_head(self):
         import torch

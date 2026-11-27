@@ -78,5 +78,54 @@ class MetricTests(unittest.TestCase):
         self.assertAlmostEqual(m.shift_auroc(sigma_in, frame_in, 3 * sigma_out, frame_out), 1.0, delta=0.01)
 
 
+
+class DiversityTests(unittest.TestCase):
+    def test_ambiguity_decomposition(self):
+        rng = np.random.default_rng(3)
+        e = rng.normal(size=(4, 500, 3)) + rng.normal(size=(1, 500, 3))
+        d = m.ensemble_diversity(e)
+        member_mse = np.mean(e.reshape(4, -1) ** 2, axis=1).mean()
+        ensemble_mse = np.mean(e.mean(axis=0) ** 2)
+        self.assertAlmostEqual(d["spread_fraction"], 1 - ensemble_mse / member_mse, places=12)
+        self.assertEqual(d["members"], 4)
+        self.assertEqual(len(d["member_rmse"]), 4)
+
+    def test_independent_members(self):
+        rng = np.random.default_rng(4)
+        d = m.ensemble_diversity(rng.normal(size=(4, 20000, 3)))
+        self.assertAlmostEqual(d["error_correlation"], 0.0, delta=0.01)
+        self.assertAlmostEqual(d["spread_fraction"], 0.75, delta=0.01)  # 1 - 1/K
+        self.assertAlmostEqual(d["mean_gain"], 0.5, delta=0.02)  # 1/sqrt(K)
+        self.assertAlmostEqual(d["error_to_spread"], 0.5, delta=0.02)  # sqrt(1/K) / 1
+
+    def test_shared_error_is_invisible_to_the_spread(self):
+        rng = np.random.default_rng(5)
+        shared = 3.0 * rng.normal(size=(1, 20000, 3))
+        own = rng.normal(size=(3, 20000, 3))
+        d = m.ensemble_diversity(shared + own)
+        self.assertAlmostEqual(d["error_correlation"], 0.9, delta=0.01)  # 9 / (9 + 1)
+        self.assertGreater(d["error_to_spread"], 2.5)
+        self.assertGreater(d["mean_gain"], 0.9)
+
+    def test_identical_members(self):
+        e = np.tile(np.random.default_rng(6).normal(size=(1, 50, 3)), (3, 1, 1))
+        d = m.ensemble_diversity(e)
+        self.assertAlmostEqual(d["spread_fraction"], 0.0)
+        self.assertAlmostEqual(d["mean_gain"], 1.0)
+        self.assertEqual(d["error_to_spread"], float("inf"))
+
+    def test_needs_two_members(self):
+        with self.assertRaises(ValueError):
+            m.ensemble_diversity(np.zeros((1, 5, 3)))
+
+    def test_shift_growth(self):
+        rng = np.random.default_rng(7)
+        err_id, sigma_id = rng.normal(size=(1000, 3)), np.ones((1000, 3))
+        g = m.shift_growth(4 * err_id, 2 * sigma_id, err_id, sigma_id)
+        self.assertAlmostEqual(g["sigma_growth"], 2.0)
+        self.assertAlmostEqual(g["error_growth"], 4.0)
+        self.assertAlmostEqual(g["common_mode_index"], 0.5)
+
+
 if __name__ == "__main__":
     unittest.main()

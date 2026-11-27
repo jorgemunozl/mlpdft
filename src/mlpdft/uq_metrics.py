@@ -172,3 +172,54 @@ def shift_auroc(sigma_in: np.ndarray, frame_in: np.ndarray, sigma_out: np.ndarra
     _, s_in = per_frame(np.zeros_like(sigma_in), sigma_in, frame_in)
     _, s_out = per_frame(np.zeros_like(sigma_out), sigma_out, frame_out)
     return auroc(s_in, s_out)
+
+
+def ensemble_diversity(member_err: np.ndarray) -> dict:
+    """How different the members of an ensemble are, from their force errors.
+
+    ``member_err`` has shape (members, n_atoms_total, 3): each member's
+    predicted minus reference force. The squared spread (population variance
+    across members) obeys mean member MSE = ensemble MSE + mean squared spread
+    (the ambiguity decomposition), so ``spread_fraction`` is the share of the
+    members' error that averaging removes. ``error_to_spread`` uses the sample
+    standard deviation (ddof = 1), the sigma the evaluator reports. See
+    ``assets/research/methods/ensemble-diversity.md`` for how to read them.
+    """
+    e = np.asarray(member_err, dtype=float).reshape(len(member_err), -1)
+    k = e.shape[0]
+    if k < 2:
+        raise ValueError("diversity needs at least two members")
+    member_mse = np.mean(e ** 2, axis=1)
+    mean_err = e.mean(axis=0)
+    ensemble_mse = float(np.mean(mean_err ** 2))
+    spread_sq = float(np.mean(e.var(axis=0)))
+    sigma_rms = float(np.sqrt(np.mean(e.var(axis=0, ddof=1))))
+    corr = np.corrcoef(e)
+    pairs = corr[np.triu_indices(k, 1)]
+    member_rmse = np.sqrt(member_mse)
+    ensemble_rmse = float(np.sqrt(ensemble_mse))
+    return {
+        "members": int(k),
+        "member_rmse": [float(v) for v in member_rmse],
+        "ensemble_rmse": ensemble_rmse,
+        "best_member_rmse": float(member_rmse.min()),
+        "mean_gain": ensemble_rmse / float(member_rmse.min()),
+        "spread_fraction": spread_sq / float(member_mse.mean()),
+        "error_correlation": float(np.mean(pairs)),
+        # identical members leave only rounding noise in the spread
+        "error_to_spread": (ensemble_rmse / sigma_rms if sigma_rms > 1e-12 * ensemble_rmse
+                            else float("inf")),
+    }
+
+
+def shift_growth(err: np.ndarray, sigma: np.ndarray, err_id: np.ndarray, sigma_id: np.ndarray) -> dict:
+    """Growth of the RMS uncertainty and of the RMS error from the in-distribution set to a shifted set.
+
+    ``common_mode_index`` = sigma growth / error growth. Below 1, the
+    uncertainty grows more slowly than the error along this shift, which is what
+    an error shared by every member (or invisible to a frozen body) produces.
+    """
+    sigma_growth = float(np.sqrt(np.mean(sigma ** 2)) / np.sqrt(np.mean(sigma_id ** 2)))
+    error_growth = float(np.sqrt(np.mean(err ** 2)) / np.sqrt(np.mean(err_id ** 2)))
+    return {"sigma_growth": sigma_growth, "error_growth": error_growth,
+            "common_mode_index": sigma_growth / error_growth}

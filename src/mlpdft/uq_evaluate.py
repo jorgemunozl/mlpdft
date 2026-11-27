@@ -15,6 +15,10 @@ and set it saves per-atom errors and uncertainties, then computes
 * shift-detection AUROC is computed against the in-distribution test set
   (role ``test``; until the replicas exist, ``test_timeblock`` is used and the
   output says so);
+* for every ensemble, each member's force errors are saved (``member_err``) and
+  ``uq_metrics.ensemble_diversity`` is reported per set; for every arm with an
+  uncertainty, ``uq_metrics.shift_growth`` compares each set with the
+  in-distribution test set (``assets/research/methods/ensemble-diversity.md``);
 * bootstrap blocks are replicas (``run``) when a set has several runs,
   otherwise time blocks of ``--block-steps`` SCF steps.
 
@@ -120,14 +124,18 @@ def llpr_forces_and_sigma(spec: dict, run_dir: Path, frames: list, device: str,
             np.concatenate([r["force_sigma"] for r in results]))
 
 
-def predict(arm: dict, run_dir: Path, frames: list, device: str, dtype: str) -> tuple[np.ndarray, np.ndarray | None]:
-    """Mean forces and their uncertainty (None for a single model without UQ)."""
+def predict(arm: dict, run_dir: Path, frames: list, device: str, dtype: str) -> tuple:
+    """Mean forces and their uncertainty (None for a single model without UQ).
+
+    An ensemble also returns every member's forces, shape (members, atoms, 3),
+    as a third element. A custom ``predictor`` may return only the first two.
+    """
     if arm["kind"] == "llpr":
         return llpr_forces_and_sigma(arm, run_dir, frames, device, dtype)
     members = ensemble_forces(arm["members"], run_dir, frames, device, dtype)
     if len(members) == 1:
         return members[0], None
-    return members.mean(axis=0), members.std(axis=0, ddof=1)
+    return members.mean(axis=0), members.std(axis=0, ddof=1), members
 
 
 def blocks_for(frames: list, block_steps: int) -> tuple[np.ndarray, str]:
@@ -213,19 +221,27 @@ def evaluate(run_dir: Path, dataset_dir: Path, *, device: str, dtype: str, block
         orx_report({"phase": "evaluate", "step": 0, "of": total, "unit": "arm x set"})
     for arm_name, arm in arms.items():
         preds = {}
+        diversity = {}
         for name, fr in frames.items():
             ref = np.concatenate([a.arrays[FORCES_KEY] for a in fr])
-            mean, sigma = predictor(arm, Path(arm.get("_base", run_dir)), fr, device, dtype)
+            out = predictor(arm, Path(arm.get("_base", run_dir)), fr, device, dtype)
+            mean, sigma = out[0], out[1]
+            members = out[2] if len(out) > 2 else None
             done += 1
             if progress:
                 orx_report({"step": done})
             frame = np.repeat(np.arange(len(fr)), [len(a) for a in fr])
             preds[name] = (mean - ref, sigma, frame)
+            arrays = {"err": mean - ref, "frame": frame,
+                      "sigma": np.full_like(mean, np.nan) if sigma is None else sigma,
+                      "scf_step": np.array([a.info.get("scf_step", -1) for a in fr]),
+                      "run": np.array([a.info.get("run", "") for a in fr])}
+            if members is not None:
+                member_err = members - ref[None]
+                arrays["member_err"] = member_err.astype(np.float32)
+                diversity[name] = uq_metrics.ensemble_diversity(member_err)
             (out_dir / arm_name).mkdir(parents=True, exist_ok=True)
-            np.savez_compressed(out_dir / arm_name / f"{name}.npz", err=mean - ref, frame=frame,
-                                sigma=np.full_like(mean, np.nan) if sigma is None else sigma,
-                                scf_step=np.array([a.info.get("scf_step", -1) for a in fr]),
-                                run=np.array([a.info.get("run", "") for a in fr]))
+            np.savez_compressed(out_dir / arm_name / f"{name}.npz", **arrays)
         alpha = q = None
         if calibration is not None and preds[calibration][1] is not None:
             e_cal, s_cal, _ = preds[calibration]
@@ -245,8 +261,11 @@ def evaluate(run_dir: Path, dataset_dir: Path, *, device: str, dtype: str, block
             else:
                 row = summaries[name]
                 if id_test is not None and name != id_test:
-                    _, s_id, f_id = preds[id_test]
+                    e_id, s_id, f_id = preds[id_test]
                     row["shift_auroc_vs_id"] = uq_metrics.shift_auroc(s_id, f_id, sigma, frame)
+                    row["shift_growth"] = uq_metrics.shift_growth(err, sigma, e_id, s_id)
+                if name in diversity:
+                    row["diversity"] = diversity[name]
             row.update({"role": eval_sets[name]["role"], "blocks": blocks[name][1]})
             arm_report["sets"][name] = row
             if report_orx:
@@ -281,6 +300,9 @@ def print_summary(report: dict) -> None:
                 line += f"  rho_frame {p['spearman_frame']:.2f}  miscal {p.get('miscal_area_cal', p['miscal_area_raw']):.3f}"
             if "shift_auroc_vs_id" in row:
                 line += f"  AUROC {row['shift_auroc_vs_id']:.2f}"
+            if "diversity" in row:
+                d = row["diversity"]
+                line += f"  err-corr {d['error_correlation']:.2f}  mean/best {d['mean_gain']:.2f}"
             print(line)
 
 
