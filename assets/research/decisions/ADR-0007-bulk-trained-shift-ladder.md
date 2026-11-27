@@ -1,12 +1,33 @@
 ---
 status: accepted
 date: 2026-11-21
-revised: 2026-11-23
+revised: 2026-11-27
 phase: 2
 owner: jorge
 supersedes: —
 superseded_by: —
 ---
+
+> **Revised 2026-11-27 (ensemble diversity).** The arms are unchanged. After
+> exp-02's snapshots matched its committee, the reasons were reviewed in
+> literature/REVIEW.md §14 and the arms' diversity in
+> methods/ensemble-diversity.md. Three requirements are added:
+>
+> 1. Snapshot members come from converged cycles. One burn-in cycle is trained
+>    and discarded (`--snapshot-burn-in-cycles 1`), and each label rung keeps
+>    the optimiser steps per cycle of the 1,000-label node
+>    (`--snapshot-cycle-epochs`).
+> 2. Every ensemble arm saves each member's force errors and reports the
+>    diversity diagnostics of methods/ensemble-diversity.md §4 on every set and
+>    rung (`uq_metrics.ensemble_diversity`, `uq_metrics.shift_growth`). They are
+>    reported and discussed, not used as gates.
+> 3. The committee keeps its block bootstrap. Its lack of diversity from
+>    initialisation is reported as a property of fine-tuning from one
+>    checkpoint, not corrected.
+>
+> Still open: the committee size (three members in `node.env`, four in the
+> shift-ladder plan) and an optional committee variant with each member's
+> readout re-initialised. Earlier versions are in git history.
 
 > **Revised 2026-11-23:** the first shift was described as "bulk LiF at
 > ≈ 162 K". Its frames have larger forces than the 300 K run, so it is now
