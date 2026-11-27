@@ -45,7 +45,9 @@ All arms start from MACE-OMAT-medium.
   - fixed budgets and the last epoch is the model, with no per-epoch
     validation (ADR-0004, revised 2026-11-24);
   - full fine-tunes: 51 epochs, lr 5e-4. These are the committee members and
-    the snapshot run, which is 3 cycles of 17 epochs;
+    the snapshot run. The snapshot run is 4 cycles of 17 epochs; the first is
+    a discarded burn-in, and the members come from epochs 33, 50 and 67
+    (ADR-0007, revised 2026-11-27);
   - frozen-body arms: force-only, lr 1e-3, batch 16. At 1,000 labels each
     head gets about 940 optimizer steps: MHC 60 epochs (250 frames per head),
     shallow-nll and probe 15 epochs (all frames). MHC and shallow-nll
